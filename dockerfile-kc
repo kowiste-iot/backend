@@ -1,0 +1,35 @@
+FROM registry.access.redhat.com/ubi9 AS ubi-micro-build
+RUN mkdir -p /mnt/rootfs
+RUN dnf install --installroot /mnt/rootfs curl jq --releasever 9 --setopt install_weak_deps=false --nodocs -y && \
+    dnf --installroot /mnt/rootfs clean all
+
+FROM quay.io/keycloak/keycloak:26.0.5
+
+USER root
+# Copy the installed packages from the builder
+COPY --from=ubi-micro-build /mnt/rootfs /
+
+COPY ./configs/keycloak/themes/custom /opt/keycloak/themes/custom
+RUN mkdir -p /opt/keycloak/themes/custom/login && \
+    chown -R 1000:1000 /opt/keycloak/themes
+
+# Copy configurations and scripts
+# COPY .env.local .
+# ENV $(cat .env.local | xargs)
+COPY ./configs/keycloak/setup-keycloak.sh /opt/keycloak/
+COPY ./configs/keycloak/wrapper.sh /opt/keycloak/
+
+# Set permissions and create user/group
+RUN chmod +x /opt/keycloak/setup-keycloak.sh /opt/keycloak/wrapper.sh && \
+    groupadd -r keycloak -g 1000 && \
+    useradd -r -g keycloak -u 1000 -d /opt/keycloak -s /sbin/nologin keycloak && \
+    chown -R keycloak:keycloak /opt/keycloak
+
+USER keycloak
+
+# Build optimized version
+RUN /opt/keycloak/bin/kc.sh build \
+    --db=postgres \
+    --features=docker
+
+ENTRYPOINT ["/opt/keycloak/wrapper.sh"]

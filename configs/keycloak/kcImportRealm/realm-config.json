@@ -1,0 +1,51 @@
+{
+    "realm": "your-realm",
+    "enabled": true,
+    "roles": {
+        "realm": [
+            {
+                "name": "user-role",
+                "description": "User Role"
+            },
+            {
+                "name": "admin-role",
+                "description": "Admin Role"
+            }
+        ]
+    },
+    "users": [
+        {
+            "username": "test-user",
+            "enabled": true,
+            "email": "test@example.com",
+            "firstName": "Test",
+            "lastName": "User",
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "test-password",
+                    "temporary": false
+                }
+            ],
+            "realmRoles": [
+                "user-role"
+            ]
+        }
+    ],
+    "clients": [
+        {
+            "clientId": "my-client",
+            "enabled": true,
+            "clientAuthenticatorType": "client-secret",
+            "secret": "my-client-secret",
+            "redirectUris": [
+                "*"
+            ],
+            "webOrigins": [
+                "*"
+            ],
+            "publicClient": false,
+            "protocol": "openid-connect"
+        }
+    ]
+}
