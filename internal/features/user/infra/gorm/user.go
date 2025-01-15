@@ -17,16 +17,16 @@ import (
 )
 
 type User struct {
-	ID        string `gorm:"primaryKey"`
-	TenantID  string `gorm:"index"`
-	BranchID  string `gorm:"index"`
-	AuthUserID    string `gorm:"uniqueIndex"`
-	Email     string `gorm:"uniqueIndex"`
-	FirstName string
-	LastName  string
-	Name      string
-	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt `gorm:"index"`
+	ID         string `gorm:"primaryKey"`
+	TenantID   string `gorm:"index"`
+	BranchID   string `gorm:"index"`
+	AuthUserID string `gorm:"uniqueIndex"`
+	Email      string
+	FirstName  string
+	LastName   string
+	Name       string
+	UpdatedAt  time.Time
+	DeletedAt  gorm.DeletedAt `gorm:"index"`
 }
 
 type userRepository struct {
@@ -35,18 +35,20 @@ type userRepository struct {
 
 func NewRepository(db *gorm.DB) domain.UserRepository {
 	db.AutoMigrate(&User{})
+	db.Exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_tenant_email ON users(tenant_id, email)")
+
 	return &userRepository{db: db}
 }
 
 func (r *userRepository) Create(ctx context.Context, input *domain.User) error {
 	dbUser := User{
-		ID:        input.ID(),
-		TenantID:  input.TenantID(),
-		BranchID:  input.Branch(),
+		ID:         input.ID(),
+		TenantID:   input.TenantID(),
+		BranchID:   input.Branch(),
 		AuthUserID: input.AuthID(),
-		Email:     input.Email(),
-		FirstName: input.FirstName(),
-		LastName:  input.LastName(),
+		Email:      input.Email(),
+		FirstName:  input.FirstName(),
+		LastName:   input.LastName(),
 	}
 	return r.db.WithContext(ctx).Create(&dbUser).Error
 }

@@ -74,7 +74,10 @@ func (h *TenantHandler) CreateTenant(c *gin.Context) {
 			"name":   input.Name,
 			"err":    err.Error(),
 		})
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create tenant"})
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to create tenant", 
+			"data": err.Error(),
+		})
 		return
 	}
 	h.logger.Info(ctx, "Tenant created successfully", map[string]interface{}{

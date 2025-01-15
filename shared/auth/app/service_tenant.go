@@ -12,7 +12,8 @@ import (
 	"fmt"
 	"strings"
 )
-//TODO:maybe this can be in the tenant feature and remove this auth layer tenant
+
+// TODO:maybe this can be in the tenant feature and remove this auth layer tenant
 func (s *Service) CreateTenant(ctx context.Context, input *command.CreateTenantInput) (id string, err error) {
 	defer func() {
 		if err != nil {
@@ -177,20 +178,6 @@ func (s *Service) createClientPermissions(ctx context.Context, tenanatDomain str
 
 		adminRoles := []string{auth.RoleAdmin, auth.RoleSuperAdmin}
 		for _, scope := range res.scopes {
-			perm := permission.Permission{
-				Name:             fmt.Sprintf("%s-%s-permission", res.name, scope),
-				Description:      fmt.Sprintf("Permission to %s %s", scope, res.name),
-				Type:             permission.TypeScope,
-				Resources:        []string{createdResource.ID},
-				Scopes:           []string{scope},
-				DecisionStrategy: permission.DecisionAffirmative,
-			}
-
-			createdPerm, err := s.permissionProvider.CreatePermission(ctx, tenanatDomain, *client.ID, perm)
-			if err != nil {
-				return fmt.Errorf("failed to create permission for %s-%s: %w", res.name, scope, err)
-			}
-
 			pol := policy.Policy{
 				Name:             fmt.Sprintf("%s-%s-policy", res.name, scope),
 				Description:      fmt.Sprintf("Policy for %s to %s %s", strings.Join(adminRoles, " and "), scope, res.name),
@@ -204,14 +191,26 @@ func (s *Service) createClientPermissions(ctx context.Context, tenanatDomain str
 			if err != nil {
 				return fmt.Errorf("failed to create policy for %s-%s: %w", res.name, scope, err)
 			}
-
-			createdPerm.Policies = []string{createdPolicy.ID}
-			if err = s.permissionProvider.UpdatePermission(ctx, tenanatDomain, *client.ID, *createdPerm); err != nil {
-				return fmt.Errorf("failed to update permission with policy for %s-%s: %w", res.name, scope, err)
+			perm := permission.Permission{
+				Name:             fmt.Sprintf("%s-%s-permission", res.name, scope),
+				Description:      fmt.Sprintf("Permission to %s %s", scope, res.name),
+				Type:             permission.TypeScope,
+				Resources:        []string{createdResource.ID},
+				Scopes:           []string{scope},
+				Policies:         []string{createdPolicy.ID},
+				DecisionStrategy: permission.DecisionAffirmative,
 			}
+
+			_, err = s.permissionProvider.CreatePermission(ctx, tenanatDomain, *client.ID, perm)
+			if err != nil {
+				return fmt.Errorf("failed to create permission for %s-%s: %w", res.name, scope, err)
+			}
+
+			// createdPerm.Policies = []string{createdPolicy.ID}
+			// if err = s.permissionProvider.UpdatePermission(ctx, tenanatDomain, *client.ID, *createdPerm); err != nil {
+			// 	return fmt.Errorf("failed to update permission with policy for %s-%s: %w", res.name, scope, err)
+			// }
 		}
 	}
 	return nil
 }
-
-
