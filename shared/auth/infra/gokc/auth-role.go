@@ -10,7 +10,7 @@ import (
 	"github.com/Nerzal/gocloak/v13"
 )
 
-// CreateTenantRole creates a new role in the specified tenant
+// CreatetRole creates a new role in the specified tenant in the client branchName-service
 func (ks *KeycloakService) CreateRole(ctx context.Context, input *command.CreateRoleInput) (string, error) {
 	token, err := ks.GetValidToken(ctx)
 	if err != nil {
@@ -21,15 +21,15 @@ func (ks *KeycloakService) CreateRole(ctx context.Context, input *command.Create
 		Name:        &input.Name,
 		Description: &input.Description,
 	}
-
-	// if input.Attributes != nil {
-	// 	keycloakRole.Attributes = &role.Attributes
-	// }
-
-	roleID, err := ks.client.CreateRealmRole(
+	client, err := ks.GetClientByClientID(ctx, input.TenantDomain, command.ClientName(input.BranchName))
+	if err != nil {
+		return "", fmt.Errorf("error getting client: %w", err)
+	}
+	roleID, err := ks.client.CreateClientRole(
 		ctx,
 		token.AccessToken,
 		input.TenantDomain,
+		*client.ID,
 		keycloakRole,
 	)
 	if err != nil {
@@ -39,48 +39,19 @@ func (ks *KeycloakService) CreateRole(ctx context.Context, input *command.Create
 	return roleID, nil
 }
 
-// UpdateTenantRole updates an existing role in the specified tenant
-func (ks *KeycloakService) UpdateRole(ctx context.Context, input *command.UpdateRoleInput) error {
-	token, err := ks.GetValidToken(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to get token: %w", err)
-	}
-
-	keycloakRole := gocloak.Role{
-		Name:        &input.Name,
-		Description: &input.Description,
-	}
-
-	// if role.Attributes != nil {
-	// 	keycloakRole.Attributes = &role.Attributes
-	// }
-
-	err = ks.client.UpdateRealmRole(
-		ctx,
-		token.AccessToken,
-		input.TenantDomain,
-		input.Name,
-		keycloakRole,
-	)
-	if err != nil {
-		return fmt.Errorf("failed to update tenant role: %w", err)
-	}
-
-	return nil
-}
-
-// DeleteTenantRole deletes a role from the specified tenant
+// DeleteRole deletes a role from the specified client
 func (ks *KeycloakService) DeleteRole(ctx context.Context, input *command.RoleIDInput) error {
 	token, err := ks.GetValidToken(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to get token: %w", err)
 	}
 
-	err = ks.client.DeleteRealmRole(
+	err = ks.client.DeleteClientRole(
 		ctx,
 		token.AccessToken,
 		input.TenantDomain,
-		input.BranchName,
+		command.ClientName(input.BranchName),
+		input.RoleID,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to delete tenant role: %w", err)
@@ -95,20 +66,25 @@ func (ks *KeycloakService) GetRole(ctx context.Context, input *command.RoleIDInp
 	if err != nil {
 		return nil, fmt.Errorf("failed to get token: %w", err)
 	}
-	role, err := ks.client.GetRealmRole(
+	client, err := ks.GetClientByClientID(ctx, input.TenantDomain, command.ClientName(input.BranchName))
+	if err != nil {
+		return nil, fmt.Errorf("error getting client: %w", err)
+	}
+	role, err := ks.client.GetClientRole(
 		ctx,
 		token.AccessToken,
 		input.TenantDomain,
+		*client.ID,
 		input.RoleID,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get tenant role: %w", err)
+		return nil, fmt.Errorf("failed to get client role: %w", err)
 	}
 
 	return &auth.Role{
+		ID:          *role.ID,
 		Name:        *role.Name,
 		Description: *role.Description,
-		// Attributes:  *role.Attributes,
 	}, nil
 }
 
@@ -119,10 +95,11 @@ func (ks *KeycloakService) GetRoles(ctx context.Context, input *baseCmd.BaseInpu
 		return nil, fmt.Errorf("failed to get token: %w", err)
 	}
 
-	roles, err := ks.client.GetRealmRoles(
+	roles, err := ks.client.GetClientRoles(
 		ctx,
 		token.AccessToken,
 		input.TenantDomain,
+		command.ClientName(input.BranchName),
 		gocloak.GetRoleParams{},
 	)
 	if err != nil {
@@ -132,9 +109,9 @@ func (ks *KeycloakService) GetRoles(ctx context.Context, input *baseCmd.BaseInpu
 	var authRoles []auth.Role
 	for _, role := range roles {
 		authRoles = append(authRoles, auth.Role{
+			ID:          *role.ID,
 			Name:        *role.Name,
 			Description: *role.Description,
-			// Attributes:  *role.Attributes,
 		})
 	}
 
@@ -146,7 +123,8 @@ func (ks *KeycloakService) GetUserRoles(ctx context.Context, input *command.User
 	if err != nil {
 		return nil, fmt.Errorf("failed to get token: %w", err)
 	}
-	realmRoles, err := ks.client.GetRealmRolesByUserID(ctx, token.AccessToken, input.TenantDomain, input.UserID)
+	realmRoles, err := ks.client.GetClientRolesByUserID(ctx, token.AccessToken,
+		input.TenantDomain, command.ClientName(input.BranchName), input.UserID)
 	if err != nil {
 		return nil, fmt.Errorf("error getting realm roles: %v", err)
 	}
@@ -164,15 +142,20 @@ func (ks *KeycloakService) AssignRoles(ctx context.Context, input *command.Assig
 	if err != nil {
 		return fmt.Errorf("failed to get token: %w", err)
 	}
+	client, err := ks.GetClientByClientID(ctx, input.TenantDomain, command.ClientName(input.BranchName))
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
 	addRoles := make([]gocloak.Role, 0)
 	for i := range input.Roles {
-		role, err := ks.client.GetRealmRole(ctx, token.AccessToken, input.TenantDomain, input.Roles[i])
+		role, err := ks.client.GetClientRole(ctx, token.AccessToken, input.TenantDomain, *client.ID, input.Roles[i])
 		if err != nil {
 			return fmt.Errorf("error getting realm role: %v", err)
 		}
 		addRoles = append(addRoles, *role)
 	}
-	err = ks.client.AddRealmRoleToUser(ctx, token.AccessToken, input.TenantDomain, input.UserID, addRoles)
+	err = ks.client.AddClientRolesToUser(ctx, token.AccessToken,
+		input.TenantDomain, *client.ID, input.UserID, addRoles)
 
 	return
 }
@@ -189,6 +172,7 @@ func (ks *KeycloakService) RemoveRoles(ctx context.Context, input *command.Remov
 		}
 		removeRoles = append(removeRoles, *role)
 	}
-	err = ks.client.DeleteRealmRoleFromUser(ctx, token.AccessToken, input.TenantDomain, input.UserID, removeRoles)
+	err = ks.client.DeleteClientRolesFromUser(ctx, token.AccessToken,
+		input.TenantDomain, command.ClientName(input.BranchName), input.UserID, removeRoles)
 	return
 }

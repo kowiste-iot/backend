@@ -1,30 +1,22 @@
 package auth
 
 type Role struct {
+	ID          string
 	Name        string
 	Description string
 }
 
 const (
-	RoleSuperAdmin = "superadmin"
-	RoleAdmin      = "admin"
-	RoleSupervisor = "supervisor"
-	RoleWorker     = "worker"
+	RoleAdmin  = "admin"
+	RoleWorker = "worker"
 )
 
 var DefaultRoles = []Role{
 	{
-		Name:        RoleSuperAdmin,
-		Description: "Super Administrator with full system access",
-	},
-	{
 		Name:        RoleAdmin,
 		Description: "Administrator with tenant management capabilities",
 	},
-	{
-		Name:        RoleSupervisor,
-		Description: "Supervisor with team management capabilities",
-	},
+
 	{
 		Name:        RoleWorker,
 		Description: "Worker with basic access permissions",

@@ -3,23 +3,41 @@ package keycloak
 import (
 	"context"
 	auth "ddd/shared/auth/domain"
+	"ddd/shared/auth/domain/permission"
+	"ddd/shared/auth/domain/policy"
+	"ddd/shared/auth/infra/restkc"
 	"fmt"
 
 	"github.com/Nerzal/gocloak/v13"
 )
 
-func (ks *KeycloakService) CreateClient(ctx context.Context, tenantID string, client auth.Client) (*auth.Client, error) {
+func (ks *KeycloakService) CreateClient(ctx context.Context, tenantDomain string, client auth.Client) (*auth.Client, error) {
 	token, err := ks.GetValidToken(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get token: %w", err)
 	}
 	goClient := ks.convertToGoCloak(client)
-	id, err := ks.client.CreateClient(ctx, token.AccessToken, tenantID, goClient)
+	id, err := ks.client.CreateClient(ctx, token.AccessToken, tenantDomain, goClient)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create client: %w", err)
 	}
-
-	createdClient, err := ks.GetClient(ctx, tenantID, id)
+	if client.Authorization {
+		err = restkc.UpdateClientSettings(ctx, ks.config.Host, token.AccessToken, tenantDomain, id, &restkc.ClientSettings{
+			ID:                            id,
+			ClientID:                      id,
+			Name:                          client.ClientID,
+			AllowRemoteResourceManagement: true,
+			PolicyEnforcementMode:         policy.Enforcing,
+			Resources:                     []string{},
+			Policies:                      []string{},
+			Scopes:                        []string{},
+			DecisionStrategy:              permission.DecisionAffirmative,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to set authorization client: %w", err)
+		}
+	}
+	createdClient, err := ks.GetClient(ctx, tenantDomain, id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get created client: %w", err)
 	}
@@ -182,6 +200,7 @@ func (ks *KeycloakService) convertToGoCloak(client auth.Client) gocloak.Client {
 		AuthorizationServicesEnabled: &client.AuthorizationEnabled,
 		ServiceAccountsEnabled:       &client.ServiceAccountEnabled,
 	}
+
 	if client.ID != nil {
 		data.ID = client.ID
 	}

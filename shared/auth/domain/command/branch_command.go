@@ -1,6 +1,9 @@
 package command
 
-import "ddd/shared/base/command"
+import (
+	"ddd/shared/base/command"
+	"fmt"
+)
 
 type CreateBranchInput struct {
 	TenantID    string
@@ -13,10 +16,13 @@ type UpdateBranchInput struct {
 	ID          string
 	Name        string
 	Description string
-	
 }
 
-type UserToBranch struct{
+type UserToBranch struct {
 	command.BaseInput
 	UserID string
+}
+
+func ClientName(branchName string) string {
+	return fmt.Sprintf("%s-service", branchName)
 }

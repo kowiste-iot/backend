@@ -2,10 +2,6 @@ package auth
 
 import "context"
 
-const (
-	BackendClient = "backend-service"
-)
-
 type ClientProvider interface {
 	CreateClient(ctx context.Context, tenantID string, client Client) (*Client, error)
 	UpdateClient(ctx context.Context, tenantID string, client Client) error
@@ -46,4 +42,5 @@ type Client struct {
 	OptionalClientScopes      []string          `json:"optionalClientScopes"`
 	AuthorizationEnabled      bool              `json:"authorizationEnabled"`
 	ServiceAccountEnabled     bool              `json:"serviceAccountEnabled"`
+	Authorization             bool              `json:"authorization"`
 }

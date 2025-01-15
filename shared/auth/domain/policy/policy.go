@@ -3,7 +3,8 @@ package policy
 import "context"
 
 const (
-	TypeRole string = "role"
+	TypeRole  string = "role"
+	Enforcing string = "ENFORCING"
 )
 
 type Policy struct {

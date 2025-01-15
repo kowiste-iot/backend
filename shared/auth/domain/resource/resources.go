@@ -5,10 +5,10 @@ import (
 )
 
 const (
-	Asset  = "asset-management"
+	Asset  = "asset-resource"
 	Tenant = "tenant-management"
 	Branch = "branch-management"
-	User   = "user-management"
+	User   = "user-resource"
 	Role   = "role-management"
 )
 

@@ -27,14 +27,6 @@ func (s *Service) CreateRole(ctx context.Context, input *command.CreateRoleInput
 	return s.tenantProvider.CreateRole(ctx, input)
 }
 
-// UpdateRole updates an existing role for a tenant
-func (s *Service) UpdateRole(ctx context.Context, input *command.UpdateRoleInput) error {
-	if s.isDefaultRole(input.Name) {
-		return fmt.Errorf("cannot update default role: %s", input.Name)
-	}
-	return s.tenantProvider.UpdateRole(ctx, input)
-}
-
 // DeleteRole deletes a role from a tenant
 func (s *Service) DeleteRole(ctx context.Context, input *command.RoleIDInput) error {
 	if s.isDefaultRole(input.RoleID) {

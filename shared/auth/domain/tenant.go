@@ -22,7 +22,6 @@ type TenantProvider interface {
 
 	// Role management methods
 	CreateRole(ctx context.Context, input *authCmd.CreateRoleInput) (string, error)
-	UpdateRole(ctx context.Context, input *authCmd.UpdateRoleInput) error
 	DeleteRole(ctx context.Context, input *authCmd.RoleIDInput) error
 	GetRole(ctx context.Context, input *authCmd.RoleIDInput) (*Role, error)
 	GetRoles(ctx context.Context, input *command.BaseInput) ([]Role, error)

@@ -10,10 +10,8 @@ import (
 	"ddd/shared/auth/domain/scope"
 	baseCmd "ddd/shared/base/command"
 	"fmt"
-	"strings"
 )
 
-// TODO:maybe this can be in the tenant feature and remove this auth layer tenant
 func (s *Service) CreateTenant(ctx context.Context, input *command.CreateTenantInput) (id string, err error) {
 	defer func() {
 		if err != nil {
@@ -37,20 +35,9 @@ func (s *Service) CreateTenant(ctx context.Context, input *command.CreateTenantI
 	if err != nil {
 		return
 	}
-	// Create default roles
-	for _, role := range auth.DefaultRoles {
-		input := command.CreateRoleInput{
-			BaseInput:   baseCmd.NewInput(tenant.Domain, ""),
-			Name:        role.Name,
-			Description: role.Description,
-		}
-		_, err = s.tenantProvider.CreateRole(ctx, &input)
-		if err != nil {
-			return
-		}
-	}
 
-	err = s.createTenantClients(ctx, id)
+	i := baseCmd.NewInput(tenant.Domain, input.DefaultBranch)
+	err = s.createTenantClients(ctx, &i)
 	if err != nil {
 		return
 	}
@@ -58,9 +45,9 @@ func (s *Service) CreateTenant(ctx context.Context, input *command.CreateTenantI
 	return
 }
 
-func (s *Service) createTenantClients(ctx context.Context, tenanatDomain string) (err error) {
+func (s *Service) createTenantClients(ctx context.Context, input *baseCmd.BaseInput) (err error) {
 	//TODO: move struct inside keycloak implementation here still dont need to know about kc implementation
-	_, err = s.clientProvider.CreateClient(ctx, tenanatDomain, auth.Client{
+	_, err = s.clientProvider.CreateClient(ctx, input.TenantDomain, auth.Client{
 		ClientID:                  "vue-client",
 		ClientAuthenticatorType:   "client-secret",
 		RedirectURIs:              []string{"http://localhost:5173/*"},
@@ -98,10 +85,10 @@ func (s *Service) createTenantClients(ctx context.Context, tenanatDomain string)
 		return
 	}
 	//backend client
-	client, err := s.clientProvider.CreateClient(ctx, tenanatDomain, auth.Client{
-		ClientID:                  auth.BackendClient,
-		Name:                      "Backend Service",
-		Description:               "Backend API Service",
+	client, err := s.clientProvider.CreateClient(ctx, input.TenantDomain, auth.Client{
+		ClientID:                  command.ClientName(input.BranchName),
+		Name:                      input.BranchName + " Service",
+		Description:               input.BranchName + " Backend API Service",
 		RootURL:                   "http://localhost:8080",
 		AdminURL:                  "http://localhost:8080",
 		ClientAuthenticatorType:   "client-secret",
@@ -131,18 +118,38 @@ func (s *Service) createTenantClients(ctx context.Context, tenanatDomain string)
 			"offline_access",
 			"microprofile-jwt",
 		},
+		Authorization: true,
 	})
 	if err != nil {
 		return
 	}
-	err = s.createClientPermissions(ctx, tenanatDomain, client)
+	err = s.createRoles(ctx, input)
+	if err != nil {
+		return
+	}
+
+	err = s.createClientPermissions(ctx, input, client)
 	return
 }
-
-func (s *Service) createClientPermissions(ctx context.Context, tenanatDomain string, client *auth.Client) (err error) {
+func (s Service) createRoles(ctx context.Context, input *baseCmd.BaseInput) (err error) {
+	// Create default roles
+	for _, role := range auth.DefaultRoles {
+		input := command.CreateRoleInput{
+			BaseInput:   *input,
+			Name:        role.Name,
+			Description: role.Description,
+		}
+		_, err = s.tenantProvider.CreateRole(ctx, &input)
+		if err != nil {
+			return
+		}
+	}
+	return
+}
+func (s *Service) createClientPermissions(ctx context.Context, input *baseCmd.BaseInput, client *auth.Client) (err error) {
 
 	for _, scName := range []string{scope.View, scope.Create, scope.Update, scope.Delete} {
-		_, err := s.scopeProvider.CreateScope(ctx, tenanatDomain, *client.ID, scope.Scope{
+		_, err := s.scopeProvider.CreateScope(ctx, input.TenantDomain, *client.ID, scope.Scope{
 			Name:        scName,
 			DisplayName: scName,
 		})
@@ -165,9 +172,34 @@ func (s *Service) createClientPermissions(ctx context.Context, tenanatDomain str
 			scopes: []string{scope.View, scope.Create, scope.Update, scope.Delete},
 		},
 	}
+	//Create policy 1 for each role
+	policies := make(map[string]*policy.Policy)
+	for _, role := range auth.DefaultRoles {
+		r, err := s.tenantProvider.GetRole(ctx, &command.RoleIDInput{
+			BaseInput: baseCmd.NewInput(input.TenantDomain, input.BranchName),
+			RoleID:    role.Name,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to get role: %w", err)
+		}
+		pol := policy.Policy{
+			Name:             fmt.Sprintf("%s-policy", role.Name),
+			Description:      fmt.Sprintf("Policy for %s ", role.Name),
+			Type:             permission.TypeRole,
+			Roles:            []string{r.ID},
+			Logic:            permission.LogicPositive,
+			DecisionStrategy: permission.DecisionAffirmative,
+		}
 
+		createdPolicy, err := s.policyProvider.CreatePolicy(ctx, input.TenantDomain, *client.ID, pol)
+		if err != nil {
+			return fmt.Errorf("failed to create policy for %s-%s: %w", role.Name, err)
+		}
+		policies[role.Name] = createdPolicy
+	}
 	for _, res := range resources {
-		createdResource, err := s.resourceProvider.CreateResource(ctx, tenanatDomain, *client.ID, resource.Resource{
+		//Create resource
+		createdResource, err := s.resourceProvider.CreateResource(ctx, input.TenantDomain, *client.ID, resource.Resource{
 			Name:        res.name,
 			DisplayName: res.name,
 			Scopes:      res.scopes,
@@ -175,42 +207,28 @@ func (s *Service) createClientPermissions(ctx context.Context, tenanatDomain str
 		if err != nil {
 			return fmt.Errorf("failed to create resource %s: %w", res.name, err)
 		}
-
-		adminRoles := []string{auth.RoleAdmin, auth.RoleSuperAdmin}
-		for _, scope := range res.scopes {
-			pol := policy.Policy{
-				Name:             fmt.Sprintf("%s-%s-policy", res.name, scope),
-				Description:      fmt.Sprintf("Policy for %s to %s %s", strings.Join(adminRoles, " and "), scope, res.name),
-				Type:             permission.TypeRole,
-				Roles:            adminRoles,
-				Logic:            permission.LogicPositive,
-				DecisionStrategy: permission.DecisionAffirmative,
+		for _, role := range auth.DefaultRoles {
+			sc := []string{scope.View}
+			if role.Name != auth.RoleWorker {
+				sc = append(sc, []string{scope.Create, scope.Update, scope.Delete}...)
 			}
-
-			createdPolicy, err := s.policyProvider.CreatePolicy(ctx, tenanatDomain, *client.ID, pol)
-			if err != nil {
-				return fmt.Errorf("failed to create policy for %s-%s: %w", res.name, scope, err)
-			}
+			p := policies[role.Name]
 			perm := permission.Permission{
-				Name:             fmt.Sprintf("%s-%s-permission", res.name, scope),
-				Description:      fmt.Sprintf("Permission to %s %s", scope, res.name),
+				Name:             fmt.Sprintf("%s-%s-permission", role.Name, res.name),
+				Description:      fmt.Sprintf("Permission for %s resource with %s role", res.name, role.Name),
 				Type:             permission.TypeScope,
 				Resources:        []string{createdResource.ID},
-				Scopes:           []string{scope},
-				Policies:         []string{createdPolicy.ID},
+				Scopes:           sc,
+				Policies:         []string{p.ID},
 				DecisionStrategy: permission.DecisionAffirmative,
 			}
 
-			_, err = s.permissionProvider.CreatePermission(ctx, tenanatDomain, *client.ID, perm)
+			_, err = s.permissionProvider.CreatePermission(ctx, input.TenantDomain, *client.ID, perm)
 			if err != nil {
-				return fmt.Errorf("failed to create permission for %s-%s: %w", res.name, scope, err)
+				return fmt.Errorf("failed to create permission for %s %s: %w", res.name, role.Name, err)
 			}
-
-			// createdPerm.Policies = []string{createdPolicy.ID}
-			// if err = s.permissionProvider.UpdatePermission(ctx, tenanatDomain, *client.ID, *createdPerm); err != nil {
-			// 	return fmt.Errorf("failed to update permission with policy for %s-%s: %w", res.name, scope, err)
-			// }
 		}
+
 	}
 	return nil
 }
