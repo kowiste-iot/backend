@@ -80,32 +80,40 @@ func (s tenantService) CreateTenant(ctx context.Context, input *command.CreateTe
 		Name:         input.Branch,
 		Description:  "Default Branch",
 	}
-	_, err = s.branch.CreateBranch(ctx, &b)
+	createdBranch, err := s.branch.CreateBranch(ctx, &b)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create default branch: %w", err)
 	}
 	// Create Admin user
-	//TODO: need to think how to manage this user so he can see anything and make branch .....
-	//	maybe we shoudl create a admin group in every tenant so the users that are there can create branch...?
 	u := userCmd.CreateUserInput{
 		BaseInput: baseCmd.NewInput(tenant.Domain(), input.Branch),
 		Email:     input.AdminEmail,
 		FirstName: "admin",
-		LastName:  "",
+		LastName:  "user",
 		Roles:     []string{auth.RoleAdmin},
 	}
-	userID, err := s.user.CreateUser(ctx, &u)
+	user, err := s.user.CreateUser(ctx, &u)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create default branch: %w", err)
 	}
+	//Assign role
 	r := authCmd.AssignRolesInput{
 		BaseInput: baseCmd.NewInput(tenant.Domain(), b.Name),
-		UserID:    userID.AuthID(),
+		UserID:    user.AuthID(),
 		Roles:     []string{auth.RoleAdmin},
 	}
 	err = s.auth.AssignRoles(ctx, &r)
 	if err != nil {
 		return nil, fmt.Errorf("failed to assign default roles: %w", err)
+	}
+	//Assign to branch
+	ub := authCmd.UserToBranch{
+		BaseInput: baseCmd.NewInput(tenant.Domain(), createdBranch.AuthBranchID()),
+		UserID:    user.AuthID(),
+	}
+	err = s.auth.AssignUserToBranch(ctx, &ub)
+	if err != nil {
+		return nil, fmt.Errorf("failed to assign admin to branch: %w", err)
 	}
 	//save in repo
 	if err := s.repo.Create(ctx, tenant); err != nil {
