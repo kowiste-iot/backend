@@ -1,9 +1,9 @@
 package command
 
-//TODO: add client.ID to this base is neccesary in a lot of places
 type BaseInput struct {
 	TenantDomain string `validate:"required,uuidv7"`
 	BranchName   string `validate:"required,uuidv7"`
+	ClientID     string
 }
 
 func NewInput(tenant, branch string) BaseInput {
@@ -11,4 +11,9 @@ func NewInput(tenant, branch string) BaseInput {
 		TenantDomain: tenant,
 		BranchName:   branch,
 	}
+}
+
+func (b *BaseInput) WithClientID(id string) BaseInput {
+	b.ClientID = id
+	return *b
 }

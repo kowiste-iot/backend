@@ -12,13 +12,13 @@ import (
 	"fmt"
 )
 
-func (s *Service) CreateTenant(ctx context.Context, input *command.CreateTenantInput) (id string, err error) {
+func (s *Service) CreateTenant(ctx context.Context, input *command.CreateTenantInput) (tenant *auth.Tenant, err error) {
 	defer func() {
 		if err != nil {
-			s.tenantProvider.DeleteTenant(ctx, id)
+			s.tenantProvider.DeleteTenant(ctx, tenant.ID)
 		}
 	}()
-	tenant := &auth.Tenant{
+	tenant = &auth.Tenant{
 		Name:     input.Name,
 		Domain:   input.Domain,
 		Settings: auth.TenantSettings{},
@@ -27,11 +27,11 @@ func (s *Service) CreateTenant(ctx context.Context, input *command.CreateTenantI
 		},
 	}
 
-	id, err = s.tenantProvider.CreateTenant(ctx, tenant)
+	tenant.Domain, err = s.tenantProvider.CreateTenant(ctx, tenant)
 	if err != nil {
 		return
 	}
-	tenant, err = s.tenantProvider.GetTenant(ctx, id)
+	tenant, err = s.tenantProvider.GetTenant(ctx, tenant.Domain)
 	if err != nil {
 		return
 	}

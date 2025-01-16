@@ -3,11 +3,13 @@ package base
 import (
 	"context"
 	auth "ddd/shared/auth/domain"
+	authCmd "ddd/shared/auth/domain/command"
+	"ddd/shared/base/command"
 	"ddd/shared/http/httputil"
+	"fmt"
 
 	"ddd/shared/logger"
 	"errors"
-	"fmt"
 )
 
 type BaseService struct {
@@ -15,17 +17,13 @@ type BaseService struct {
 	Auth   auth.AuthProvider
 }
 
-func (b *BaseService) CheckPermission(c context.Context, resource string, scope string) (err error) {
-	token, ok := httputil.GetToken(c)
+func (b *BaseService) CheckPermission(ctx context.Context, input *command.CheckPermissionInput) (err error) {
+	token, ok := httputil.GetToken(ctx)
 	if !ok {
-		return errors.New("token not found")
+		return fmt.Errorf("not token present")
 	}
-	branch, ok := httputil.GetBranch(c)
-	if !ok {
-		return errors.New("branch not found")
-	}
-	branchClient := fmt.Sprintf("%s-service", branch)
-	hasPermission, err := b.Auth.ValidatePermissionUser(c, token, branchClient, resource, scope)
+	hasPermission, err := b.Auth.ValidatePermissionUser(ctx, token,
+		authCmd.ClientName(input.BranchName), input.Resource, input.Scope)
 	if err != nil {
 		return err
 	}

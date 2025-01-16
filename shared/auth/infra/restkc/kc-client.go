@@ -2,7 +2,6 @@ package restkc
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/go-resty/resty/v2"
@@ -33,24 +32,22 @@ type ClientSettings struct {
 // }
 //"http://localhost:7080/auth/auth/admin/realms/%s/clients/%s/authz/resource-server"
 
-// {
-//   "id": "7de4f407-1509-4f99-92d3-45bdf23d39c5",
-//   "clientId": "7de4f407-1509-4f99-92d3-45bdf23d39c5",
-//   "name": "main-service",
-//   "allowRemoteResourceManagement": true,
-//   "policyEnforcementMode": "ENFORCING",
-//   "resources": [],
-//   "policies": [],
-//   "scopes": [],
-//   "decisionStrategy": "AFFIRMATIVE"
-// }
+//	{
+//	  "id": "7de4f407-1509-4f99-92d3-45bdf23d39c5",
+//	  "clientId": "7de4f407-1509-4f99-92d3-45bdf23d39c5",
+//	  "name": "main-service",
+//	  "allowRemoteResourceManagement": true,
+//	  "policyEnforcementMode": "ENFORCING",
+//	  "resources": [],
+//	  "policies": [],
+//	  "scopes": [],
+//	  "decisionStrategy": "AFFIRMATIVE"
+//	}
 func UpdateClientSettings(ctx context.Context, url, token, tenantID, IDofClient string, p *ClientSettings) error {
 	baseURL := url + "/admin/realms/%s/clients/%s/authz/resource-server"
 	endpoint := fmt.Sprintf(baseURL, tenantID, IDofClient)
 
 	client := resty.New()
-	b, _ := json.MarshalIndent(p, "", "  ")
-	fmt.Println(string(b))
 	// No need to set result since the response is empty (204 No Content)
 	resp, err := client.R().
 		SetContext(ctx).

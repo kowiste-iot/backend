@@ -7,7 +7,7 @@ import (
 	"ddd/shared/auth/domain/resource"
 	"ddd/shared/auth/domain/scope"
 	"ddd/shared/base"
-	baseCmd"ddd/shared/base/command"
+	baseCmd "ddd/shared/base/command"
 	"errors"
 	"fmt"
 )
@@ -30,23 +30,27 @@ func NewService(base *base.BaseService, repo domain.AssetRepository) AssetServic
 		BaseService: base,
 	}
 }
-func (s *assetService) CreateAsset(ctx context.Context, cmd *command.CreateAssetInput) (*domain.Asset, error) {
-	err := s.CheckPermission(ctx, resource.Asset, scope.Create)
+func (s *assetService) CreateAsset(ctx context.Context, input *command.CreateAssetInput) (*domain.Asset, error) {
+	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
+		BaseInput: input.BaseInput,
+		Resource:  resource.Asset,
+		Scope:     scope.Create,
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	asset, err := domain.New(cmd.TenantDomain, cmd.BranchName, cmd.Name, cmd.Description)
+	asset, err := domain.New(input.TenantDomain, input.BranchName, input.Name, input.Description)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create asset: %w", err)
 	}
-	if cmd.Parent != "" {
-		asset.WithParent(cmd.Parent)
+	if input.Parent != "" {
+		asset.WithParent(input.Parent)
 	}
 	err = s.repo.Create(ctx, &command.CreateAssetInput{
 		BaseInput: baseCmd.BaseInput{
-			TenantDomain: cmd.TenantDomain,
-			BranchName: cmd.BranchName,
+			TenantDomain: input.TenantDomain,
+			BranchName:   input.BranchName,
 		},
 		ID:          asset.ID(),
 		Name:        asset.Name(),
@@ -61,7 +65,11 @@ func (s *assetService) CreateAsset(ctx context.Context, cmd *command.CreateAsset
 }
 
 func (s *assetService) GetAsset(ctx context.Context, input *command.AssetIDInput) (*domain.Asset, error) {
-	err := s.CheckPermission(ctx, resource.Asset, scope.View)
+	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
+		BaseInput: input.BaseInput,
+		Resource:  resource.Asset,
+		Scope:     scope.View,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +81,11 @@ func (s *assetService) GetAsset(ctx context.Context, input *command.AssetIDInput
 }
 
 func (s *assetService) ListAssets(ctx context.Context, input *baseCmd.BaseInput) ([]*domain.Asset, error) {
-	err := s.CheckPermission(ctx, resource.Asset, scope.View)
+	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
+		BaseInput: *input,
+		Resource:  resource.Asset,
+		Scope:     scope.View,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -84,29 +96,30 @@ func (s *assetService) ListAssets(ctx context.Context, input *baseCmd.BaseInput)
 	return assets, nil
 }
 
-func (s *assetService) UpdateAsset(ctx context.Context, cmd *command.UpdateAssetInput) (*domain.Asset, error) {
-	err := s.CheckPermission(ctx, resource.Asset, scope.Update)
+func (s *assetService) UpdateAsset(ctx context.Context, input *command.UpdateAssetInput) (*domain.Asset, error) {
+	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
+		BaseInput: input.BaseInput,
+		Resource:  resource.Asset,
+		Scope:     scope.Update,
+	})
 	if err != nil {
 		return nil, err
 	}
 	asset, err := s.repo.FindByID(ctx, &command.AssetIDInput{
-		BaseInput: baseCmd.BaseInput{
-			TenantDomain: cmd.TenantDomain,
-			BranchName: cmd.BranchName,
-		},
-		AssetID: cmd.ID,
+		BaseInput: input.BaseInput,
+		AssetID:   input.ID,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get asset: %w", err)
 	}
-	err = asset.Update(cmd.Name, cmd.Parent, cmd.Description)
+	err = asset.Update(input.Name, input.Parent, input.Description)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get asset: %w", err)
 	}
 	if err := s.repo.Update(ctx, &command.UpdateAssetInput{
 		BaseInput: baseCmd.BaseInput{
-			TenantDomain: cmd.TenantDomain,
-			BranchName: cmd.BranchName,
+			TenantDomain: input.TenantDomain,
+			BranchName:   input.BranchName,
 		},
 		ID:          asset.ID(),
 		Name:        asset.Name(),
@@ -119,7 +132,12 @@ func (s *assetService) UpdateAsset(ctx context.Context, cmd *command.UpdateAsset
 	return asset, nil
 }
 func (s *assetService) DeleteAsset(ctx context.Context, input *command.AssetIDInput) error {
-	err := s.CheckPermission(ctx, resource.Asset, scope.Delete)
+
+	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
+		BaseInput: input.BaseInput,
+		Resource:  resource.Asset,
+		Scope:     scope.Delete,
+	})
 	if err != nil {
 		return err
 	}

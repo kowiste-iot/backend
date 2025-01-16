@@ -86,7 +86,7 @@ func TestNew(t *testing.T) {
 			require.NoError(t, err)
 			assert.NotEmpty(t, asset.ID())
 			assert.Equal(t, tt.tenantID, asset.TenantID())
-			assert.Equal(t, tt.branchID, asset.branchID)
+			assert.Equal(t, tt.branchID, asset.branchName)
 			assert.Equal(t, tt.assetName, asset.Name())
 			assert.Equal(t, tt.description, asset.Description())
 			assert.False(t, asset.IsDeleted())
@@ -110,7 +110,7 @@ func TestNewFromRepository(t *testing.T) {
 
 	assert.Equal(t, id, asset.ID())
 	assert.Equal(t, tenantID, asset.TenantID())
-	assert.Equal(t, branchID, asset.branchID)
+	assert.Equal(t, branchID, asset.branchName)
 	assert.Equal(t, name, asset.Name())
 	assert.Equal(t, description, asset.Description())
 	assert.Equal(t, &parent, asset.Parent())

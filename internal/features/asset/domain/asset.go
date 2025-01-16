@@ -11,7 +11,7 @@ import (
 type Asset struct {
 	id          string
 	tenantID    string
-	branchID    string
+	branchName  string
 	name        string
 	parent      *string
 	description string
@@ -21,7 +21,7 @@ type Asset struct {
 type assetValidation struct {
 	ID          string     `validate:"required,uuidv7"`
 	TenantID    string     `validate:"required,uuidv7"`
-	BranchID    string     `validate:"required,uuidv7"`
+	BranchName  string     `validate:"required"`
 	Name        string     `validate:"required,min=3,max=255"`
 	Parent      *string    `validate:"omitempty,uuidv7"`
 	Description string     `validate:"omitempty,min=3,max=512"`
@@ -29,7 +29,7 @@ type assetValidation struct {
 	DeletedAt   *time.Time `validate:"omitempty"`
 }
 
-func New(tenantID, branchID, name, description string) (asset *Asset, err error) {
+func New(tenantID, branchName, name, description string) (asset *Asset, err error) {
 
 	id, err := uuid.NewV7()
 	if err != nil {
@@ -37,7 +37,7 @@ func New(tenantID, branchID, name, description string) (asset *Asset, err error)
 	}
 	asset = &Asset{
 		id:          id.String(),
-		branchID:    branchID,
+		branchName:  branchName,
 		tenantID:    tenantID,
 		name:        name,
 		description: description,
@@ -47,7 +47,7 @@ func New(tenantID, branchID, name, description string) (asset *Asset, err error)
 	err = validator.Validate(assetValidation{
 		ID:          asset.id,
 		TenantID:    asset.tenantID,
-		BranchID:    asset.branchID,
+		BranchName:  asset.branchName,
 		Name:        asset.name,
 		Parent:      asset.parent,
 		Description: asset.description,
@@ -58,11 +58,11 @@ func New(tenantID, branchID, name, description string) (asset *Asset, err error)
 	return
 }
 
-func NewFromRepository(id, tenantID, branchID, name, description string, parent *string, updatedAt time.Time, deletedAt *time.Time) *Asset {
+func NewFromRepository(id, tenantID, branchName, name, description string, parent *string, updatedAt time.Time, deletedAt *time.Time) *Asset {
 	return &Asset{
 		id:          id,
 		tenantID:    tenantID,
-		branchID:    branchID,
+		branchName:  branchName,
 		name:        name,
 		parent:      parent,
 		description: description,
@@ -82,7 +82,7 @@ func (a *Asset) Update(name, parent, description string) (err error) {
 	return validator.Validate(assetValidation{
 		ID:          a.id,
 		TenantID:    a.tenantID,
-		BranchID:    a.branchID,
+		BranchName:    a.branchName,
 		Name:        a.name,
 		Parent:      a.parent,
 		Description: a.description,
@@ -104,7 +104,7 @@ func (a *Asset) IsDeleted() bool {
 // Getters
 func (a *Asset) ID() string            { return a.id }
 func (a *Asset) TenantID() string      { return a.tenantID }
-func (a *Asset) BranchID() string      { return a.branchID }
+func (a *Asset) BranchName() string      { return a.branchName }
 func (a *Asset) Name() string          { return a.name }
 func (a *Asset) Parent() *string       { return a.parent }
 func (a *Asset) Description() string   { return a.description }

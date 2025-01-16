@@ -247,7 +247,7 @@ func (h *TenantHandler) TenantIDMiddleware() gin.HandlerFunc {
 		}
 		tenant, err := h.tenantService.GetTenant(c.Request.Context(), tenantID)
 		if err != nil {
-			httputil.NewErrorResponse(c, errors.NewBadRequest("Tenant ID not found", nil))
+			httputil.NewErrorResponse(c, errors.NewBadRequest("Tenant ID not found", err))
 			c.Abort()
 			return
 		}

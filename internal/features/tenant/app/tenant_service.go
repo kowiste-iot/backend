@@ -9,8 +9,6 @@ import (
 	appAuth "ddd/shared/auth/app"
 	auth "ddd/shared/auth/domain"
 	authCmd "ddd/shared/auth/domain/command"
-	"ddd/shared/auth/domain/resource"
-	"ddd/shared/auth/domain/scope"
 	"ddd/shared/base"
 	baseCmd "ddd/shared/base/command"
 	"ddd/shared/validator"
@@ -71,11 +69,11 @@ func (s tenantService) CreateTenant(ctx context.Context, input *command.CreateTe
 		DefaultBranch: input.Branch,
 	}
 	//create keycloak realm
-	id, err := s.auth.CreateTenant(ctx, &i)
+	createdTenant, err := s.auth.CreateTenant(ctx, &i)
 	if err != nil {
 		return nil, err
 	}
-	tenant.SetAuthID(id)
+	tenant.SetAuthID(createdTenant.ID)
 	//Create default branch
 	b := command.CreateBranchInput{
 		TenantDomain: tenant.Domain(),
@@ -118,10 +116,10 @@ func (s tenantService) CreateTenant(ctx context.Context, input *command.CreateTe
 }
 
 func (s *tenantService) GetTenant(ctx context.Context, tenantID string) (*domain.Tenant, error) {
-	err := s.CheckPermission(ctx, resource.Tenant, scope.View)
-	if err != nil {
-		return nil, err
-	}
+	// err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{} resource.Tenant, scope.View)
+	// if err != nil {
+	// 	return nil, err
+	// }
 	tenant, err := s.repo.FindByID(ctx, tenantID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get tenant: %w", err)
@@ -130,10 +128,10 @@ func (s *tenantService) GetTenant(ctx context.Context, tenantID string) (*domain
 }
 
 func (s *tenantService) ListTenants(ctx context.Context) ([]*domain.Tenant, error) {
-	err := s.CheckPermission(ctx, resource.Tenant, scope.View)
-	if err != nil {
-		return nil, err
-	}
+	// err := s.CheckPermission(ctx, resource.Tenant, scope.View)
+	// if err != nil {
+	// 	return nil, err
+	// }
 	tenants, err := s.repo.FindAll(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list assets: %w", err)
@@ -142,10 +140,10 @@ func (s *tenantService) ListTenants(ctx context.Context) ([]*domain.Tenant, erro
 }
 
 func (s *tenantService) UpdateTenant(ctx context.Context, cmd *command.UpdateTenantInput) (*domain.Tenant, error) {
-	err := s.CheckPermission(ctx, resource.Tenant, scope.Update)
-	if err != nil {
-		return nil, err
-	}
+	// err := s.CheckPermission(ctx, resource.Tenant, scope.Update)
+	// if err != nil {
+	// 	return nil, err
+	// }
 	tenant, err := s.repo.FindByID(ctx, cmd.ID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get tenant: %w", err)
@@ -161,10 +159,10 @@ func (s *tenantService) UpdateTenant(ctx context.Context, cmd *command.UpdateTen
 	return tenant, nil
 }
 func (s *tenantService) DeleteTenant(ctx context.Context, tenantID string) error {
-	err := s.CheckPermission(ctx, resource.Tenant, scope.Delete)
-	if err != nil {
-		return err
-	}
+	// err := s.CheckPermission(ctx, resource.Tenant, scope.Delete)
+	// if err != nil {
+	// 	return err
+	// }
 	has, err := s.repo.HasChildren(ctx, tenantID)
 	if err != nil {
 		return err

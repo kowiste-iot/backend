@@ -56,7 +56,11 @@ func (s *userService) CreateUser(ctx context.Context, input *command.CreateUserI
 }
 
 func (s *userService) GetUser(ctx context.Context, input *command.UserIDInput) (*domain.User, error) {
-	err := s.CheckPermission(ctx, resource.User, scope.View)
+	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
+		BaseInput: input.BaseInput,
+		Resource:  resource.User,
+		Scope:     scope.View,
+	})
 	if err != nil {
 		return nil, err
 	}
