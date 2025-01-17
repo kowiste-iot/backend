@@ -41,7 +41,27 @@ func (ks *KeycloakService) CreateClient(ctx context.Context, tenantDomain string
 	if err != nil {
 		return nil, fmt.Errorf("failed to get created client: %w", err)
 	}
-
+	if !client.Authorization {
+		//add info group and roles to the tokens
+		mapper := restkc.ProtocolMapper{
+			Protocol:       "openid-connect",
+			ProtocolMapper: "oidc-group-membership-mapper",
+			Name:           "user groups",
+			Config: restkc.ProtocolMapperConfig{
+				ClaimName:               "branch",
+				FullPath:                "true",
+				IDTokenClaim:            "true",
+				AccessTokenClaim:        "true",
+				LightweightClaim:        "false",
+				UserinfoTokenClaim:      "true",
+				IntrospectionTokenClaim: "true",
+			},
+		}
+		err = restkc.CreateProtocolMapper(ctx, ks.config.Host, token.AccessToken, tenantDomain, *createdClient.ID, mapper)
+		if err != nil {
+			return nil, fmt.Errorf("failed to set client mapper: %w", err)
+		}
+	}
 	return createdClient, nil
 }
 
