@@ -42,7 +42,7 @@ func validateRoles(fl validator.FieldLevel) bool {
 	}
 
 	for _, role := range roles {
-		if !slices.ContainsFunc(auth.DefaultRoles, func(r auth.Role) bool {
+		if !slices.ContainsFunc(auth.DefaultRoles(), func(r auth.Role) bool {
 			return r.Name == role
 		}) {
 			return false

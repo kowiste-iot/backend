@@ -11,8 +11,9 @@ const (
 	RoleWorker = "worker"
 )
 
-var DefaultRoles = []Role{
-	{
+func DefaultRoles () []Role{
+	return[]Role{
+		{
 		Name:        RoleAdmin,
 		Description: "Administrator with tenant management capabilities",
 	},
@@ -20,11 +21,13 @@ var DefaultRoles = []Role{
 	{
 		Name:        RoleWorker,
 		Description: "Worker with basic access permissions",
-	},
+	},	
+	}
+
 }
 
 func (r Role) IsDefaultRole() bool {
-	for _, defaultRole := range DefaultRoles {
+	for _, defaultRole := range DefaultRoles() {
 		if r.Name == defaultRole.Name {
 			return true
 		}

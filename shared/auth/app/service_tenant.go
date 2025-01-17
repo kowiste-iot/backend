@@ -133,7 +133,7 @@ func (s *Service) createTenantClients(ctx context.Context, input *baseCmd.BaseIn
 }
 func (s Service) createRoles(ctx context.Context, input *baseCmd.BaseInput) (err error) {
 	// Create default roles
-	for _, role := range auth.DefaultRoles {
+	for _, role := range auth.DefaultRoles() {
 		input := command.CreateRoleInput{
 			BaseInput:   *input,
 			Name:        role.Name,
@@ -174,7 +174,7 @@ func (s *Service) createClientPermissions(ctx context.Context, input *baseCmd.Ba
 	}
 	//Create policy 1 for each role
 	policies := make(map[string]*policy.Policy)
-	for _, role := range auth.DefaultRoles {
+	for _, role := range auth.DefaultRoles() {
 		r, err := s.tenantProvider.GetRole(ctx, &command.RoleIDInput{
 			BaseInput: baseCmd.NewInput(input.TenantDomain, input.BranchName),
 			RoleID:    role.Name,
@@ -207,7 +207,7 @@ func (s *Service) createClientPermissions(ctx context.Context, input *baseCmd.Ba
 		if err != nil {
 			return fmt.Errorf("failed to create resource %s: %w", res.name, err)
 		}
-		for _, role := range auth.DefaultRoles {
+		for _, role := range auth.DefaultRoles() {
 			sc := []string{scope.View}
 			if role.Name != auth.RoleWorker {
 				sc = append(sc, []string{scope.Create, scope.Update, scope.Delete}...)

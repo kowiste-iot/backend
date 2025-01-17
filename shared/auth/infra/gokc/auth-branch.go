@@ -128,16 +128,17 @@ func (ks *KeycloakService) AssignUserToBranch(ctx context.Context, input *comman
 	if err != nil {
 		return fmt.Errorf("failed to get token: %w", err)
 	}
-
-	err = ks.client.AddUserToGroup(
-		ctx,
-		token.AccessToken,
-		input.TenantDomain,
-		input.UserID,
-		input.BranchName,
-	)
-	if err != nil {
-		return fmt.Errorf("failed to assign user to branch: %w", err)
+	for i := range input.Branchs {
+		err = ks.client.AddUserToGroup(
+			ctx,
+			token.AccessToken,
+			input.TenantDomain,
+			input.UserID,
+			input.Branchs[i],
+		)
+		if err != nil {
+			return fmt.Errorf("failed to assign user to branch: %w", err)
+		}
 	}
 
 	return nil
@@ -148,16 +149,17 @@ func (ks *KeycloakService) RemoveUserFromBranch(ctx context.Context, input *comm
 	if err != nil {
 		return fmt.Errorf("failed to get token: %w", err)
 	}
-
-	err = ks.client.DeleteUserFromGroup(
-		ctx,
-		token.AccessToken,
-		input.TenantDomain,
-		input.UserID,
-		input.BranchName,
-	)
-	if err != nil {
-		return fmt.Errorf("failed to remove user from branch: %w", err)
+	for i := range input.Branchs {
+		err = ks.client.DeleteUserFromGroup(
+			ctx,
+			token.AccessToken,
+			input.TenantDomain,
+			input.UserID,
+			input.Branchs[i],
+		)
+		if err != nil {
+			return fmt.Errorf("failed to remove user from branch: %w", err)
+		}
 	}
 
 	return nil

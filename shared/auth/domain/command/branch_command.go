@@ -1,7 +1,6 @@
 package command
 
 import (
-	"ddd/shared/base/command"
 	"fmt"
 )
 
@@ -19,8 +18,9 @@ type UpdateBranchInput struct {
 }
 
 type UserToBranch struct {
-	command.BaseInput
-	UserID string
+	TenantDomain string
+	UserID   string
+	Branchs   []string
 }
 
 func ClientName(branchName string) string {

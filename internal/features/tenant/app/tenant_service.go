@@ -74,16 +74,29 @@ func (s tenantService) CreateTenant(ctx context.Context, input *command.CreateTe
 		return nil, err
 	}
 	tenant.SetAuthID(createdTenant.ID)
+
 	//Create default branch
-	b := command.CreateBranchInput{
+	defaultB := command.CreateBranchInput{
 		TenantDomain: tenant.Domain(),
 		Name:         input.Branch,
 		Description:  "Default Branch",
 	}
-	createdBranch, err := s.branch.CreateBranch(ctx, &b)
+	createdBranch, err := s.branch.CreateBranch(ctx, &defaultB)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create default branch: %w", err)
 	}
+
+	//Create admins branch
+	adminB := command.CreateBranchInput{
+		TenantDomain: tenant.Domain(),
+		Name:         auth.AdminBranch,
+		Description:  "Admin Group",
+	}
+	adminBranch, err := s.branch.CreateBranch(ctx, &adminB)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create default branch: %w", err)
+	}
+
 	// Create Admin user
 	u := userCmd.CreateUserInput{
 		BaseInput: baseCmd.NewInput(tenant.Domain(), input.Branch),
@@ -96,9 +109,10 @@ func (s tenantService) CreateTenant(ctx context.Context, input *command.CreateTe
 	if err != nil {
 		return nil, fmt.Errorf("failed to create default branch: %w", err)
 	}
+
 	//Assign role
 	r := authCmd.AssignRolesInput{
-		BaseInput: baseCmd.NewInput(tenant.Domain(), b.Name),
+		BaseInput: baseCmd.NewInput(tenant.Domain(), defaultB.Name),
 		UserID:    user.AuthID(),
 		Roles:     []string{auth.RoleAdmin},
 	}
@@ -106,10 +120,12 @@ func (s tenantService) CreateTenant(ctx context.Context, input *command.CreateTe
 	if err != nil {
 		return nil, fmt.Errorf("failed to assign default roles: %w", err)
 	}
+
 	//Assign to branch
 	ub := authCmd.UserToBranch{
-		BaseInput: baseCmd.NewInput(tenant.Domain(), createdBranch.AuthBranchID()),
-		UserID:    user.AuthID(),
+		TenantDomain: tenant.Domain(),
+		UserID:   user.AuthID(),
+		Branchs:  []string{createdBranch.AuthBranchID(), adminBranch.AuthBranchID()},
 	}
 	err = s.auth.AssignUserToBranch(ctx, &ub)
 	if err != nil {

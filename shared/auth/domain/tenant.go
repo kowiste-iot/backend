@@ -49,9 +49,3 @@ type TenantSettings struct {
 	CustomConfig   map[string]string `json:"customConfig"`
 }
 
-type Branch struct {
-	ID          string            `json:"id"`
-	Name        string            `json:"name"`
-	Description string            `json:"description"`
-	Attributes  map[string]string `json:"attributes,omitempty"`
-}
