@@ -3,8 +3,8 @@ package permission
 import "context"
 
 const (
-	TypeScope string = "scope"
-	TypeRole  string = "role"
+	TypeScope    string = "scope"
+	TypeResource string = "resource"
 )
 const (
 	DecisionUnanimous   string = "UNANIMOUS"
@@ -19,10 +19,12 @@ type Permission struct {
 	Name             string   `json:"name"`
 	Description      string   `json:"description,omitempty"`
 	Type             string   `json:"type"` // resource-based, scope-based
+	ResourceType     string   `json:"resourceType"`
 	Resources        []string `json:"resources,omitempty"`
 	Scopes           []string `json:"scopes,omitempty"`
 	Policies         []string `json:"policies"`
 	DecisionStrategy string   `json:"decisionStrategy"` // UNANIMOUS, AFFIRMATIVE, CONSENSUS
+	Logic            string   `json:"logic"`
 }
 
 type PermissionProvider interface {

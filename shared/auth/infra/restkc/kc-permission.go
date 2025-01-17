@@ -8,19 +8,8 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
-type Permission struct {
-	ID               string   `json:"id,omitempty"`
-	Name             string   `json:"name"`
-	Description      string   `json:"description"`
-	Type             string   `json:"type"`
-	Resources        []string `json:"resources"`
-	Scopes           []string `json:"scopes"`
-	Policies         []string `json:"policies"`
-	DecisionStrategy string   `json:"decisionStrategy"`
-	Logic            string   `json:"logic"`
-}
 
-func CreatePermission(ctx context.Context, url, token, tenantID, IDofClient string, p Permission) (*Permission, error) {
+func CreatePermission(ctx context.Context, url, token, tenantID, IDofClient string, p permission.Permission) (*permission.Permission, error) {
 	baseURL := url + "/admin/realms/%s/clients/%s/authz/resource-server/permission/%s"
 	endpoint := fmt.Sprintf(baseURL, tenantID, IDofClient, p.Type)
 
@@ -34,7 +23,7 @@ func CreatePermission(ctx context.Context, url, token, tenantID, IDofClient stri
 
 	client := resty.New()
 
-	var result Permission
+	var result permission.Permission
 
 	resp, err := client.R().
 		SetContext(ctx).

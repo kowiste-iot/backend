@@ -105,23 +105,14 @@ func (ks *KeycloakService) CreatePermission(ctx context.Context, tenantDomain, c
 			}
 		}
 	}
-
-	per := restkc.Permission{
-		Name:             p.Name,
-		Description:      p.Description,
-		Resources:        p.Resources,
-		Scopes:           internalScopes,
-		Policies:         p.Policies,
-		Type:             permission.TypeScope,
-		DecisionStrategy: permission.DecisionAffirmative,
-	}
+	p.Scopes=internalScopes
 
 	c, err := ks.client.GetClient(ctx, token.AccessToken, tenantDomain, clientID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create permission error client: %w", err)
 	}
 
-	created, err := restkc.CreatePermission(ctx, ks.config.Host, token.AccessToken, tenantDomain, *c.ID, per)
+	created, err := restkc.CreatePermission(ctx, ks.config.Host, token.AccessToken, tenantDomain, *c.ID, p)
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to create permission: %w", err)
@@ -140,54 +131,6 @@ func (ks *KeycloakService) CreatePermission(ctx context.Context, tenantDomain, c
 
 	return result, nil
 }
-
-// func (ks *KeycloakService) CreatePermission(ctx context.Context, tenantID, clientID string, p permission.Permission) (*permission.Permission, error) {
-// 	token, err := ks.GetValidToken(ctx)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("failed to get token: %w", err)
-// 	}
-// 	decisionStrategy := gocloak.DecisionStrategy(p.DecisionStrategy)
-// 	kcPermission := gocloak.PermissionRepresentation{
-// 		Name:             &p.Name,
-// 		Description:      &p.Description,
-// 		Type:             &p.Type,
-// 		Resources:        &p.Resources,
-// 		Scopes:           &p.Scopes,
-// 		Policies:         &p.Policies,
-// 		DecisionStrategy: gocloak.AFFIRMATIVE,
-// 		Logic: gocloak.LogicP(*gocloak.POSITIVE),
-// 	}
-// 	createdPermission, err := ks.client.CreatePermission(
-// 		ctx,
-// 		token.AccessToken,
-// 		tenantID,
-// 		clientID,
-// 		kcPermission,
-// 	)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("failed to create permission: %w", err)
-// 	}
-// 	// Convert back to our Permission type
-// 	result := &permission.Permission{
-// 		ID:               *createdPermission.ID,
-// 		Name:             *createdPermission.Name,
-// 		Type:             *createdPermission.Type,
-// 		DecisionStrategy: string(decisionStrategy),
-// 	}
-// 	if createdPermission.Description != nil {
-// 		result.Description = *createdPermission.Description
-// 	}
-// 	if createdPermission.Resources != nil {
-// 		result.Resources = *createdPermission.Resources
-// 	}
-// 	if createdPermission.Scopes != nil {
-// 		result.Scopes = *createdPermission.Scopes
-// 	}
-// 	if createdPermission.Policies != nil {
-// 		result.Policies = *createdPermission.Policies
-// 	}
-// 	return result, nil
-// }
 
 func (ks *KeycloakService) GetPermission(ctx context.Context, tenantID, clientID, permissionID string) (*permission.Permission, error) {
 	token, err := ks.GetValidToken(ctx)

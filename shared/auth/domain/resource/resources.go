@@ -2,18 +2,21 @@ package resource
 
 import (
 	"context"
+	"ddd/shared/auth/domain/scope"
 )
 
 const (
+	//Endpoints resources
 	Asset  = "asset-resource"
-	Tenant = "tenant-management"
-	Branch = "branch-management"
+	Tenant = "tenant-resource"
+	Branch = "branch-resource"
 	User   = "user-resource"
-	Role   = "role-management"
+	Role   = "role-resource"
+	//Endpoin type
+	TypeBase = "base-type"
 )
 
 type ResourceProvider interface {
-	// Resource Management
 	CreateResource(ctx context.Context, tenantID, clientID string, resource Resource) (*Resource, error)
 	UpdateResource(ctx context.Context, tenantID, clientID string, resource Resource) error
 	DeleteResource(ctx context.Context, tenantID, clientID, resourceID string) error
@@ -30,4 +33,19 @@ type Resource struct {
 	Attributes  map[string][]string `json:"attributes,omitempty"`
 	DisplayName string              `json:"displayName,omitempty"`
 	IconURI     string              `json:"icon_uri,omitempty"`
+}
+
+func EndpointsResources() (resources []Resource) {
+	return []Resource{
+		{
+			Name:   Asset,
+			Type: TypeBase,
+			Scopes: []string{scope.View, scope.Create, scope.Update, scope.Delete},
+		},
+		{
+			Name:   User,
+			Type: TypeBase,
+			Scopes: []string{scope.View, scope.Create, scope.Update, scope.Delete},
+		},
+	}
 }

@@ -133,7 +133,7 @@ func (s *Service) createTenantClients(ctx context.Context, input *baseCmd.BaseIn
 }
 func (s Service) createRoles(ctx context.Context, input *baseCmd.BaseInput) (err error) {
 	// Create default roles
-	for _, role := range auth.DefaultRoles() {
+	for _, role := range auth.AllRoles() {
 		input := command.CreateRoleInput{
 			BaseInput:   *input,
 			Name:        role.Name,
@@ -146,6 +146,7 @@ func (s Service) createRoles(ctx context.Context, input *baseCmd.BaseInput) (err
 	}
 	return
 }
+
 func (s *Service) createClientPermissions(ctx context.Context, input *baseCmd.BaseInput, client *auth.Client) (err error) {
 
 	for _, scName := range []string{scope.View, scope.Create, scope.Update, scope.Delete} {
@@ -159,22 +160,9 @@ func (s *Service) createClientPermissions(ctx context.Context, input *baseCmd.Ba
 
 	}
 
-	resources := []struct {
-		name   string
-		scopes []string
-	}{
-		{
-			name:   resource.Asset,
-			scopes: []string{scope.View, scope.Create, scope.Update, scope.Delete},
-		},
-		{
-			name:   resource.User,
-			scopes: []string{scope.View, scope.Create, scope.Update, scope.Delete},
-		},
-	}
 	//Create policy 1 for each role
 	policies := make(map[string]*policy.Policy)
-	for _, role := range auth.DefaultRoles() {
+	for _, role := range auth.AllRoles() {
 		r, err := s.tenantProvider.GetRole(ctx, &command.RoleIDInput{
 			BaseInput: baseCmd.NewInput(input.TenantDomain, input.BranchName),
 			RoleID:    role.Name,
@@ -185,7 +173,7 @@ func (s *Service) createClientPermissions(ctx context.Context, input *baseCmd.Ba
 		pol := policy.Policy{
 			Name:             fmt.Sprintf("%s-policy", role.Name),
 			Description:      fmt.Sprintf("Policy for %s ", role.Name),
-			Type:             permission.TypeRole,
+			Type:             policy.TypeRole,
 			Roles:            []string{r.ID},
 			Logic:            permission.LogicPositive,
 			DecisionStrategy: permission.DecisionAffirmative,
@@ -193,29 +181,31 @@ func (s *Service) createClientPermissions(ctx context.Context, input *baseCmd.Ba
 
 		createdPolicy, err := s.policyProvider.CreatePolicy(ctx, input.TenantDomain, *client.ID, pol)
 		if err != nil {
-			return fmt.Errorf("failed to create policy for %s-%s: %w", role.Name, err)
+			return fmt.Errorf("failed to create policy for %s: %w", role.Name, err)
 		}
 		policies[role.Name] = createdPolicy
 	}
+	resources := resource.EndpointsResources()
+
+	//Create reosources and non admin permission
 	for _, res := range resources {
-		//Create resource
+
 		createdResource, err := s.resourceProvider.CreateResource(ctx, input.TenantDomain, *client.ID, resource.Resource{
-			Name:        res.name,
-			DisplayName: res.name,
-			Scopes:      res.scopes,
+			Name:        res.Name,
+			DisplayName: res.Name,
+			Type:        res.Type,
+			Scopes:      res.Scopes,
 		})
 		if err != nil {
-			return fmt.Errorf("failed to create resource %s: %w", res.name, err)
+			return fmt.Errorf("failed to create resource %s: %w", res.Name, err)
 		}
-		for _, role := range auth.DefaultRoles() {
+		for _, role := range auth.NonAdminRoles() {
 			sc := []string{scope.View}
-			if role.Name != auth.RoleWorker {
-				sc = append(sc, []string{scope.Create, scope.Update, scope.Delete}...)
-			}
 			p := policies[role.Name]
+
 			perm := permission.Permission{
-				Name:             fmt.Sprintf("%s-%s-permission", role.Name, res.name),
-				Description:      fmt.Sprintf("Permission for %s resource with %s role", res.name, role.Name),
+				Name:             fmt.Sprintf("%s-%s-permission", role.Name, res.Name),
+				Description:      fmt.Sprintf("Permission for %s resource with %s role", res.Name, role.Name),
 				Type:             permission.TypeScope,
 				Resources:        []string{createdResource.ID},
 				Scopes:           sc,
@@ -225,10 +215,28 @@ func (s *Service) createClientPermissions(ctx context.Context, input *baseCmd.Ba
 
 			_, err = s.permissionProvider.CreatePermission(ctx, input.TenantDomain, *client.ID, perm)
 			if err != nil {
-				return fmt.Errorf("failed to create permission for %s %s: %w", res.name, role.Name, err)
+				return fmt.Errorf("failed to create permission for %s %s: %w", res.Name, role.Name, err)
 			}
 		}
 
+	}
+	//resource permission for admin
+	sc := []string{scope.View, scope.Create, scope.Update, scope.Delete}
+
+	p := policies[auth.RoleAdmin]
+	perm := permission.Permission{
+		Name:             fmt.Sprintf("%s-permission", auth.RoleAdmin),
+		Description:      fmt.Sprintf("Permission for %s resource with %s role", auth.RoleAdmin, auth.RoleAdmin),
+		Type:             permission.TypeResource,
+		ResourceType:     resource.TypeBase,
+		Scopes:           sc,
+		Policies:         []string{p.ID},
+		DecisionStrategy: permission.DecisionAffirmative,
+	}
+
+	_, err = s.permissionProvider.CreatePermission(ctx, input.TenantDomain, *client.ID, perm)
+	if err != nil {
+		return fmt.Errorf("failed to create permission for %s: %w", auth.RoleAdmin, err)
 	}
 	return nil
 }
