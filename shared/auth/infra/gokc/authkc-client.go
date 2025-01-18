@@ -201,6 +201,35 @@ func getStringMap(m *map[string]string) map[string]string {
 	return *m
 }
 func (ks *KeycloakService) convertToGoCloak(client auth.Client) gocloak.Client {
+	attributes := map[string]string{
+		"realm_client":                             "false",
+		"backchannel.logout.session.required":      "true",
+		"backchannel.logout.revoke.offline.tokens": "false",
+	}
+
+	defaultScopes := []string{
+		"web-origins",
+		"roles",
+		"profile",
+		"email",
+	}
+	optScopes := []string{
+		"address",
+		"phone",
+		"offline_access",
+		"microprofile-jwt",
+	}
+
+	if !client.Authorization {
+		attributes["oidc.ciba.grant.enabled"] = "false"
+		attributes["post.logout.redirect.uris"] = "http://localhost:5173"
+		attributes["display.on.consent.screen"] = "false"
+		attributes["oauth2.device.authorization.grant.enabled"] = "false"
+
+		defaultScopes = append(defaultScopes, []string{"acr", "basic"}...)
+		optScopes = append(optScopes, "organization")
+	}
+
 	data := gocloak.Client{
 		ClientID:                     &client.ClientID,
 		Enabled:                      gocloak.BoolP(true),
@@ -208,15 +237,15 @@ func (ks *KeycloakService) convertToGoCloak(client auth.Client) gocloak.Client {
 		ClientAuthenticatorType:      &client.ClientAuthenticatorType,
 		RedirectURIs:                 &client.RedirectURIs,
 		StandardFlowEnabled:          &client.StandardFlowEnabled,
-		DirectAccessGrantsEnabled:    &client.DirectAccessGrantsEnabled,
+		DirectAccessGrantsEnabled:    gocloak.BoolP(true),
 		PublicClient:                 &client.PublicClient,
 		FrontChannelLogout:           gocloak.BoolP(true),
-		Protocol:                     &client.Protocol,
-		Attributes:                   &client.Attributes,
+		Protocol:                     gocloak.StringP("openid-connect"),
+		Attributes:                   &attributes,
 		FullScopeAllowed:             &client.FullScopeAllowed,
 		NodeReRegistrationTimeout:    gocloak.Int32P(-1),
-		DefaultClientScopes:          &client.DefaultClientScopes,
-		OptionalClientScopes:         &client.OptionalClientScopes,
+		DefaultClientScopes:          &defaultScopes,
+		OptionalClientScopes:         &optScopes,
 		AuthorizationServicesEnabled: &client.AuthorizationEnabled,
 		ServiceAccountsEnabled:       &client.ServiceAccountEnabled,
 	}
@@ -236,26 +265,20 @@ func (ks *KeycloakService) convertFromGoCloak(client *gocloak.Client) auth.Clien
 		return auth.Client{}
 	}
 	return auth.Client{
-		ID:                        client.ID,
-		ClientID:                  gocloak.PString(client.ClientID),
-		Name:                      gocloak.PString(client.Name),
-		Description:               gocloak.PString(client.Description),
-		RootURL:                   gocloak.PString(client.RootURL),
-		AdminURL:                  gocloak.PString(client.AdminURL),
-		BaseURL:                   gocloak.PString(client.BaseURL),
-		ClientAuthenticatorType:   gocloak.PString(client.ClientAuthenticatorType),
-		RedirectURIs:              gocloak.PStringSlice(client.RedirectURIs),
-		WebOrigins:                gocloak.PStringSlice(client.WebOrigins),
-		Protocol:                  gocloak.PString(client.Protocol),
-		PublicClient:              gocloak.PBool(client.PublicClient),
-		Attributes:                getStringMap(client.Attributes),
-		DefaultClientScopes:       gocloak.PStringSlice(client.DefaultClientScopes),
-		OptionalClientScopes:      gocloak.PStringSlice(client.OptionalClientScopes),
-		DirectAccessGrantsEnabled: gocloak.PBool(client.DirectAccessGrantsEnabled),
-		StandardFlowEnabled:       gocloak.PBool(client.StandardFlowEnabled),
-		ImplicitFlowEnabled:       gocloak.PBool(client.ImplicitFlowEnabled),
-		ServiceAccountsEnabled:    gocloak.PBool(client.ServiceAccountsEnabled),
-		FullScopeAllowed:          gocloak.PBool(client.FullScopeAllowed),
+		ID:                      client.ID,
+		ClientID:                gocloak.PString(client.ClientID),
+		Name:                    gocloak.PString(client.Name),
+		Description:             gocloak.PString(client.Description),
+		RootURL:                 gocloak.PString(client.RootURL),
+		AdminURL:                gocloak.PString(client.AdminURL),
+		ClientAuthenticatorType: gocloak.PString(client.ClientAuthenticatorType),
+		RedirectURIs:            gocloak.PStringSlice(client.RedirectURIs),
+		WebOrigins:              gocloak.PStringSlice(client.WebOrigins),
+		PublicClient:            gocloak.PBool(client.PublicClient),
+		StandardFlowEnabled:     gocloak.PBool(client.StandardFlowEnabled),
+		ImplicitFlowEnabled:     gocloak.PBool(client.ImplicitFlowEnabled),
+		ServiceAccountEnabled:  gocloak.PBool(client.ServiceAccountsEnabled),
+		FullScopeAllowed:        gocloak.PBool(client.FullScopeAllowed),
 	}
 }
 

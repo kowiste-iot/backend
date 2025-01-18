@@ -48,75 +48,28 @@ func (s *Service) CreateTenant(ctx context.Context, input *command.CreateTenantI
 func (s *Service) createTenantClients(ctx context.Context, input *baseCmd.BaseInput) (err error) {
 	//TODO: move struct inside keycloak implementation here still dont need to know about kc implementation
 	_, err = s.clientProvider.CreateClient(ctx, input.TenantDomain, auth.Client{
-		ClientID:                  "vue-client",
-		ClientAuthenticatorType:   "client-secret",
-		RedirectURIs:              []string{"http://localhost:5173/*"},
-		WebOrigins:                []string{"*"},
-		StandardFlowEnabled:       true,
-		DirectAccessGrantsEnabled: true,
-		PublicClient:              true,
-		Protocol:                  "openid-connect",
-		Attributes: map[string]string{
-			"realm_client":                              "false",
-			"oidc.ciba.grant.enabled":                   "false",
-			"backchannel.logout.session.required":       "true",
-			"post.logout.redirect.uris":                 "http://localhost:5173",
-			"display.on.consent.screen":                 "false",
-			"oauth2.device.authorization.grant.enabled": "false",
-			"backchannel.logout.revoke.offline.tokens":  "false",
-		},
-		DefaultClientScopes: []string{
-			"web-origins",
-			"acr",
-			"roles",
-			"profile",
-			"basic",
-			"email",
-		},
-		OptionalClientScopes: []string{
-			"address",
-			"phone",
-			"offline_access",
-			"organization",
-			"microprofile-jwt",
-		},
+		ClientID:                "vue-client",
+		ClientAuthenticatorType: "client-secret",
+		RedirectURIs:            []string{"http://localhost:5173/*"},
+		WebOrigins:              []string{"*"},
+		StandardFlowEnabled:     true,
+		PublicClient:            true,
 	})
 	if err != nil {
 		return
 	}
 	//backend client
 	client, err := s.clientProvider.CreateClient(ctx, input.TenantDomain, auth.Client{
-		ClientID:                  command.ClientName(input.BranchName),
-		Name:                      input.BranchName + " Service",
-		Description:               input.BranchName + " Backend API Service",
-		RootURL:                   "http://localhost:8080",
-		AdminURL:                  "http://localhost:8080",
-		ClientAuthenticatorType:   "client-secret",
-		RedirectURIs:              []string{"http://localhost:8080/*"},
-		WebOrigins:                []string{"http://localhost:8080"},
-		NotBefore:                 0,
-		DirectAccessGrantsEnabled: true,
-		ServiceAccountsEnabled:    true,
-		AuthorizationEnabled:      true,
-		Protocol:                  "openid-connect",
-		Attributes: map[string]string{
-			"realm_client":                             "false",
-			"backchannel.logout.session.required":      "true",
-			"backchannel.logout.revoke.offline.tokens": "false",
-		},
-		NodeReRegistrationTimeout: -1,
-		DefaultClientScopes: []string{
-			"web-origins",
-			"roles",
-			"profile",
-			"email",
-		},
-		OptionalClientScopes: []string{
-			"address",
-			"phone",
-			"offline_access",
-			"microprofile-jwt",
-		},
+		ClientID:                command.ClientName(input.BranchName),
+		Name:                    input.BranchName + " Service",
+		Description:             input.BranchName + " Backend API Service",
+		RootURL:                 "http://localhost:8080",
+		AdminURL:                "http://localhost:8080",
+		ClientAuthenticatorType: "client-secret",
+		RedirectURIs:            []string{"http://localhost:8080/*"},
+		WebOrigins:              []string{"http://localhost:8080"},
+		ServiceAccountEnabled:  true,
+		AuthorizationEnabled:    true,
 		Authorization: true,
 	})
 	if err != nil {
