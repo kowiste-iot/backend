@@ -49,7 +49,7 @@ func (ks *KeycloakService) CreateClient(ctx context.Context, tenantDomain string
 			Name:           "user groups",
 			Config: restkc.ProtocolMapperConfig{
 				ClaimName:               "branch",
-				FullPath:                "true",
+				FullPath:                "false",
 				IDTokenClaim:            "true",
 				AccessTokenClaim:        "true",
 				LightweightClaim:        "false",

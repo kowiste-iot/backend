@@ -7,11 +7,12 @@ import (
 
 const (
 	//Endpoints resources
-	Asset  = "asset-resource"
-	Tenant = "tenant-resource"
-	Branch = "branch-resource"
-	User   = "user-resource"
-	Role   = "role-resource"
+	Asset  string = "asset-resource"
+	Tenant string = "tenant-resource"
+	Branch string = "branch-resource"
+	User   string = "user-resource"
+	Role   string = "role-resource"
+	Admin  string = "admin-resource"
 	//Endpoin type
 	TypeBase = "base-type"
 )
@@ -39,12 +40,17 @@ func EndpointsResources() (resources []Resource) {
 	return []Resource{
 		{
 			Name:   Asset,
-			Type: TypeBase,
+			Type:   TypeBase,
 			Scopes: []string{scope.View, scope.Create, scope.Update, scope.Delete},
 		},
 		{
 			Name:   User,
-			Type: TypeBase,
+			Type:   TypeBase,
+			Scopes: []string{scope.View, scope.Create, scope.Update, scope.Delete},
+		},
+		{
+			Name:   Admin,
+			Type:   TypeBase,
 			Scopes: []string{scope.View, scope.Create, scope.Update, scope.Delete},
 		},
 	}
