@@ -1,2 +1,38 @@
 web-client:
-  
+    type: public
+    name: web client
+    description: client Frontend
+    redirect_uris:
+        - http://localhost:5173/*
+    origins:
+        - *
+    logotout_redirect: http://localhost:5173
+backend-client:
+    type: private
+    name: %s Service
+    description: %s Backend API Service
+    redirect_uris:
+        - http://localhost:8080/*
+    origins:
+        - http://localhost:8080 
+    root_url: http://localhost:8080/
+    admin_url: http://localhost:8080
+    authorization:
+        roles:
+            - admin
+            - worker
+        scopes:
+            - view
+            - create
+            - update
+            - delete
+        resources:
+            - name: asset-resource
+              type: base
+              scopes:
+                - admin: all
+                - worker: view
+                
+
+
+

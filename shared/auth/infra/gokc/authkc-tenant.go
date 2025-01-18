@@ -107,41 +107,7 @@ func mapRealmToTenant(realm *gocloak.RealmRepresentation) *auth.Tenant {
 	return tenant
 }
 
-func (ks *KeycloakService) setupRealmConfig(ctx context.Context, tenant auth.Tenant) error {
-	token, err := ks.GetValidToken(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to get token: %w", err)
-	}
 
-	// Create default client
-	clientID := fmt.Sprintf("%s-client", tenant.Domain)
-	client := &gocloak.Client{
-		ClientID:                  &clientID,
-		Enabled:                   gocloak.BoolP(true),
-		StandardFlowEnabled:       gocloak.BoolP(true),
-		DirectAccessGrantsEnabled: gocloak.BoolP(true),
-		Protocol:                  gocloak.StringP("openid-connect"),
-	}
-
-	_, err = ks.client.CreateClient(ctx, token.AccessToken, tenant.Domain, *client)
-	if err != nil {
-		return fmt.Errorf("failed to create default client: %w", err)
-	}
-
-	// Create default roles
-	defaultRoles := []string{"user", "admin"}
-	for _, roleName := range defaultRoles {
-		role := gocloak.Role{
-			Name: &roleName,
-		}
-		_, err := ks.client.CreateRealmRole(ctx, token.AccessToken, tenant.Domain, role)
-		if err != nil {
-			return fmt.Errorf("failed to create role %s: %w", roleName, err)
-		}
-	}
-
-	return nil
-}
 
 func (ks *KeycloakService) updateRealmConfig(ctx context.Context, tenant *auth.Tenant) error {
 	token, err := ks.GetValidToken(ctx)

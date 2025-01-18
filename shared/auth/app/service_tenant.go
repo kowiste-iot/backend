@@ -97,7 +97,6 @@ func (s *Service) createTenantClients(ctx context.Context, input *baseCmd.BaseIn
 		NotBefore:                 0,
 		DirectAccessGrantsEnabled: true,
 		ServiceAccountsEnabled:    true,
-		ServiceAccountEnabled:     true,
 		AuthorizationEnabled:      true,
 		Protocol:                  "openid-connect",
 		Attributes: map[string]string{
