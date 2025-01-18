@@ -2,19 +2,18 @@ package resource
 
 import (
 	"context"
+	"ddd/pkg/config"
 	"ddd/shared/auth/domain/scope"
 )
 
 const (
-	//Endpoints resources
+	//TODO: have to keep this for now until think if is possible to use the config one.
 	Asset  string = "asset-resource"
 	Tenant string = "tenant-resource"
 	Branch string = "branch-resource"
 	User   string = "user-resource"
 	Role   string = "role-resource"
 	Admin  string = "admin-resource"
-	//Endpoin type
-	TypeBase = "base-type"
 )
 
 type ResourceProvider interface {
@@ -36,22 +35,17 @@ type Resource struct {
 	IconURI     string              `json:"icon_uri,omitempty"`
 }
 
-func EndpointsResources() (resources []Resource) {
-	return []Resource{
-		{
-			Name:   Asset,
-			Type:   TypeBase,
-			Scopes: []string{scope.View, scope.Create, scope.Update, scope.Delete},
-		},
-		{
-			Name:   User,
-			Type:   TypeBase,
-			Scopes: []string{scope.View, scope.Create, scope.Update, scope.Delete},
-		},
-		{
-			Name:   Admin,
-			Type:   TypeBase,
-			Scopes: []string{scope.View, scope.Create, scope.Update, scope.Delete},
-		},
+func EndpointsResources(input map[string]config.Resource) (resources []Resource) {
+	for i := range input {
+		scopes := scope.AllScopes()
+		if input[i].Scopes != nil {
+			scopes = *input[i].Scopes //This allow resources to have limit scopes for ex only view and create
+		}
+		resources = append(resources, Resource{
+			Name:   input[i].Name,
+			Type:   input[i].Type,
+			Scopes: scopes,
+		})
 	}
+	return
 }

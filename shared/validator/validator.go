@@ -13,10 +13,15 @@ import (
 )
 
 var (
-	validate *validator.Validate
-	once     sync.Once
-)
+	validate   *validator.Validate
+	once       sync.Once
+	validRoles []string 
 
+)
+func InitValidator(roles []string) {
+    validRoles = roles
+    GetValidator()
+}
 // validateUUIDv7 validates if a string is a valid UUIDv7
 func validateUUIDv7(fl validator.FieldLevel) bool {
 	value := fl.Field().String()
@@ -42,7 +47,7 @@ func validateRoles(fl validator.FieldLevel) bool {
 	}
 
 	for _, role := range roles {
-		if !slices.ContainsFunc(auth.AllRoles(), func(r auth.Role) bool {
+		if !slices.ContainsFunc(auth.AllRoles(validRoles), func(r auth.Role) bool {
 			return r.Name == role
 		}) {
 			return false

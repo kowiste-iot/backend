@@ -4,6 +4,7 @@ import (
 	"context"
 	appAsset "ddd/internal/features/asset/app"
 	repoAsset "ddd/internal/features/asset/infra/gorm"
+	"errors"
 
 	appTenant "ddd/internal/features/tenant/app"
 	repoTenant "ddd/internal/features/tenant/infra/gorm"
@@ -26,6 +27,7 @@ import (
 	"ddd/shared/logger/openob"
 	"ddd/shared/streaming/domain"
 	"ddd/shared/streaming/infrastructure/nats"
+	"ddd/shared/validator"
 
 	//appNats "ddd/shared/nats/app"
 	appToken "ddd/shared/token/app"
@@ -44,6 +46,7 @@ type Core struct {
 }
 
 func NewCore(ctx context.Context) (*Core, error) {
+
 	core := &Core{}
 	if err := core.initConfig(); err != nil {
 		return nil, err
@@ -102,6 +105,13 @@ func (c *Core) initDB(ctx context.Context) error {
 
 func (c *Core) initServer(ctx context.Context) error {
 
+	//load authentication config
+	tenantConfig, err := config.LoadTenant()
+	if err != nil {
+		return errors.New("cant load tenant config")
+	}
+	validator.InitValidator(tenantConfig.Authorization.Roles)
+
 	kc, err := keycloak.NewKeycloakService(keycloak.KeycloakConfig{
 		Host:         c.cfg.Authentication.Host,
 		Realm:        c.cfg.Authentication.Realm,
@@ -118,7 +128,8 @@ func (c *Core) initServer(ctx context.Context) error {
 		Auth:   kc,
 	}
 
-	authService := appAuth.NewAuthService(kc, kc, kc, kc, kc, kc, kc)
+	authService := appAuth.NewAuthService(tenantConfig, kc, kc, kc, kc, kc, kc, kc)
+
 	//Branch
 	branchRepo := repoTenant.NewBranchRepository(c.db)
 	branchService := appTenant.NewBranchService(base, authService, branchRepo)

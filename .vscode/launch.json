@@ -13,7 +13,10 @@
       "env": {
         "CONFIG_FILE_NAME": "config",
         "CONFIG_FILE_TYPE": "yaml",
-        "CONFIG_FILE_PATH": "../../configs"
+        "CONFIG_FILE_PATH": "../../configs",
+        "AUTH_CONFIG_FILE_NAME": "tenant",
+        "AUTH_CONFIG_FILE_TYPE": "yaml",
+        "AUTH_CONFIG_FILE_PATH": "../../configs"
       }
     }
   ]
