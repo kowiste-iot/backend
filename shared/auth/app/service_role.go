@@ -4,7 +4,10 @@ import (
 	"context"
 	auth "ddd/shared/auth/domain"
 	"ddd/shared/auth/domain/command"
+	"ddd/shared/auth/domain/permission"
+	"ddd/shared/auth/domain/policy"
 	baseCmd "ddd/shared/base/command"
+	"ddd/shared/util"
 	"fmt"
 	"slices"
 )
@@ -20,11 +23,32 @@ func (s *Service) GetRole(ctx context.Context, input *command.RoleIDInput) (*aut
 }
 
 // CreateRole creates a new role for a tenant
-func (s *Service) CreateRole(ctx context.Context, input *command.CreateRoleInput) (string, error) {
+func (s *Service) CreateRole(ctx context.Context, input *command.CreateRoleInput) (id string, err error) {
 	if s.isDefaultRole(input.Name) {
 		return "", fmt.Errorf("cannot create role with reserved name: %s", input.Name)
 	}
-	return s.tenantProvider.CreateRole(ctx, input)
+	id, err = s.tenantProvider.CreateRole(ctx, input)
+	if err != nil {
+		return
+	}
+	pol := policy.Policy{
+		Name:             fmt.Sprintf("%s-policy", input.Name),
+		Description:      fmt.Sprintf("Policy for %s ", util.CapitalizeFirst(input.Name)),
+		Type:             policy.TypeRole,
+		Roles:            []string{id},
+		Logic:            permission.LogicPositive,
+		DecisionStrategy: permission.DecisionAffirmative,
+	}
+	client, err := s.clientProvider.GetClientByClientID(ctx, input.TenantDomain, command.ClientName(input.BranchName))
+	if err != nil {
+		return "", fmt.Errorf("error getting client: %w", err)
+	}
+	_, err = s.policyProvider.CreatePolicy(ctx, input.TenantDomain, *client.ID, pol)
+	if err != nil {
+		return "", fmt.Errorf("failed to create policy for %s: %w", input.Name, err)
+	}
+	//TODO: create permission
+	return
 }
 
 // DeleteRole deletes a role from a tenant

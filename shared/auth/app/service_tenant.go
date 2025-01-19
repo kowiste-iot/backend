@@ -142,7 +142,7 @@ func (s *Service) createClientPermissions(ctx context.Context, input *baseCmd.Ba
 	}
 	resources := resource.EndpointsResources(s.tenantConfig.Authorization.Resources)
 
-	//Create reosources and non admin permission
+	//Create resources and non admin permission
 	for _, res := range resources {
 
 		createdResource, err := s.resourceProvider.CreateResource(ctx, input.TenantDomain, *client.ID, resource.Resource{

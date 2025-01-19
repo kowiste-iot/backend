@@ -14,12 +14,15 @@ const (
 	User   string = "user-resource"
 	Role   string = "role-resource"
 	Admin  string = "admin-resource"
+
+	//
+	defaultResource string ="Default Resource"
 )
 
 type ResourceProvider interface {
-	CreateResource(ctx context.Context, tenantID, clientID string, resource Resource) (*Resource, error)
+	CreateResource(ctx context.Context, tenantID, clientID string, resource Resource) (*Resource, error) //Should we allow crate resource?
 	UpdateResource(ctx context.Context, tenantID, clientID string, resource Resource) error
-	DeleteResource(ctx context.Context, tenantID, clientID, resourceID string) error
+	//DeleteResource(ctx context.Context, tenantID, clientID, resourceID string) error
 	GetResource(ctx context.Context, tenantID, clientID, resourceID string) (*Resource, error)
 	ListResources(ctx context.Context, tenantID, clientID string) ([]Resource, error)
 }
@@ -46,6 +49,18 @@ func EndpointsResources(input map[string]config.Resource) (resources []Resource)
 			Type:   input[i].Type,
 			Scopes: scopes,
 		})
+	}
+	return
+}
+
+type Resources []Resource
+
+func (rs Resources) FilterResource() (resources []Resource) {
+	for i := range rs {
+		if rs[i].Name == defaultResource {
+			continue
+		}
+		resources = append(resources, rs[i])
 	}
 	return
 }

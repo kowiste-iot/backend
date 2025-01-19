@@ -15,6 +15,7 @@ import (
 	"ddd/internal/interfaces/http"
 	assethandler "ddd/internal/interfaces/http/handlers/asset"
 	branchhandler "ddd/internal/interfaces/http/handlers/branch"
+	resourcehandler "ddd/internal/interfaces/http/handlers/resource"
 	rolehandler "ddd/internal/interfaces/http/handlers/roles"
 	tenanthandler "ddd/internal/interfaces/http/handlers/tenant"
 	userhandler "ddd/internal/interfaces/http/handlers/user"
@@ -183,6 +184,10 @@ func (c *Core) initServer(ctx context.Context) error {
 			UserService: userService,
 		}),
 		RolesHandler: rolehandler.New(rolehandler.Dependencies{
+			Logger:      c.logger,
+			AuthService: authService,
+		}),
+		ResourceHandler: resourcehandler.New(resourcehandler.Dependencies{
 			Logger:      c.logger,
 			AuthService: authService,
 		}),

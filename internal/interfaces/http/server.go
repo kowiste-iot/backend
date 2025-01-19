@@ -8,6 +8,7 @@ import (
 
 	assethandler "ddd/internal/interfaces/http/handlers/asset"
 	branchhandler "ddd/internal/interfaces/http/handlers/branch"
+	resourcehandler "ddd/internal/interfaces/http/handlers/resource"
 	rolehandler "ddd/internal/interfaces/http/handlers/roles"
 	tenanthandler "ddd/internal/interfaces/http/handlers/tenant"
 	userhandler "ddd/internal/interfaces/http/handlers/user"
@@ -31,6 +32,7 @@ type Server struct {
 	assetHandler    *assethandler.AssetHandler
 	userHandler     *userhandler.UserHandler
 	rolesHandler    *rolehandler.RoleHandler
+	resourceHandler *resourcehandler.ResourceHandler
 	tokenHandler    *wshandler.TokenHandler
 	wsNotifyHandler *wshandler.NotificationHandler
 }
@@ -38,6 +40,7 @@ type Server struct {
 type ServerDependencies struct {
 	Authentication  auth.AuthProvider
 	RolesHandler    *rolehandler.RoleHandler
+	ResourceHandler *resourcehandler.ResourceHandler
 	BranchHandler   *branchhandler.BranchHandler
 	TenantHandler   *tenanthandler.TenantHandler
 	AssetHandler    *assethandler.AssetHandler
@@ -67,6 +70,7 @@ func NewServer(cfg *config.Config, logger logger.Logger, deps ServerDependencies
 		router:          router,
 		auth:            deps.Authentication,
 		rolesHandler:    deps.RolesHandler,
+		resourceHandler: deps.ResourceHandler,
 		tenantHandler:   deps.TenantHandler,
 		assetHandler:    deps.AssetHandler,
 		userHandler:     deps.UserHandler,

@@ -52,13 +52,19 @@ func (s *Server) setupRoutes() {
 					users.PUT(":id", s.userHandler.UpdateUser)
 					users.DELETE(":id", s.userHandler.DeleteUser)
 				}
-				// User routes
+				// Roles routes
 				roles := apiBranch.Group("roles")
 				{
 					roles.POST("", s.rolesHandler.CreateRole)
 					roles.GET("", s.rolesHandler.ListRoles)
 					roles.GET(":id", s.rolesHandler.GetRole)
 					roles.DELETE(":id", s.rolesHandler.DeleteRole)
+				}
+				// Resource routes
+				resource := apiBranch.Group("resources")
+				{
+					resource.GET("", s.resourceHandler.ListResources)
+					resource.GET(":id", s.resourceHandler.GetReseource)
 				}
 
 				// 	// Measure routes
