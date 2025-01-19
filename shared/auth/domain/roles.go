@@ -8,8 +8,16 @@ type Role struct {
 	Description string
 }
 
+func NewRole(id string, Name string) *Role {
+	return &Role{
+		ID:   id,
+		Name: Name,
+	}
+}
+
 const (
 	RoleAdmin = "admin"
+	RoleUma = "uma_protection"
 )
 
 func NonAdminRoles(input []string) (roles []Role) {
@@ -35,11 +43,17 @@ func AllRoles(nonAdminRoles []string) []Role {
 
 }
 
-func (r Role) IsDefaultRole(nonAdminRoles []string) bool {
-	for _, defaultRole := range AllRoles(nonAdminRoles) {
+func (r Role) IsDefaultRole() bool {
+	for _, defaultRole := range AdminRoles() {
 		if r.Name == defaultRole.Name {
 			return true
 		}
 	}
 	return false
+}
+func (r *Role) WithDescription(input *string) *Role {
+	if input != nil {
+		r.Description = *input
+	}
+	return r
 }

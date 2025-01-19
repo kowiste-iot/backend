@@ -43,7 +43,7 @@ func (s *Server) setupRoutes() {
 					assets.PUT(":id", s.assetHandler.UpdateAsset)
 					assets.DELETE(":id", s.assetHandler.DeleteAsset)
 				}
-				// Asset routes
+				// User routes
 				users := apiBranch.Group("users")
 				{
 					users.POST("", s.userHandler.CreateUser)
@@ -51,6 +51,14 @@ func (s *Server) setupRoutes() {
 					users.GET(":id", s.userHandler.GetUser)
 					users.PUT(":id", s.userHandler.UpdateUser)
 					users.DELETE(":id", s.userHandler.DeleteUser)
+				}
+				// User routes
+				roles := apiBranch.Group("roles")
+				{
+					roles.POST("", s.rolesHandler.CreateRole)
+					roles.GET("", s.rolesHandler.ListRoles)
+					roles.GET(":id", s.rolesHandler.GetRole)
+					roles.DELETE(":id", s.rolesHandler.DeleteRole)
 				}
 
 				// 	// Measure routes

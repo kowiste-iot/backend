@@ -47,7 +47,7 @@ func (h *RoleHandler) CreateRole(c *gin.Context) {
 
 	input := authCmd.CreateRoleInput{
 		BaseInput: baseCmd.NewInput(tenant.Domain(), branch),
-		Name:      req.Role,
+		Name:      req.Name,
 	}
 
 	_, err = h.authService.CreateRole(ctx, &input)
@@ -99,11 +99,8 @@ func (h *RoleHandler) ListRoles(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get base: " + err.Error()})
 		return
 	}
-	input := baseCmd.BaseInput{
-		TenantDomain: tenant.Domain(),
-		BranchName: branch,
-	}
-	roles, err := h.authService.GetRoles(ctx, &input)
+	inputBase := baseCmd.NewInput(tenant.Domain(), branch)
+	roles, err := h.authService.GetRoles(ctx, &inputBase)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to list roles"})
 		return
@@ -111,7 +108,7 @@ func (h *RoleHandler) ListRoles(c *gin.Context) {
 
 	pg, _ := pagination.GetPagination(ctx)
 	response := pagination.PaginatedResponse{
-		Data:       roles,
+		Data:       ToRoleResponses(roles),
 		Pagination: *pg,
 	}
 
@@ -157,7 +154,7 @@ func (h *RoleHandler) AssignRole(c *gin.Context) {
 	input := authCmd.AssignRolesInput{
 		BaseInput: baseCmd.NewInput(tenant.Domain(), branch),
 		UserID:    userID,
-		Roles:     []string{req.Role},
+		Roles:     []string{req.Name},
 	}
 	err = h.authService.AssignRoles(c.Request.Context(), &input)
 	if err != nil {

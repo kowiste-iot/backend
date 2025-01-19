@@ -94,12 +94,15 @@ func (ks *KeycloakService) GetRoles(ctx context.Context, input *baseCmd.BaseInpu
 	if err != nil {
 		return nil, fmt.Errorf("failed to get token: %w", err)
 	}
-
+	client, err := ks.GetClientByClientID(ctx, input.TenantDomain, command.ClientName(input.BranchName))
+	if err != nil {
+		return nil, fmt.Errorf("error getting client: %w", err)
+	}
 	roles, err := ks.client.GetClientRoles(
 		ctx,
 		token.AccessToken,
 		input.TenantDomain,
-		command.ClientName(input.BranchName),
+		*client.ID,
 		gocloak.GetRoleParams{},
 	)
 	if err != nil {
@@ -108,11 +111,12 @@ func (ks *KeycloakService) GetRoles(ctx context.Context, input *baseCmd.BaseInpu
 
 	var authRoles []auth.Role
 	for _, role := range roles {
-		authRoles = append(authRoles, auth.Role{
-			ID:          *role.ID,
-			Name:        *role.Name,
-			Description: *role.Description,
-		})
+		if *role.Name == auth.RoleUma {
+			continue //dont show uma role
+		}
+		r := auth.NewRole(*role.ID, *role.Name)
+		r.WithDescription(role.Description)
+		authRoles = append(authRoles, *r)
 	}
 
 	return authRoles, nil
