@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"ddd/internal/features/asset/domain"
-	"ddd/internal/features/asset/domain/command"
 	baseCmd "ddd/shared/base/command"
 	gormhelper "ddd/shared/gorm"
 	"ddd/shared/pagination"
@@ -33,35 +32,35 @@ func NewRepository(db *gorm.DB) domain.AssetRepository {
 	return &assetRepository{db: db}
 }
 
-func (r *assetRepository) Create(ctx context.Context, input *command.CreateAssetInput) error {
+func (r *assetRepository) Create(ctx context.Context, input *domain.Asset) error {
 	dbAsset := Asset{
-		ID:          input.ID,
-		TenantID:    input.TenantDomain,
-		BranchID:    input.BranchName,
-		Parent:      &input.Parent,
-		Name:        input.Name,
-		Description: input.Description,
+		ID:          input.ID(),
+		TenantID:    input.TenantID(),
+		BranchID:    input.BranchName(),
+		Parent:      input.Parent(),
+		Name:        input.Name(),
+		Description: input.Description(),
 	}
 	return r.db.WithContext(ctx).Create(&dbAsset).Error
 }
 
-func (r *assetRepository) Update(ctx context.Context, input *command.UpdateAssetInput) error {
+func (r *assetRepository) Update(ctx context.Context, input *domain.Asset) error {
 	dbAsset := Asset{
-		ID:          input.ID,
-		TenantID:    input.TenantDomain,
-		BranchID:    input.BranchName,
-		Parent:      &input.Parent,
-		Name:        input.Name,
-		Description: input.Description,
+		ID:          input.ID(),
+		TenantID:    input.TenantID(),
+		BranchID:    input.BranchName(),
+		Parent:      input.Parent(),
+		Name:        input.Name(),
+		Description: input.Description(),
 	}
 	return r.db.WithContext(ctx).Updates(&dbAsset).Error
 }
 
-func (r *assetRepository) FindByID(ctx context.Context, input *command.AssetIDInput) (*domain.Asset, error) {
+func (r *assetRepository) FindByID(ctx context.Context, input *baseCmd.BaseInput, assetID string) (*domain.Asset, error) {
 	var dbAsset Asset
 
 	err := r.db.WithContext(ctx).Where(
-		gormhelper.TenantBranchFilter(input.TenantDomain, input.BranchName)+" AND id = ?", input.AssetID).
+		gormhelper.TenantBranchFilter(input.TenantDomain, input.BranchName)+" AND id = ?", assetID).
 		First(&dbAsset).Error
 	if err != nil {
 		return nil, err
@@ -119,21 +118,21 @@ func (r *assetRepository) FindAll(ctx context.Context, input *baseCmd.BaseInput)
 	return assets, nil
 }
 
-func (r *assetRepository) Remove(ctx context.Context, input *command.AssetIDInput) error {
+func (r *assetRepository) Remove(ctx context.Context, input *baseCmd.BaseInput, assetID string) error {
 
 	resp := r.db.WithContext(ctx).Where(
-		gormhelper.TenantBranchFilter(input.TenantDomain, input.BranchName)+" AND id = ?", input.AssetID).Delete(&Asset{})
+		gormhelper.TenantBranchFilter(input.TenantDomain, input.BranchName)+" AND id = ?", assetID).Delete(&Asset{})
 	if resp.RowsAffected == 0 {
 		return errors.New("no delete")
 	}
 	return resp.Error
 }
 
-func (r *assetRepository) HasChildren(ctx context.Context, input *command.AssetIDInput) (bool, error) {
+func (r *assetRepository) HasChildren(ctx context.Context, input *baseCmd.BaseInput, assetID string) (bool, error) {
 	var count int64
 	err := r.db.WithContext(ctx).
 		Model(&Asset{}).
-		Where(gormhelper.TenantBranchFilter(input.TenantDomain, input.BranchName)+" AND parent = ?", input.AssetID).
+		Where(gormhelper.TenantBranchFilter(input.TenantDomain, input.BranchName)+" AND parent = ?", assetID).
 		Count(&count).Error
 
 	return count > 0, err

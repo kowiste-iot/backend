@@ -35,6 +35,7 @@ func (r *tenantRepository) Create(ctx context.Context, asset *domain.Tenant) err
 	dbAsset := Tenant{
 		ID:          asset.ID(),
 		AuthID:      asset.AuhtID(),
+		Domain:      asset.Domain(),
 		Name:        asset.Name(),
 		Description: asset.Description(),
 	}
@@ -44,16 +45,17 @@ func (r *tenantRepository) Update(ctx context.Context, asset *domain.Tenant) err
 	dbAsset := Tenant{
 		ID:          asset.ID(),
 		AuthID:      asset.AuhtID(),
+		Domain:      asset.Domain(),
 		Name:        asset.Name(),
 		Description: asset.Description(),
 	}
 	return r.db.WithContext(ctx).Save(&dbAsset).Error
 }
 
-func (r *tenantRepository) FindByID(ctx context.Context, tenantID string) (*domain.Tenant, error) {
+func (r *tenantRepository) FindByID(ctx context.Context, tenantDomain string) (*domain.Tenant, error) {
 	var dbTenant Tenant
 
-	err := r.db.WithContext(ctx).Where("auth_id = ?", tenantID).First(&dbTenant).Error
+	err := r.db.WithContext(ctx).Where("domain = ?", tenantDomain).First(&dbTenant).Error
 	if err != nil {
 		return nil, err
 	}

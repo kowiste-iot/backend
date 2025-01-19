@@ -8,6 +8,7 @@ import (
 	"ddd/shared/auth/domain/scope"
 	"ddd/shared/base"
 	baseCmd "ddd/shared/base/command"
+	"ddd/shared/validator"
 	"errors"
 	"fmt"
 )
@@ -39,7 +40,10 @@ func (s *assetService) CreateAsset(ctx context.Context, input *command.CreateAss
 	if err != nil {
 		return nil, err
 	}
-
+	err = validator.Validate(input)
+	if err != nil {
+		return nil, fmt.Errorf("validation error %s", err.Error())
+	}
 	asset, err := domain.New(input.TenantDomain, input.BranchName, input.Name, input.Description)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create asset: %w", err)
@@ -47,16 +51,8 @@ func (s *assetService) CreateAsset(ctx context.Context, input *command.CreateAss
 	if input.Parent != "" {
 		asset.WithParent(input.Parent)
 	}
-	err = s.repo.Create(ctx, &command.CreateAssetInput{
-		BaseInput: baseCmd.BaseInput{
-			TenantDomain: input.TenantDomain,
-			BranchName:   input.BranchName,
-		},
-		ID:          asset.ID(),
-		Name:        asset.Name(),
-		Parent:      *asset.Parent(),
-		Description: asset.Description(),
-	})
+
+	err = s.repo.Create(ctx, asset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create asset: %w", err)
 	}
@@ -73,7 +69,7 @@ func (s *assetService) GetAsset(ctx context.Context, input *command.AssetIDInput
 	if err != nil {
 		return nil, err
 	}
-	asset, err := s.repo.FindByID(ctx, input)
+	asset, err := s.repo.FindByID(ctx, &input.BaseInput, input.AssetID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get asset: %w", err)
 	}
@@ -105,10 +101,7 @@ func (s *assetService) UpdateAsset(ctx context.Context, input *command.UpdateAss
 	if err != nil {
 		return nil, err
 	}
-	asset, err := s.repo.FindByID(ctx, &command.AssetIDInput{
-		BaseInput: input.BaseInput,
-		AssetID:   input.ID,
-	})
+	asset, err := s.repo.FindByID(ctx, &input.BaseInput, input.ID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get asset: %w", err)
 	}
@@ -116,16 +109,7 @@ func (s *assetService) UpdateAsset(ctx context.Context, input *command.UpdateAss
 	if err != nil {
 		return nil, fmt.Errorf("failed to get asset: %w", err)
 	}
-	if err := s.repo.Update(ctx, &command.UpdateAssetInput{
-		BaseInput: baseCmd.BaseInput{
-			TenantDomain: input.TenantDomain,
-			BranchName:   input.BranchName,
-		},
-		ID:          asset.ID(),
-		Name:        asset.Name(),
-		Parent:      *asset.Parent(),
-		Description: asset.Description(),
-	}); err != nil {
+	if err := s.repo.Update(ctx, asset); err != nil {
 		return nil, fmt.Errorf("failed to update asset: %w", err)
 	}
 
@@ -141,14 +125,14 @@ func (s *assetService) DeleteAsset(ctx context.Context, input *command.AssetIDIn
 	if err != nil {
 		return err
 	}
-	has, err := s.repo.HasChildren(ctx, input)
+	has, err := s.repo.HasChildren(ctx, &input.BaseInput, input.AssetID)
 	if err != nil {
 		return err
 	}
 	if has {
 		return errors.New("asset has children and cannot be deleted")
 	}
-	err = s.repo.Remove(ctx, input)
+	err = s.repo.Remove(ctx, &input.BaseInput, input.AssetID)
 	if err != nil {
 		return err
 	}

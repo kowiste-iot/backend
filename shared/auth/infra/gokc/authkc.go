@@ -132,7 +132,7 @@ func (k *KeycloakService) getTenantOrDefault(ctx context.Context) string {
 	domain := k.config.Realm
 	tenant, ok := httputil.GetTenant(ctx)
 	if ok {
-		domain = tenant.AuhtID()
+		domain = tenant.Domain()
 	}
 	return domain
 }

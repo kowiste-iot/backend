@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"ddd/shared/validator"
 	"errors"
 	"time"
 
@@ -18,16 +17,6 @@ type Asset struct {
 	updatedAt   time.Time
 	deletedAt   *time.Time
 }
-type assetValidation struct {
-	ID          string     `validate:"required,uuidv7"`
-	TenantID    string     `validate:"required,uuidv7"`
-	BranchName  string     `validate:"required"`
-	Name        string     `validate:"required,min=3,max=255"`
-	Parent      *string    `validate:"omitempty,uuidv7"`
-	Description string     `validate:"omitempty,min=3,max=512"`
-	UpdatedAt   time.Time  `validate:"required"`
-	DeletedAt   *time.Time `validate:"omitempty"`
-}
 
 func New(tenantID, branchName, name, description string) (asset *Asset, err error) {
 
@@ -43,17 +32,6 @@ func New(tenantID, branchName, name, description string) (asset *Asset, err erro
 		description: description,
 		updatedAt:   time.Now(),
 	}
-
-	err = validator.Validate(assetValidation{
-		ID:          asset.id,
-		TenantID:    asset.tenantID,
-		BranchName:  asset.branchName,
-		Name:        asset.name,
-		Parent:      asset.parent,
-		Description: asset.description,
-		UpdatedAt:   asset.updatedAt,
-		DeletedAt:   asset.deletedAt,
-	})
 
 	return
 }
@@ -79,16 +57,7 @@ func (a *Asset) Update(name, parent, description string) (err error) {
 		a.parent = &parent
 	}
 
-	return validator.Validate(assetValidation{
-		ID:          a.id,
-		TenantID:    a.tenantID,
-		BranchName:    a.branchName,
-		Name:        a.name,
-		Parent:      a.parent,
-		Description: a.description,
-		UpdatedAt:   a.updatedAt,
-		DeletedAt:   a.deletedAt,
-	})
+	return
 }
 func (a *Asset) Delete() {
 	now := time.Now()
@@ -104,7 +73,7 @@ func (a *Asset) IsDeleted() bool {
 // Getters
 func (a *Asset) ID() string            { return a.id }
 func (a *Asset) TenantID() string      { return a.tenantID }
-func (a *Asset) BranchName() string      { return a.branchName }
+func (a *Asset) BranchName() string    { return a.branchName }
 func (a *Asset) Name() string          { return a.name }
 func (a *Asset) Parent() *string       { return a.parent }
 func (a *Asset) Description() string   { return a.description }
