@@ -52,7 +52,7 @@ func (s *Service) GetUserRoles(ctx context.Context, input *command.UserRolesInpu
 
 // isDefaultRole checks if a role name or ID matches any default roles
 func (s *Service) isDefaultRole(identifier string) bool {
-	return slices.ContainsFunc(auth.AllRoles(), func(role auth.Role) bool {
+	return slices.ContainsFunc(auth.AllRoles(s.tenantConfig.Authorization.Roles), func(role auth.Role) bool {
 		return role.Name == identifier
 	})
 }

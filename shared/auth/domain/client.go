@@ -20,26 +20,13 @@ type Client struct {
 	Description               string            `json:"description"`
 	RootURL                   string            `json:"rootUrl"`
 	AdminURL                  string            `json:"adminUrl"`
-	BaseURL                   string            `json:"baseUrl"`
-	SurrogateAuthRequired     bool              `json:"surrogateAuthRequired"`
-	AlwaysDisplayInConsole    bool              `json:"alwaysDisplayInConsole"`
 	ClientAuthenticatorType   string            `json:"clientAuthenticatorType"`
 	RedirectURIs              []string          `json:"redirectUris"`
 	WebOrigins                []string          `json:"webOrigins"`
-	NotBefore                 int               `json:"notBefore"`
-	BearerOnly                bool              `json:"bearerOnly"`
-	ConsentRequired           bool              `json:"consentRequired"`
 	StandardFlowEnabled       bool              `json:"standardFlowEnabled"`
 	ImplicitFlowEnabled       bool              `json:"implicitFlowEnabled"`
-	DirectAccessGrantsEnabled bool              `json:"directAccessGrantsEnabled"`
-	ServiceAccountsEnabled    bool              `json:"serviceAccountsEnabled"`
 	PublicClient              bool              `json:"publicClient"`
-	Protocol                  string            `json:"protocol"`
-	Attributes                map[string]string `json:"attributes"`
 	FullScopeAllowed          bool              `json:"fullScopeAllowed"`
-	NodeReRegistrationTimeout int               `json:"nodeReRegistrationTimeout"`
-	DefaultClientScopes       []string          `json:"defaultClientScopes"`
-	OptionalClientScopes      []string          `json:"optionalClientScopes"`
 	AuthorizationEnabled      bool              `json:"authorizationEnabled"`
 	ServiceAccountEnabled     bool              `json:"serviceAccountEnabled"`
 	Authorization             bool              `json:"authorization"`

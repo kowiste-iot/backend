@@ -23,3 +23,7 @@ type ScopeProvider interface {
 	GetScope(ctx context.Context, tenantID, clientID, scopeID string) (*Scope, error)
 	ListScopes(ctx context.Context, tenantID, clientID string) ([]Scope, error)
 }
+
+func AllScopes() []string {
+	return []string{View, Create, Update, Delete}
+}

@@ -58,7 +58,7 @@ func (h *AssetHandler) CreateAsset(c *gin.Context) {
 		return
 	}
 	input := command.CreateAssetInput{
-		BaseInput: baseCmd.NewInput(tenant.Domain(),branch),
+		BaseInput:   baseCmd.NewInput(tenant.Domain(), branch),
 		Name:        req.Name,
 		Description: req.Description,
 		Parent:      req.Parent,
@@ -143,10 +143,7 @@ func (h *AssetHandler) ListAssets(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get base: " + err.Error()})
 		return
 	}
-	input := baseCmd.BaseInput{
-		TenantDomain: tenant.Domain(),
-		BranchName: branch,
-	}
+	input := baseCmd.NewInput(tenant.Domain(), branch)
 	results, err := h.assetService.ListAssets(ctx, &input)
 	if err != nil {
 		tenantID, _ := httputil.GetTenant(ctx)
@@ -186,14 +183,16 @@ func (h *AssetHandler) ListAssets(c *gin.Context) {
 func (h *AssetHandler) UpdateAsset(c *gin.Context) {
 	assetID := c.Param("id")
 	ctx := c.Request.Context()
+	tenant, branch, err := httputil.GetBase(ctx)
 
 	var req UpdateAssetRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
+	inputBase := baseCmd.NewInput(tenant.Domain(), branch)
 	input := command.UpdateAssetInput{
+		BaseInput:   inputBase,
 		ID:          assetID,
 		Name:        req.Name,
 		Parent:      req.Parent,

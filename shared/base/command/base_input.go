@@ -1,8 +1,8 @@
 package command
 
 type BaseInput struct {
-	TenantDomain string `validate:"required,uuidv7"`
-	BranchName   string `validate:"required,uuidv7"`
+	TenantDomain string `validate:"required"`
+	BranchName   string `validate:"required"`
 	ClientID     string
 }
 

@@ -1,5 +1,7 @@
 package auth
 
+import "ddd/shared/util"
+
 type Role struct {
 	ID          string
 	Name        string
@@ -7,17 +9,17 @@ type Role struct {
 }
 
 const (
-	RoleAdmin  = "admin"
-	RoleWorker = "worker"
+	RoleAdmin = "admin"
 )
 
-func NonAdminRoles() []Role {
-	return []Role{
-		{
-			Name:        RoleWorker,
-			Description: "Worker with basic access permissions",
-		},
+func NonAdminRoles(input []string) (roles []Role) {
+	for i := range input {
+		roles = append(roles, Role{
+			Name:        input[i],
+			Description: util.CapitalizeFirst(input[i]) + " with basic access permissions",
+		})
 	}
+	return
 }
 func AdminRoles() []Role {
 	return []Role{
@@ -28,13 +30,13 @@ func AdminRoles() []Role {
 	}
 }
 
-func AllRoles() []Role {
-	return append(AdminRoles(), NonAdminRoles()...)
+func AllRoles(nonAdminRoles []string) []Role {
+	return append(AdminRoles(), NonAdminRoles(nonAdminRoles)...)
 
 }
 
-func (r Role) IsDefaultRole() bool {
-	for _, defaultRole := range AllRoles() {
+func (r Role) IsDefaultRole(nonAdminRoles []string) bool {
+	for _, defaultRole := range AllRoles(nonAdminRoles) {
 		if r.Name == defaultRole.Name {
 			return true
 		}

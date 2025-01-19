@@ -1,0 +1,42 @@
+web-client:
+  type: public
+  client_id: vue-client
+  name: web client
+  description: client Frontend
+  redirect_uris:
+    - 'http://localhost:5173/*'
+  origins:
+    - '*'
+  logout_redirect: 'http://localhost:5173'
+
+backend-client:
+  type: private
+  name: Backend Service
+  description: Backend API Service
+  redirect_uris:
+    - 'http://localhost:8080/*'
+  origins:
+    - 'http://localhost:8080'
+  root_url: 'http://localhost:8080'
+  admin_url: 'http://localhost:8080'
+
+authorization:
+  admin_group: base
+  roles:
+    - worker
+  resources:
+    asset-resource:
+      name: asset-resource
+      type: base
+      permissions:
+        worker:
+          - view
+    user-resource:
+      name: user-resource
+      type: base
+      permissions:
+        worker:
+          - view
+    admin-resource:
+      name: admin-resource
+      type: base
