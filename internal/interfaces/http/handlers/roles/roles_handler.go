@@ -48,6 +48,7 @@ func (h *RoleHandler) CreateRole(c *gin.Context) {
 	input := authCmd.CreateRoleInput{
 		BaseInput: baseCmd.NewInput(tenant.Domain(), branch),
 		Name:      req.Name,
+		Description: req.Description,
 	}
 
 	_, err = h.authService.CreateRole(ctx, &input)

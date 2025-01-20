@@ -35,8 +35,14 @@ func (ks *KeycloakService) CreateRole(ctx context.Context, input *command.Create
 	if err != nil {
 		return "", fmt.Errorf("failed to create tenant role: %w", err)
 	}
-
-	return roleID, nil
+	role, err := ks.GetRole(ctx, &command.RoleIDInput{
+		BaseInput: input.BaseInput,
+		RoleID:    roleID,
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to get  role: %w", err)
+	}
+	return role.ID, nil
 }
 
 // DeleteRole deletes a role from the specified client
@@ -45,12 +51,15 @@ func (ks *KeycloakService) DeleteRole(ctx context.Context, input *command.RoleID
 	if err != nil {
 		return fmt.Errorf("failed to get token: %w", err)
 	}
-
+	client, err := ks.GetClientByClientID(ctx, input.TenantDomain, command.ClientName(input.BranchName))
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
 	err = ks.client.DeleteClientRole(
 		ctx,
 		token.AccessToken,
 		input.TenantDomain,
-		command.ClientName(input.BranchName),
+		*client.ID,
 		input.RoleID,
 	)
 	if err != nil {

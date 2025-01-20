@@ -73,13 +73,12 @@ func (s *Service) CreateRole(ctx context.Context, input *command.CreateRoleInput
 	if err != nil {
 		return "", fmt.Errorf("failed to create policy for %s: %w", input.Name, err)
 	}
-	//TODO: create permission
 	return
 }
 
 // DeleteRole deletes a role from a tenant
-func (s *Service) DeleteRole(ctx context.Context, input *command.RoleIDInput) error {
-	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
+func (s *Service) DeleteRole(ctx context.Context, input *command.RoleIDInput) (err error) {
+	err = s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
 		Resource:  resource.Role,
 		Scope:     scope.Delete,
@@ -90,7 +89,19 @@ func (s *Service) DeleteRole(ctx context.Context, input *command.RoleIDInput) er
 	if s.isDefaultRole(input.RoleID) {
 		return fmt.Errorf("cannot delete default role: %s", input.RoleID)
 	}
-	return s.tenantProvider.DeleteRole(ctx, input)
+	inputPolicy := command.PolicyNameInput{
+		BaseInput: input.BaseInput,
+		PolicyName:  command.PolicyName(input.RoleID),
+	}
+	err = s.policyProvider.DeletePolicy(ctx, &inputPolicy)
+	if err != nil {
+		return fmt.Errorf("failed to delete policy %w", err)
+	}
+	err = s.tenantProvider.DeleteRole(ctx, input)
+	if err != nil {
+		return err
+	}
+	return
 }
 
 // AssignRoles assigns roles to a user

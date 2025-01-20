@@ -1,6 +1,9 @@
 package policy
 
-import "context"
+import (
+	"context"
+	"ddd/shared/auth/domain/command"
+)
 
 const (
 	TypeRole  string = "role"
@@ -20,4 +23,5 @@ type Policy struct {
 type PolicyProvider interface {
 	CreatePolicy(ctx context.Context, tenantID, clientID string, policy Policy) (*Policy, error)
 	UpdatePolicy(ctx context.Context, tenantID, clientID string, policy Policy) error
+	DeletePolicy(ctx context.Context, input *command.PolicyNameInput) error
 }

@@ -57,8 +57,8 @@ func (s *Server) setupRoutes() {
 				{
 					roles.POST("", s.rolesHandler.CreateRole)
 					roles.GET("", s.rolesHandler.ListRoles)
-					roles.GET(":id", s.rolesHandler.GetRole)
-					roles.DELETE(":id", s.rolesHandler.DeleteRole)
+					roles.GET(":name", s.rolesHandler.GetRole)
+					roles.DELETE(":name", s.rolesHandler.DeleteRole)
 				}
 				// Resource routes
 				resource := apiBranch.Group("resources")

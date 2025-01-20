@@ -3,7 +3,7 @@ package command
 type BaseInput struct {
 	TenantDomain string `validate:"required"`
 	BranchName   string `validate:"required"`
-	ClientID     string
+	ClientID     *string
 }
 
 func NewInput(tenant, branch string) BaseInput {
@@ -14,6 +14,6 @@ func NewInput(tenant, branch string) BaseInput {
 }
 
 func (b *BaseInput) WithClientID(id string) BaseInput {
-	b.ClientID = id
+	b.ClientID = &id
 	return *b
 }

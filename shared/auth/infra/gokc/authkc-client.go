@@ -3,9 +3,11 @@ package keycloak
 import (
 	"context"
 	auth "ddd/shared/auth/domain"
+	"ddd/shared/auth/domain/command"
 	"ddd/shared/auth/domain/permission"
 	"ddd/shared/auth/domain/policy"
 	"ddd/shared/auth/infra/restkc"
+	baseCmd "ddd/shared/base/command"
 	"fmt"
 
 	"github.com/Nerzal/gocloak/v13"
@@ -277,7 +279,7 @@ func (ks *KeycloakService) convertFromGoCloak(client *gocloak.Client) auth.Clien
 		PublicClient:            gocloak.PBool(client.PublicClient),
 		StandardFlowEnabled:     gocloak.PBool(client.StandardFlowEnabled),
 		ImplicitFlowEnabled:     gocloak.PBool(client.ImplicitFlowEnabled),
-		ServiceAccountEnabled:  gocloak.PBool(client.ServiceAccountsEnabled),
+		ServiceAccountEnabled:   gocloak.PBool(client.ServiceAccountsEnabled),
 		FullScopeAllowed:        gocloak.PBool(client.FullScopeAllowed),
 	}
 }
@@ -294,4 +296,15 @@ func (k *KeycloakService) getClientToken(ctx context.Context, tenant, clientID s
 	t, err := k.client.LoginClient(ctx, clientID, *secr.Value, tenant)
 
 	return t.AccessToken, nil
+}
+
+func (k *KeycloakService) fetchClient(ctx context.Context, input *baseCmd.BaseInput) (err error) {
+	if input.ClientID == nil {
+		client, err := k.GetClientByClientID(ctx, input.TenantDomain, command.ClientName(input.BranchName))
+		if err != nil {
+			return fmt.Errorf("error getting client: %w", err)
+		}
+		input.ClientID = client.ID
+	}
+	return
 }
