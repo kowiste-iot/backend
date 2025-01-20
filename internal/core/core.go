@@ -129,7 +129,7 @@ func (c *Core) initServer(ctx context.Context) error {
 		Auth:   kc,
 	}
 
-	authService := appAuth.NewAuthService(tenantConfig, kc, kc, kc, kc, kc, kc, kc)
+	authService := appAuth.NewAuthService(tenantConfig, base, kc, kc, kc, kc, kc, kc, kc)
 
 	//Branch
 	branchRepo := repoTenant.NewBranchRepository(c.db)

@@ -7,6 +7,7 @@ import (
 	"ddd/shared/auth/domain/policy"
 	"ddd/shared/auth/domain/resource"
 	"ddd/shared/auth/domain/scope"
+	"ddd/shared/base"
 )
 
 type Service struct {
@@ -17,10 +18,12 @@ type Service struct {
 	permissionProvider permission.PermissionProvider
 	scopeProvider      scope.ScopeProvider
 	tenantConfig       *config.TenantConfiguration
+	*base.BaseService
 }
 
 func NewAuthService(
 	tenantConfig *config.TenantConfiguration,
+	base *base.BaseService,
 	identityProvider auth.IdentityProvider,
 	tenantProvider auth.TenantProvider,
 	clientProvider auth.ClientProvider,
@@ -32,6 +35,7 @@ func NewAuthService(
 
 	return &Service{
 		tenantConfig:       tenantConfig,
+		BaseService:        base,
 		tenantProvider:     tenantProvider,
 		clientProvider:     clientProvider,
 		resourceProvider:   resourceProvider,

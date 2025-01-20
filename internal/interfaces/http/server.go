@@ -13,7 +13,7 @@ import (
 	tenanthandler "ddd/internal/interfaces/http/handlers/tenant"
 	userhandler "ddd/internal/interfaces/http/handlers/user"
 	"ddd/pkg/config"
-	auth "ddd/shared/auth/domain"
+	"ddd/shared/auth/domain/validation"
 	"ddd/shared/logger"
 
 	"github.com/gin-contrib/cors"
@@ -27,7 +27,7 @@ type Server struct {
 	logger          logger.Logger
 	router          *gin.Engine
 	httpServer      *http.Server
-	auth            auth.AuthProvider
+	auth            validation.AuthProvider
 	tenantHandler   *tenanthandler.TenantHandler
 	assetHandler    *assethandler.AssetHandler
 	userHandler     *userhandler.UserHandler
@@ -38,7 +38,7 @@ type Server struct {
 }
 
 type ServerDependencies struct {
-	Authentication  auth.AuthProvider
+	Authentication  validation.AuthProvider
 	RolesHandler    *rolehandler.RoleHandler
 	ResourceHandler *resourcehandler.ResourceHandler
 	BranchHandler   *branchhandler.BranchHandler

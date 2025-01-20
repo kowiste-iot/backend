@@ -40,3 +40,6 @@ authorization:
     admin-resource:
       name: admin-resource
       type: base
+    role-resource:
+      name: admin-resource
+      type: base

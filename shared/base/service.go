@@ -2,8 +2,8 @@ package base
 
 import (
 	"context"
-	auth "ddd/shared/auth/domain"
 	authCmd "ddd/shared/auth/domain/command"
+	"ddd/shared/auth/domain/validation"
 	"ddd/shared/base/command"
 	"ddd/shared/http/httputil"
 	"fmt"
@@ -14,7 +14,7 @@ import (
 
 type BaseService struct {
 	Logger logger.Logger
-	Auth   auth.AuthProvider
+	Auth   validation.AuthProvider
 }
 
 func (b *BaseService) CheckPermission(ctx context.Context, input *command.CheckPermissionInput) (err error) {

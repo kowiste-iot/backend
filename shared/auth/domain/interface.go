@@ -3,15 +3,7 @@ package auth
 import (
 	"context"
 	userCmd "ddd/internal/features/user/domain/command"
-
-	"github.com/golang-jwt/jwt/v5"
 )
-
-type AuthProvider interface {
-	ValidateToken(ctx context.Context, token string) (*jwt.Token, error)
-	ValidatePermissionService(ctx context.Context, token, clientID, resource, scope string) (bool, error)
-	ValidatePermissionUser(ctx context.Context, token, clientID, resource, scope string) (bool, error)
-}
 
 type IdentityProvider interface {
 	CreateUser(ctx context.Context, input *userCmd.CreateUserInput) (string, error)
