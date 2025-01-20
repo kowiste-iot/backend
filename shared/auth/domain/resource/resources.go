@@ -4,6 +4,7 @@ import (
 	"context"
 	"ddd/pkg/config"
 	"ddd/shared/auth/domain/scope"
+	baseCmd "ddd/shared/base/command"
 )
 
 const (
@@ -16,7 +17,7 @@ const (
 	Admin  string = "admin-resource"
 
 	//
-	defaultResource string ="Default Resource"
+	defaultResource string = "Default Resource"
 )
 
 type ResourceProvider interface {
@@ -24,7 +25,7 @@ type ResourceProvider interface {
 	UpdateResource(ctx context.Context, tenantID, clientID string, resource Resource) error
 	//DeleteResource(ctx context.Context, tenantID, clientID, resourceID string) error
 	GetResource(ctx context.Context, tenantID, clientID, resourceID string) (*Resource, error)
-	ListResources(ctx context.Context, tenantID, clientID string) ([]Resource, error)
+	ListResources(ctx context.Context, input *baseCmd.BaseInput) ([]Resource, error)
 }
 
 type Resource struct {
@@ -55,7 +56,7 @@ func EndpointsResources(input map[string]config.Resource) (resources []Resource)
 
 type Resources []Resource
 
-func (rs Resources) FilterResource() (resources []Resource) {
+func (rs Resources) Filter() (resources []Resource) {
 	for i := range rs {
 		if rs[i].Name == defaultResource {
 			continue

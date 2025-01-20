@@ -64,7 +64,6 @@ func (s *Server) setupRoutes() {
 				resource := apiBranch.Group("resources")
 				{
 					resource.GET("", s.resourceHandler.ListResources)
-					resource.GET(":id", s.resourceHandler.GetReseource)
 				}
 
 				// 	// Measure routes

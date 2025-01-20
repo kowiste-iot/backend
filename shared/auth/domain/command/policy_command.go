@@ -3,6 +3,11 @@ package command
 import (
 	"ddd/shared/base/command"
 	"fmt"
+	"strings"
+)
+
+const (
+	defaultName string = "-policy"
 )
 
 // type CreateRoleInput struct {
@@ -22,5 +27,8 @@ type PolicyNameInput struct {
 }
 
 func PolicyName(roleName string) string {
-	return fmt.Sprintf("%s-policy", roleName)
+	return fmt.Sprintf("%s"+defaultName, roleName)
+}
+func PolicyToRole(policyName string) string {
+	return strings.Replace(policyName, defaultName, "", -1)
 }

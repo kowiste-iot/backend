@@ -26,20 +26,20 @@ authorization:
     - worker
   resources:
     asset-resource:
-      name: asset-resource
+      name: asset
       type: base
       permissions:
         worker:
           - view
     user-resource:
-      name: user-resource
+      name: user
       type: base
       permissions:
         worker:
           - view
     admin-resource:
-      name: admin-resource
+      name: admin
       type: base
     role-resource:
-      name: admin-resource
+      name: role
       type: base

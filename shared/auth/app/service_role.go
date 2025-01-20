@@ -106,14 +106,14 @@ func (s *Service) DeleteRole(ctx context.Context, input *command.RoleIDInput) (e
 
 // AssignRoles assigns roles to a user
 func (s *Service) AssignRoles(ctx context.Context, input *command.AssignRolesInput) error {
-	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
-		BaseInput: input.BaseInput,
-		Resource:  resource.Role,
-		Scope:     scope.Update,
-	})
-	if err != nil {
-		return err
-	}
+	// err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
+	// 	BaseInput: input.BaseInput,
+	// 	Resource:  resource.Role,
+	// 	Scope:     scope.Update,
+	// })
+	// if err != nil {
+	// 	return err
+	// }
 	return s.tenantProvider.AssignRoles(ctx, input)
 }
 

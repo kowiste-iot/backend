@@ -2,25 +2,28 @@ package app
 
 import (
 	"context"
-	"ddd/shared/auth/domain/command"
+	"ddd/shared/auth/domain/permission"
 	"ddd/shared/auth/domain/resource"
 	baseCmd "ddd/shared/base/command"
-
 	"fmt"
 )
 
 func (s *Service) GetResources(ctx context.Context, input *baseCmd.BaseInput) (resources []resource.Resource, err error) {
 
-	client, err := s.clientProvider.GetClientByClientID(ctx, input.TenantDomain, command.ClientName(input.BranchName))
-	if err != nil {
-		return nil, fmt.Errorf("error getting client: %w", err)
-	}
-	var temp resource.Resources
-	temp, err = s.resourceProvider.ListResources(ctx, input.TenantDomain, *client.ID)
+	var tempResources resource.Resources
+	tempResources, err = s.resourceProvider.ListResources(ctx, input)
 	if err != nil {
 		return
 	}
 
-	resources = temp.FilterResource()
-	return
+	resources = tempResources.Filter()
+	var tempPermissions permission.Permissions
+
+	tempPermissions, err = s.permissionProvider.ListPermissions(ctx, input)
+	if err != nil {
+		return
+	}
+	permissions:=tempPermissions.Filter(true)
+	fmt.Println("re", permissions)
+	return 
 }

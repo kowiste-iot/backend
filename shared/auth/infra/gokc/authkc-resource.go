@@ -3,12 +3,11 @@ package keycloak
 import (
 	"context"
 	"ddd/shared/auth/domain/resource"
+	baseCmd "ddd/shared/base/command"
 	"fmt"
 
 	"github.com/Nerzal/gocloak/v13"
 )
-
-
 
 // ResourceProvider interface methods for KeycloakService
 func (ks *KeycloakService) CreateResource(ctx context.Context, tenantID, clientID string, resource resource.Resource) (*resource.Resource, error) {
@@ -112,17 +111,21 @@ func (ks *KeycloakService) GetResource(ctx context.Context, tenantID, clientID, 
 	return convertFromKeycloakResource(kcResource), nil
 }
 
-func (ks *KeycloakService) ListResources(ctx context.Context, tenantID, clientID string) ([]resource.Resource, error) {
+func (ks *KeycloakService) ListResources(ctx context.Context, input *baseCmd.BaseInput) ([]resource.Resource, error) {
 	token, err := ks.GetValidToken(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get token: %w", err)
+	}
+	err = ks.fetchClient(ctx, input)
+	if err != nil {
+		return nil, fmt.Errorf("error getting client: %w", err)
 	}
 
 	kcResources, err := ks.client.GetResources(
 		ctx,
 		token.AccessToken,
-		tenantID,
-		clientID,
+		input.TenantDomain,
+		*input.ClientID,
 		gocloak.GetResourceParams{},
 	)
 	if err != nil {

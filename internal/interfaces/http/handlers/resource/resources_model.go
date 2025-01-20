@@ -6,15 +6,14 @@ import (
 
 type ResourceResponse struct {
 	Name        string `json:"name"`
-	ReadOnly    bool   `json:"readonly"`
-	Description string `json:"description,omitempty"`
+	DisplayName string `json:"displaName"`
 }
 
-
 // Conversion helpers
-func ToResourcesResponse(role resource.Resource) ResourceResponse {
+func ToResourcesResponse(resource resource.Resource) ResourceResponse {
 	return ResourceResponse{
-		Name:        role.Name,
+		Name:        resource.Name,
+		DisplayName: resource.DisplayName,
 	}
 }
 

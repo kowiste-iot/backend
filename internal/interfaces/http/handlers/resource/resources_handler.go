@@ -2,7 +2,6 @@ package resourcehandler
 
 import (
 	authApp "ddd/shared/auth/app"
-	"ddd/shared/auth/domain/command"
 	baseCmd "ddd/shared/base/command"
 	ginhelp "ddd/shared/http/gin"
 	"ddd/shared/http/httputil"
@@ -28,37 +27,6 @@ func New(deps Dependencies) *ResourceHandler {
 		logger:      deps.Logger,
 		authService: deps.AuthService,
 	}
-}
-
-func (h *ResourceHandler) GetReseource(c *gin.Context) {
-	roleName := c.Param("name")
-	ctx := c.Request.Context()
-
-	tenant, branch, err := httputil.GetBase(ctx)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get base: " + err.Error()})
-		return
-	}
-	input := command.RoleIDInput{
-		BaseInput: baseCmd.NewInput(tenant.Domain(), branch),
-		RoleID:    roleName,
-	}
-	role, err := h.authService.GetRole(c.Request.Context(), &input)
-	if err != nil {
-		h.logger.Error(c.Request.Context(), err, "Failed to get role", nil)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get role"})
-		return
-	}
-
-	if role == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Role not found"})
-		return
-	}
-
-	c.JSON(http.StatusOK, ResourceResponse{
-		Name:        role.Name,
-		Description: role.Description,
-	})
 }
 
 func (h *ResourceHandler) ListResources(c *gin.Context) {

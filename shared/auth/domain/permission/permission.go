@@ -1,6 +1,10 @@
 package permission
 
-import "context"
+import (
+	"context"
+	"ddd/shared/auth/domain/command"
+	baseCmd "ddd/shared/base/command"
+)
 
 const (
 	TypeScope    string = "scope"
@@ -14,6 +18,11 @@ const (
 	LogicPositive string = "POSITIVE"
 )
 
+const (
+	defaultPermission string = "Default Permission"
+	adminPermission   string = "admin-permission"
+)
+
 type Permission struct {
 	ID               string   `json:"id,omitempty"`
 	Name             string   `json:"name"`
@@ -23,6 +32,7 @@ type Permission struct {
 	Resources        []string `json:"resources,omitempty"`
 	Scopes           []string `json:"scopes,omitempty"`
 	Policies         []string `json:"policies"`
+	Roles            []string `json:"roles"`
 	DecisionStrategy string   `json:"decisionStrategy"` // UNANIMOUS, AFFIRMATIVE, CONSENSUS
 	Logic            string   `json:"logic"`
 }
@@ -32,5 +42,21 @@ type PermissionProvider interface {
 	UpdatePermission(ctx context.Context, tenantID, clientID string, permission Permission) error
 	DeletePermission(ctx context.Context, tenantID, clientID, permissionID string) error
 	GetPermission(ctx context.Context, tenantID, clientID, permissionID string) (*Permission, error)
-	ListPermissions(ctx context.Context, tenantID, clientID string) ([]Permission, error)
+	ListPermissions(ctx context.Context, input *baseCmd.BaseInput) ([]Permission, error)
+}
+
+type Permissions []Permission
+
+func (rs Permissions) Filter(filterAdmin bool) (permission []Permission) {
+	for i := range rs {
+		if rs[i].Name == defaultPermission ||
+			(filterAdmin && rs[i].Name == adminPermission) {
+			continue
+		}
+		for j := range rs[i].Policies {
+			rs[i].Roles = append(rs[i].Roles, command.PolicyToRole(rs[i].Policies[j]))
+		}
+		permission = append(permission, rs[i])
+	}
+	return
 }

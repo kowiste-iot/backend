@@ -146,15 +146,15 @@ func (s *Service) createClientPermissions(ctx context.Context, input *baseCmd.Ba
 	for _, res := range resources {
 
 		createdResource, err := s.resourceProvider.CreateResource(ctx, input.TenantDomain, *client.ID, resource.Resource{
-			Name:        res.Name,
-			DisplayName: util.CapitalizeFirst(res.Name),
+			Name:        command.ResourceName(res.Name),
+			DisplayName: res.Name,
 			Type:        res.Type,
 			Scopes:      res.Scopes,
 		})
 		if err != nil {
 			return fmt.Errorf("failed to create resource %s: %w", res.Name, err)
 		}
-		resourceConfig, exist := s.tenantConfig.Authorization.Resources[res.Name]
+		resourceConfig, exist := s.tenantConfig.Authorization.Resources[command.ResourceName(res.Name)]
 		if !exist {
 			return fmt.Errorf("error fetching resource %s", res.Name)
 		}

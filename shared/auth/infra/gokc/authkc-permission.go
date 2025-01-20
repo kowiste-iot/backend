@@ -4,6 +4,7 @@ import (
 	"context"
 	"ddd/shared/auth/domain/permission"
 	"ddd/shared/auth/infra/restkc"
+	baseCmd "ddd/shared/base/command"
 	"fmt"
 
 	"github.com/Nerzal/gocloak/v13"
@@ -105,7 +106,7 @@ func (ks *KeycloakService) CreatePermission(ctx context.Context, tenantDomain, c
 			}
 		}
 	}
-	p.Scopes=internalScopes
+	p.Scopes = internalScopes
 
 	c, err := ks.client.GetClient(ctx, token.AccessToken, tenantDomain, clientID)
 	if err != nil {
@@ -159,17 +160,20 @@ func (ks *KeycloakService) GetPermission(ctx context.Context, tenantID, clientID
 	}, nil
 }
 
-func (ks *KeycloakService) ListPermissions(ctx context.Context, tenantID, clientID string) ([]permission.Permission, error) {
+func (ks *KeycloakService) ListPermissions(ctx context.Context, input *baseCmd.BaseInput) ([]permission.Permission, error) {
 	token, err := ks.GetValidToken(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get token: %w", err)
 	}
-
+	err = ks.fetchClient(ctx, input)
+	if err != nil {
+		return nil, fmt.Errorf("error getting client: %w", err)
+	}
 	kcPermissions, err := ks.client.GetPermissions(
 		ctx,
 		token.AccessToken,
-		tenantID,
-		clientID,
+		input.TenantDomain,
+		*input.ClientID,
 		gocloak.GetPermissionParams{},
 	)
 	if err != nil {
@@ -179,15 +183,48 @@ func (ks *KeycloakService) ListPermissions(ctx context.Context, tenantID, client
 	permissions := make([]permission.Permission, len(kcPermissions))
 	for i, kp := range kcPermissions {
 		permissions[i] = permission.Permission{
-			ID:        *kp.ID,
-			Name:      *kp.Name,
-			Type:      *kp.Type,
-			Resources: *kp.Resources,
-			Scopes:    *kp.Scopes,
-			Policies:  *kp.Policies,
+			ID:    *kp.ID,
+			Name:  *kp.Name,
+			Type:  *kp.Type,
+			Logic: string(*kp.Logic),
+		}
+		if kp.Resources != nil {
+			permissions[i].Resources = *kp.Resources
+		}
+		if kp.Scopes != nil {
+			permissions[i].Scopes = *kp.Scopes
+		}
+		if kp.Resources != nil {
+			permissions[i].Policies = *kp.Policies
+		}
+		resourPerm, err := ks.client.GetPermissionResources(ctx, token.AccessToken, input.TenantDomain, *input.ClientID, *kp.ID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch permission resource %w", err)
+		}
+		if len(resourPerm) > 0 {
+			for j := range resourPerm {
+				permissions[i].Resources = append(permissions[i].Resources, *resourPerm[j].ResourceID)
+			}
+		}
+		scopesPerm, err := ks.client.GetPermissionScopes(ctx, token.AccessToken, input.TenantDomain, *input.ClientID, *kp.ID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch permission scopes %w", err)
+		}
+		if len(scopesPerm) > 0 {
+			for j := range scopesPerm {
+				permissions[i].Scopes = append(permissions[i].Scopes, *scopesPerm[j].ScopeName)
+			}
+		}
+		policyPerm, err := ks.client.GetAuthorizationPolicyAssociatedPolicies(ctx, token.AccessToken, input.TenantDomain, *input.ClientID, *kp.ID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch permission scopes %w", err)
+		}
+		if len(policyPerm) > 0 {
+			for j := range policyPerm {
+				permissions[i].Policies = append(permissions[i].Policies, *policyPerm[j].Name)
+			}
 		}
 	}
-
 	return permissions, nil
 }
 func (ks *KeycloakService) UpdatePermission(ctx context.Context, tenantID, clientID string, permission permission.Permission) error {
