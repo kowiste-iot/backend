@@ -6,7 +6,7 @@ import (
 
 type ResourceResponse struct {
 	Name        string `json:"name"`
-	DisplayName string `json:"displaName"`
+	DisplayName string `json:"displayName"`
 }
 
 // Conversion helpers

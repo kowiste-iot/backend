@@ -56,9 +56,10 @@ func EndpointsResources(input map[string]config.Resource) (resources []Resource)
 
 type Resources []Resource
 
-func (rs Resources) Filter() (resources []Resource) {
+func (rs Resources) Filter(filterAdmin bool) (resources []Resource) {
 	for i := range rs {
-		if rs[i].Name == defaultResource {
+		if rs[i].Name == defaultResource ||
+			(filterAdmin && rs[i].Name == Admin) {
 			continue
 		}
 		resources = append(resources, rs[i])

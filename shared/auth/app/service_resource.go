@@ -16,7 +16,7 @@ func (s *Service) GetResources(ctx context.Context, input *baseCmd.BaseInput) (r
 		return
 	}
 
-	resources = tempResources.Filter()
+	resources = tempResources.Filter(true)
 	var tempPermissions permission.Permissions
 
 	tempPermissions, err = s.permissionProvider.ListPermissions(ctx, input)
