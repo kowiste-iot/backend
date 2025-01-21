@@ -2,7 +2,6 @@ package permission
 
 import (
 	"context"
-	"ddd/shared/auth/domain/command"
 	baseCmd "ddd/shared/base/command"
 )
 
@@ -43,20 +42,4 @@ type PermissionProvider interface {
 	DeletePermission(ctx context.Context, tenantID, clientID, permissionID string) error
 	GetPermission(ctx context.Context, tenantID, clientID, permissionID string) (*Permission, error)
 	ListPermissions(ctx context.Context, input *baseCmd.BaseInput) ([]Permission, error)
-}
-
-type Permissions []Permission
-
-func (rs Permissions) Filter(filterAdmin bool) (permission []Permission) {
-	for i := range rs {
-		if rs[i].Name == defaultPermission ||
-			(filterAdmin && rs[i].Name == adminPermission) {
-			continue
-		}
-		for j := range rs[i].Policies {
-			rs[i].Roles = append(rs[i].Roles, command.PolicyToRole(rs[i].Policies[j]))
-		}
-		permission = append(permission, rs[i])
-	}
-	return
 }

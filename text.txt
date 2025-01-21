@@ -1,10 +1,11 @@
 .env.local
 .gitignore
+.gitlab-ci.yml
 Makefile
 README.md
 cmd/
   server/
-    __debug_bin2905847180
+    __debug_bin2427612604
     iot.db
     main.go
 configs/
@@ -56,14 +57,6 @@ internal/
       infra/
         gorm/
           asset.go
-    role/
-      app/
-        service.go
-      domain/
-        asset.go
-        command/
-          asset_command.go
-        interface.go
     tenant/
       app/
         branch_service.go
@@ -101,9 +94,9 @@ internal/
         branch/
           branch_handler.go
           branch_model.go
-        role/
-          role_handler.go
-          role_model.go
+        resource/
+          resources_handler.go
+          resources_model.go
         roles/
           roles_handler.go
           roles_model.go
@@ -132,6 +125,7 @@ shared/
     app/
       service.go
       service_branch.go
+      service_resource.go
       service_role.go
       service_tenant.go
     domain/
@@ -139,6 +133,8 @@ shared/
       client.go
       command/
         branch_command.go
+        policy_command.go
+        resource_command.go
         role_command.go
         tenant_command.go
       interface.go
@@ -152,14 +148,16 @@ shared/
       scope/
         scope.go
       tenant.go
+      validation/
+        validation.go
     infra/
       gokc/
         auth-branch.go
-        auth-role.go
         authkc-client.go
         authkc-permission.go
         authkc-policy.go
         authkc-resource.go
+        authkc-role.go
         authkc-scope.go
         authkc-tenant.go
         authkc-user.go
