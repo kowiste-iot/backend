@@ -1,0 +1,31 @@
+github-sync:
+  image: alpine:latest
+  variables:
+    GIT_DEPTH: '0'
+    GIT_STRATEGY: clone
+
+  before_script:
+    - apk update && apk add git openssh
+
+  script:
+    # Configure git
+    - git config --global user.name "${GITLAB_USER_NAME}"
+    - git config --global user.email "${GITLAB_USER_EMAIL}"
+
+    # Prepare branch
+    - git checkout ${CI_COMMIT_SHA}
+    - git checkout -b public
+
+    # Setup and push to GitHub
+    - git remote remove github || true
+    - git remote add github "https://${GITHUB_TOKEN}@github.com/kowiste-iot/backend.git"
+    - |
+      if ! git push -u github public:main --force; then
+        echo "Failed to push to GitHub"
+        exit 1
+      fi
+
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "public"'
+      when: always
+    - when: never
