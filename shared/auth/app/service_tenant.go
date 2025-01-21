@@ -48,7 +48,6 @@ func (s *Service) CreateTenant(ctx context.Context, input *command.CreateTenantI
 }
 
 func (s *Service) createTenantClients(ctx context.Context, input *baseCmd.BaseInput) (err error) {
-	//TODO: move struct inside keycloak implementation here still dont need to know about kc implementation
 	_, err = s.clientProvider.CreateClient(ctx, input.TenantDomain, auth.Client{
 		ClientID:            s.tenantConfig.WebClient.ClientID,
 		Name:                s.tenantConfig.WebClient.Name,

@@ -32,7 +32,7 @@ type Permission struct {
 	Resources        []string `json:"resources,omitempty"`
 	Scopes           []string `json:"scopes,omitempty"`
 	Policies         []string `json:"policies"`
-	Roles            []string `json:"roles"`
+	Roles            []string `json:"roles,omitempty"`
 	DecisionStrategy string   `json:"decisionStrategy"` // UNANIMOUS, AFFIRMATIVE, CONSENSUS
 	Logic            string   `json:"logic"`
 }
