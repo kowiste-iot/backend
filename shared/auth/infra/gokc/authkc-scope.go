@@ -3,6 +3,7 @@ package keycloak
 import (
 	"context"
 	"ddd/shared/auth/domain/scope"
+	baseCmd "ddd/shared/base/command"
 	"fmt"
 
 	"github.com/Nerzal/gocloak/v13"
@@ -63,17 +64,20 @@ func (ks *KeycloakService) GetScope(ctx context.Context, tenantID, clientID, sco
 	}, nil
 }
 
-func (ks *KeycloakService) ListScopes(ctx context.Context, tenantID, clientID string) ([]scope.Scope, error) {
+func (ks *KeycloakService) ListScopes(ctx context.Context, input *baseCmd.BaseInput) ([]scope.Scope, error) {
 	token, err := ks.GetValidToken(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get token: %w", err)
 	}
-
+	err = ks.fetchClient(ctx, input)
+	if err != nil {
+		return nil, fmt.Errorf("error getting client: %w", err)
+	}
 	kcScopes, err := ks.client.GetScopes(
 		ctx,
 		token.AccessToken,
-		tenantID,
-		clientID,
+		input.TenantDomain,
+		*input.ClientID,
 		gocloak.GetScopeParams{},
 	)
 	if err != nil {

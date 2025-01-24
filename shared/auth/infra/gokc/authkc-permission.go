@@ -92,7 +92,7 @@ func (ks *KeycloakService) CreatePermission(ctx context.Context, tenantDomain, c
 		return nil, fmt.Errorf("failed to get token: %w", err)
 	}
 	internalScopes := []string{}
-	scopes, err := ks.ListScopes(ctx, tenantDomain, clientID)
+	scopes, err := ks.ListScopes(ctx,&baseCmd.BaseInput{TenantDomain: tenantDomain,ClientID: &clientID})
 	if err != nil {
 		return nil, err
 	}

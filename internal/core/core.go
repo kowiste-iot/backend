@@ -4,21 +4,22 @@ import (
 	"context"
 	appAsset "ddd/internal/features/asset/app"
 	repoAsset "ddd/internal/features/asset/infra/gorm"
+	assethandler "ddd/internal/features/asset/interface/rest"
 	"errors"
 
 	appTenant "ddd/internal/features/tenant/app"
 	repoTenant "ddd/internal/features/tenant/infra/gorm"
+	tenanthandler "ddd/internal/features/tenant/interface/rest"
 
 	appUser "ddd/internal/features/user/app"
 	repoUser "ddd/internal/features/user/infra/gorm"
+	userhandler "ddd/internal/features/user/interface/rest"
 
 	"ddd/internal/interfaces/http"
-	assethandler "ddd/internal/interfaces/http/handlers/asset"
 	branchhandler "ddd/internal/interfaces/http/handlers/branch"
 	resourcehandler "ddd/internal/interfaces/http/handlers/resource"
 	rolehandler "ddd/internal/interfaces/http/handlers/roles"
-	tenanthandler "ddd/internal/interfaces/http/handlers/tenant"
-	userhandler "ddd/internal/interfaces/http/handlers/user"
+	scopehandler "ddd/internal/interfaces/http/handlers/scopes"
 	wshandler "ddd/internal/interfaces/http/handlers/websocket"
 	"ddd/pkg/config"
 	appAuth "ddd/shared/auth/app"
@@ -188,6 +189,10 @@ func (c *Core) initServer(ctx context.Context) error {
 			AuthService: authService,
 		}),
 		ResourceHandler: resourcehandler.New(resourcehandler.Dependencies{
+			Logger:      c.logger,
+			AuthService: authService,
+		}),
+		ScopeHandler: scopehandler.New(scopehandler.Dependencies{
 			Logger:      c.logger,
 			AuthService: authService,
 		}),

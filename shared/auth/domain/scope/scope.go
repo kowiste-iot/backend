@@ -1,6 +1,9 @@
 package scope
 
-import "context"
+import (
+	"context"
+	baseCmd "ddd/shared/base/command"
+)
 
 const (
 	View   string = "view"
@@ -21,7 +24,7 @@ type ScopeProvider interface {
 	UpdateScope(ctx context.Context, tenantID, clientID string, scope Scope) error
 	DeleteScope(ctx context.Context, tenantID, clientID, scopeID string) error
 	GetScope(ctx context.Context, tenantID, clientID, scopeID string) (*Scope, error)
-	ListScopes(ctx context.Context, tenantID, clientID string) ([]Scope, error)
+	ListScopes(ctx context.Context, input *baseCmd.BaseInput) ([]Scope, error)
 }
 
 func AllScopes() []string {

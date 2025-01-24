@@ -6,12 +6,13 @@ import (
 	"net/http"
 	"time"
 
-	assethandler "ddd/internal/interfaces/http/handlers/asset"
+	assethandler "ddd/internal/features/asset/interface/rest"
+	tenanthandler "ddd/internal/features/tenant/interface/rest"
+	userhandler "ddd/internal/features/user/interface/rest"
 	branchhandler "ddd/internal/interfaces/http/handlers/branch"
 	resourcehandler "ddd/internal/interfaces/http/handlers/resource"
 	rolehandler "ddd/internal/interfaces/http/handlers/roles"
-	tenanthandler "ddd/internal/interfaces/http/handlers/tenant"
-	userhandler "ddd/internal/interfaces/http/handlers/user"
+	scopehandler "ddd/internal/interfaces/http/handlers/scopes"
 	"ddd/pkg/config"
 	"ddd/shared/auth/domain/validation"
 	"ddd/shared/logger"
@@ -35,6 +36,7 @@ type Server struct {
 	resourceHandler *resourcehandler.ResourceHandler
 	tokenHandler    *wshandler.TokenHandler
 	wsNotifyHandler *wshandler.NotificationHandler
+	scopesHandler   *scopehandler.ScopeHandler
 }
 
 type ServerDependencies struct {
@@ -45,6 +47,7 @@ type ServerDependencies struct {
 	TenantHandler   *tenanthandler.TenantHandler
 	AssetHandler    *assethandler.AssetHandler
 	UserHandler     *userhandler.UserHandler
+	ScopeHandler    *scopehandler.ScopeHandler
 	TokenHandler    *wshandler.TokenHandler
 	WSNotifyHandler *wshandler.NotificationHandler
 }
@@ -74,6 +77,7 @@ func NewServer(cfg *config.Config, logger logger.Logger, deps ServerDependencies
 		tenantHandler:   deps.TenantHandler,
 		assetHandler:    deps.AssetHandler,
 		userHandler:     deps.UserHandler,
+		scopesHandler:   deps.ScopeHandler,
 		wsNotifyHandler: deps.WSNotifyHandler,
 		tokenHandler:    deps.TokenHandler,
 		// measureHandler:   deps.MeasureHandler,

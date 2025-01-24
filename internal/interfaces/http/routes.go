@@ -65,6 +65,10 @@ func (s *Server) setupRoutes() {
 				{
 					resource.GET("", s.resourceHandler.ListResources)
 				}
+				scopes := apiBranch.Group("scopes")
+				{
+					scopes.GET("", s.scopesHandler.ListRoles)
+				}
 
 				// 	// Measure routes
 				// 	measures := v1.Group("/measures")
