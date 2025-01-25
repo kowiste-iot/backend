@@ -2,6 +2,7 @@ package resource
 
 import (
 	"ddd/shared/auth/domain/permission"
+	"ddd/shared/auth/domain/scope"
 )
 
 type Resources []Resource
@@ -17,14 +18,14 @@ func (rs Resources) Filter(filterAdmin bool) (resources []Resource) {
 	return
 }
 
-func (rs Resources) MapPermission(input permission.Permissions) (rp []ResourcePermission) {
+func (rs Resources) MapPermission(input permission.Permissions, scopes scope.Scopes) (rp []ResourcePermission) {
 	for i := range rs {
 		permsInResource := input.GetByResource(rs[i].ID)
 
-		roles := make(map[string][]string)
+		roles := make(map[string][]scope.Scope)
 		for k := range permsInResource {
 			for j := range permsInResource[k].Roles {
-				roles[permsInResource[k].Roles[j]] = permsInResource[k].Scopes
+				roles[permsInResource[k].Roles[j].Name] = scopes.GetByName(permsInResource[k].Scopes)
 			}
 		}
 

@@ -2,13 +2,20 @@ package resourcehandler
 
 import (
 	"ddd/shared/auth/domain/resource"
+	"ddd/shared/auth/domain/scope"
 )
 
+type UpdateResourceRequest struct {
+	ID          string                   `json:"id" binding:"required"`
+	Name        string                   `json:"name" binding:"required"`
+	DisplayName string                   `json:"displayname"`
+	Roles       map[string][]scope.Scope `json:"roles"`
+}
 type ResourceResponse struct {
-	ID          string              `json:"id"`
-	Name        string              `json:"name"`
-	DisplayName string              `json:"displayName"`
-	Roles       map[string][]string `json:"roles"`
+	ID          string                   `json:"id"`
+	Name        string                   `json:"name"`
+	DisplayName string                   `json:"displayName"`
+	Roles       map[string][]scope.Scope `json:"roles"`
 }
 
 // Conversion helpers

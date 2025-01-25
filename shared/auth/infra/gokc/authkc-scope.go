@@ -18,7 +18,6 @@ func (ks *KeycloakService) CreateScope(ctx context.Context, tenantID, clientID s
 	kcScope := gocloak.ScopeRepresentation{
 		Name:        &sc.Name,
 		DisplayName: &sc.DisplayName,
-		IconURI:     &sc.IconURI,
 	}
 
 	createdScope, err := ks.client.CreateScope(
@@ -36,7 +35,6 @@ func (ks *KeycloakService) CreateScope(ctx context.Context, tenantID, clientID s
 		ID:          *createdScope.ID,
 		Name:        *createdScope.Name,
 		DisplayName: *createdScope.DisplayName,
-		IconURI:     *createdScope.IconURI,
 	}, nil
 }
 func (ks *KeycloakService) GetScope(ctx context.Context, tenantID, clientID, scopeID string) (*scope.Scope, error) {
@@ -60,7 +58,6 @@ func (ks *KeycloakService) GetScope(ctx context.Context, tenantID, clientID, sco
 		ID:          *kcScope.ID,
 		Name:        *kcScope.Name,
 		DisplayName: *kcScope.DisplayName,
-		IconURI:     *kcScope.IconURI,
 	}, nil
 }
 
@@ -90,7 +87,6 @@ func (ks *KeycloakService) ListScopes(ctx context.Context, input *baseCmd.BaseIn
 			ID:          *ks.ID,
 			Name:        *ks.Name,
 			DisplayName: *ks.DisplayName,
-			IconURI:     *ks.IconURI,
 		}
 	}
 
@@ -106,7 +102,6 @@ func (ks *KeycloakService) UpdateScope(ctx context.Context, tenantID, clientID s
 		ID:          &scope.ID,
 		Name:        &scope.Name,
 		DisplayName: &scope.DisplayName,
-		IconURI:     &scope.IconURI,
 	}
 
 	err = ks.client.UpdateScope(

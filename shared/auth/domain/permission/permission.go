@@ -2,6 +2,7 @@ package permission
 
 import (
 	"context"
+	"ddd/shared/auth/domain/role"
 	baseCmd "ddd/shared/base/command"
 )
 
@@ -23,17 +24,17 @@ const (
 )
 
 type Permission struct {
-	ID               string   `json:"id,omitempty"`
-	Name             string   `json:"name"`
-	Description      string   `json:"description,omitempty"`
-	Type             string   `json:"type"` // resource-based, scope-based
-	ResourceType     string   `json:"resourceType"`
-	Resources        []string `json:"resources,omitempty"`
-	Scopes           []string `json:"scopes,omitempty"`
-	Policies         []string `json:"policies"`
-	Roles            []string `json:"roles,omitempty"`
-	DecisionStrategy string   `json:"decisionStrategy"` // UNANIMOUS, AFFIRMATIVE, CONSENSUS
-	Logic            string   `json:"logic"`
+	ID               string      `json:"id,omitempty"`
+	Name             string      `json:"name"`
+	Description      string      `json:"description,omitempty"`
+	Type             string      `json:"type"` // resource-based, scope-based
+	ResourceType     string      `json:"resourceType"`
+	Resources        []string    `json:"resources,omitempty"`
+	Scopes           []string    `json:"scopes,omitempty"`
+	Policies         []string    `json:"policies"`
+	Roles            []role.Role `json:"roles,omitempty"`
+	DecisionStrategy string      `json:"decisionStrategy"` // UNANIMOUS, AFFIRMATIVE, CONSENSUS
+	Logic            string      `json:"logic"`
 }
 
 type PermissionProvider interface {

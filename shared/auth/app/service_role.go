@@ -2,11 +2,11 @@ package app
 
 import (
 	"context"
-	auth "ddd/shared/auth/domain"
 	"ddd/shared/auth/domain/command"
 	"ddd/shared/auth/domain/permission"
 	"ddd/shared/auth/domain/policy"
 	"ddd/shared/auth/domain/resource"
+	"ddd/shared/auth/domain/role"
 	"ddd/shared/auth/domain/scope"
 	baseCmd "ddd/shared/base/command"
 	"ddd/shared/util"
@@ -15,7 +15,7 @@ import (
 )
 
 // GetTenantRoles retrieves all roles for a tenant
-func (s *Service) GetRoles(ctx context.Context, input *baseCmd.BaseInput) ([]auth.Role, error) {
+func (s *Service) GetRoles(ctx context.Context, input *baseCmd.BaseInput) ([]role.Role, error) {
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: *input,
 		Resource:  resource.Role,
@@ -28,7 +28,7 @@ func (s *Service) GetRoles(ctx context.Context, input *baseCmd.BaseInput) ([]aut
 }
 
 // GetTenantRole retrieves a specific role from a tenant
-func (s *Service) GetRole(ctx context.Context, input *command.RoleIDInput) (*auth.Role, error) {
+func (s *Service) GetRole(ctx context.Context, input *command.RoleIDInput) (*role.Role, error) {
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
 		Resource:  resource.Role,
@@ -131,7 +131,7 @@ func (s *Service) RemoveRoles(ctx context.Context, input *command.RemoveRolesInp
 }
 
 // GetUserRoles gets all roles assigned to a user
-func (s *Service) GetUserRoles(ctx context.Context, input *command.UserRolesInput) ([]auth.Role, error) {
+func (s *Service) GetUserRoles(ctx context.Context, input *command.UserRolesInput) ([]role.Role, error) {
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
 		Resource:  resource.Role,
@@ -145,7 +145,7 @@ func (s *Service) GetUserRoles(ctx context.Context, input *command.UserRolesInpu
 
 // isDefaultRole checks if a role name or ID matches any default roles
 func (s *Service) isDefaultRole(identifier string) bool {
-	return slices.ContainsFunc(auth.AllRoles(s.tenantConfig.Authorization.Roles), func(role auth.Role) bool {
+	return slices.ContainsFunc(role.AllRoles(s.tenantConfig.Authorization.Roles), func(role role.Role) bool {
 		return role.Name == identifier
 	})
 }

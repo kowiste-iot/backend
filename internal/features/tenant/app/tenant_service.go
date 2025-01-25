@@ -9,6 +9,7 @@ import (
 	appAuth "ddd/shared/auth/app"
 	auth "ddd/shared/auth/domain"
 	authCmd "ddd/shared/auth/domain/command"
+	"ddd/shared/auth/domain/role"
 	"ddd/shared/base"
 	baseCmd "ddd/shared/base/command"
 	"ddd/shared/validator"
@@ -103,7 +104,7 @@ func (s tenantService) CreateTenant(ctx context.Context, input *command.CreateTe
 		Email:     input.AdminEmail,
 		FirstName: "admin",
 		LastName:  "user",
-		Roles:     []string{auth.RoleAdmin},
+		Roles:     []string{role.RoleAdmin},
 	}
 	user, err := s.user.CreateUser(ctx, &u)
 	if err != nil {
@@ -114,7 +115,7 @@ func (s tenantService) CreateTenant(ctx context.Context, input *command.CreateTe
 	r := authCmd.AssignRolesInput{
 		BaseInput: baseCmd.NewInput(tenant.Domain(), defaultB.Name),
 		UserID:    user.AuthID(),
-		Roles:     []string{auth.RoleAdmin},
+		Roles:     []string{role.RoleAdmin},
 	}
 	err = s.auth.AssignRoles(ctx, &r)
 	if err != nil {

@@ -16,7 +16,6 @@ type Scope struct {
 	ID          string `json:"id,omitempty"`
 	Name        string `json:"name"`
 	DisplayName string `json:"displayName,omitempty"`
-	IconURI     string `json:"iconUri,omitempty"`
 }
 
 type ScopeProvider interface {

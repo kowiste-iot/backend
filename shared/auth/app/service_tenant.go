@@ -7,6 +7,7 @@ import (
 	"ddd/shared/auth/domain/permission"
 	"ddd/shared/auth/domain/policy"
 	"ddd/shared/auth/domain/resource"
+	"ddd/shared/auth/domain/role"
 	"ddd/shared/auth/domain/scope"
 	baseCmd "ddd/shared/base/command"
 	"ddd/shared/util"
@@ -87,7 +88,7 @@ func (s *Service) createTenantClients(ctx context.Context, input *baseCmd.BaseIn
 }
 func (s Service) createRoles(ctx context.Context, input *baseCmd.BaseInput) (err error) {
 	// Create default roles
-	for _, role := range auth.AllRoles(s.tenantConfig.Authorization.Roles) {
+	for _, role := range role.AllRoles(s.tenantConfig.Authorization.Roles) {
 		input := command.CreateRoleInput{
 			BaseInput:   *input,
 			Name:        role.Name,
@@ -116,7 +117,7 @@ func (s *Service) createClientPermissions(ctx context.Context, input *baseCmd.Ba
 
 	//Create policy 1 for each role
 	policies := make(map[string]*policy.Policy)
-	for _, role := range auth.AllRoles(s.tenantConfig.Authorization.Roles) {
+	for _, role := range role.AllRoles(s.tenantConfig.Authorization.Roles) {
 		r, err := s.tenantProvider.GetRole(ctx, &command.RoleIDInput{
 			BaseInput: baseCmd.NewInput(input.TenantDomain, input.BranchName),
 			RoleID:    role.Name,
@@ -185,10 +186,10 @@ func (s *Service) createClientPermissions(ctx context.Context, input *baseCmd.Ba
 	//resource permission for admin
 	sc := scope.AllScopes()
 
-	p := policies[auth.RoleAdmin]
+	p := policies[role.RoleAdmin]
 	perm := permission.Permission{
-		Name:             fmt.Sprintf("%s-permission", auth.RoleAdmin),
-		Description:      fmt.Sprintf("Permission for %s resource with %s role", auth.RoleAdmin, auth.RoleAdmin),
+		Name:             fmt.Sprintf("%s-permission", role.RoleAdmin),
+		Description:      fmt.Sprintf("Permission for %s resource with %s role", role.RoleAdmin, role.RoleAdmin),
 		Type:             permission.TypeResource,
 		ResourceType:     s.tenantConfig.Authorization.AdminGroup,
 		Scopes:           sc,
@@ -198,7 +199,7 @@ func (s *Service) createClientPermissions(ctx context.Context, input *baseCmd.Ba
 
 	_, err = s.permissionProvider.CreatePermission(ctx, input.TenantDomain, *client.ID, perm)
 	if err != nil {
-		return fmt.Errorf("failed to create permission for %s: %w", auth.RoleAdmin, err)
+		return fmt.Errorf("failed to create permission for %s: %w", role.RoleAdmin, err)
 	}
 	return nil
 }

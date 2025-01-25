@@ -184,7 +184,10 @@ func (h *AssetHandler) UpdateAsset(c *gin.Context) {
 	assetID := c.Param("id")
 	ctx := c.Request.Context()
 	tenant, branch, err := httputil.GetBase(ctx)
-
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get base: " + err.Error()})
+		return
+	}
 	var req UpdateAssetRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

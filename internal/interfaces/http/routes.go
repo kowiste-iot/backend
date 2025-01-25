@@ -64,6 +64,7 @@ func (s *Server) setupRoutes() {
 				resource := apiBranch.Group("resources")
 				{
 					resource.GET("", s.resourceHandler.ListResources)
+					resource.PUT(":id", s.resourceHandler.UpdateResource)
 				}
 				scopes := apiBranch.Group("scopes")
 				{

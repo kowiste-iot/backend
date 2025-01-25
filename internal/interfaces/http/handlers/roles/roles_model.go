@@ -1,7 +1,7 @@
 package rolehandler
 
 import (
-	auth "ddd/shared/auth/domain"
+	"ddd/shared/auth/domain/role"
 )
 
 // Requests
@@ -22,6 +22,7 @@ type AssignRoleRequest struct {
 
 // Responses
 type RoleResponse struct {
+	ID          string `json:"id"`
 	Name        string `json:"name"`
 	ReadOnly    bool   `json:"readonly"`
 	Description string `json:"description,omitempty"`
@@ -33,15 +34,16 @@ type RoleAssignmentResponse struct {
 }
 
 // Conversion helpers
-func ToRoleResponse(role auth.Role) RoleResponse {
+func ToRoleResponse(role role.Role) RoleResponse {
 	return RoleResponse{
+		ID:          role.ID,
 		Name:        role.Name,
 		ReadOnly:    role.IsDefaultRole(),
 		Description: role.Description,
 	}
 }
 
-func ToRoleResponses(roles []auth.Role) []RoleResponse {
+func ToRoleResponses(roles []role.Role) []RoleResponse {
 	responses := make([]RoleResponse, len(roles))
 	for i, role := range roles {
 		responses[i] = ToRoleResponse(role)

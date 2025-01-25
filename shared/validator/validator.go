@@ -1,7 +1,7 @@
 package validator
 
 import (
-	auth "ddd/shared/auth/domain"
+	"ddd/shared/auth/domain/role"
 	"ddd/shared/errors"
 	"reflect"
 	"slices"
@@ -46,9 +46,9 @@ func validateRoles(fl validator.FieldLevel) bool {
 		return false
 	}
 
-	for _, role := range roles {
-		if !slices.ContainsFunc(auth.AllRoles(validRoles), func(r auth.Role) bool {
-			return r.Name == role
+	for _, rol := range roles {
+		if !slices.ContainsFunc(role.AllRoles(validRoles), func(r role.Role) bool {
+			return r.Name == rol
 		}) {
 			return false
 		}

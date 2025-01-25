@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	authCmd "ddd/shared/auth/domain/command"
+	"ddd/shared/auth/domain/role"
 	"ddd/shared/base/command"
 )
 
@@ -23,12 +24,12 @@ type TenantProvider interface {
 	// Role management methods
 	CreateRole(ctx context.Context, input *authCmd.CreateRoleInput) (string, error)
 	DeleteRole(ctx context.Context, input *authCmd.RoleIDInput) error
-	GetRole(ctx context.Context, input *authCmd.RoleIDInput) (*Role, error)
-	GetRoles(ctx context.Context, input *command.BaseInput) ([]Role, error)
+	GetRole(ctx context.Context, input *authCmd.RoleIDInput) (*role.Role, error)
+	GetRoles(ctx context.Context, input *command.BaseInput) ([]role.Role, error)
 	// Role assignment methods
 	AssignRoles(ctx context.Context, input *authCmd.AssignRolesInput) error
 	RemoveRoles(ctx context.Context, input *authCmd.RemoveRolesInput) error
-	GetUserRoles(ctx context.Context, input *authCmd.UserRolesInput) ([]Role, error)
+	GetUserRoles(ctx context.Context, input *authCmd.UserRolesInput) ([]role.Role, error)
 }
 
 type Tenant struct {

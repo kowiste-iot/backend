@@ -1,8 +1,10 @@
 package resource
 
+import "ddd/shared/auth/domain/scope"
+
 type ResourcePermission struct {
-	ID          string              `json:"id,omitempty"`
-	Name        string              `json:"name"`
-	DisplayName string              `json:"displayName,omitempty"`
-	Roles       map[string][]string `json:"roles,omitempty"`
+	ID          string                   `json:"id,omitempty"`
+	Name        string                   `json:"name"`
+	DisplayName string                   `json:"displayName,omitempty"`
+	Roles       map[string][]scope.Scope `json:"roles,omitempty"`
 }

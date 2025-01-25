@@ -1,17 +1,25 @@
 package permission
 
-import "ddd/shared/auth/domain/command"
+import (
+	"ddd/shared/auth/domain/command"
+	"ddd/shared/auth/domain/role"
+	"errors"
+)
 
 type Permissions []Permission
 
-func (rs Permissions) Filter(filterAdmin bool) (permission []Permission) {
+func (rs Permissions) MapRoles(roles role.Roles, filterAdmin bool) (permission []Permission, err error) {
 	for i := range rs {
 		if rs[i].Name == defaultPermission ||
 			(filterAdmin && rs[i].Name == adminPermission) {
 			continue
 		}
 		for j := range rs[i].Policies {
-			rs[i].Roles = append(rs[i].Roles, command.PolicyToRole(rs[i].Policies[j]))
+			role := roles.GetByName(command.PolicyToRole(rs[i].Policies[j]))
+			if role == nil {
+				return nil, errors.New("role not found")
+			}
+			rs[i].Roles = append(rs[i].Roles, *role)
 		}
 		permission = append(permission, rs[i])
 	}
