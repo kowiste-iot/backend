@@ -2,7 +2,7 @@ package resourcehandler
 
 import (
 	authApp "ddd/shared/auth/app"
-	"ddd/shared/auth/domain/command"
+	resourceCmd "ddd/shared/auth/domain/resource/command"
 	baseCmd "ddd/shared/base/command"
 	ginhelp "ddd/shared/http/gin"
 	"ddd/shared/http/httputil"
@@ -68,7 +68,7 @@ func (h *ResourceHandler) UpdateResource(c *gin.Context) {
 	}
 
 	inputBase := baseCmd.NewInput(tenant.Domain(), branch)
-	input := command.UpdateResourceInput{
+	input := resourceCmd.UpdateResourceInput{
 		BaseInput:   inputBase,
 		ID:          resourceID,
 		Name:        req.Name,
@@ -81,5 +81,5 @@ func (h *ResourceHandler) UpdateResource(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, ToResourcesResponse(result))
+	c.JSON(http.StatusOK, ToResourcesResponse(*result))
 }

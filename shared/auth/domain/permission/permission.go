@@ -4,6 +4,7 @@ import (
 	"context"
 	"ddd/shared/auth/domain/role"
 	baseCmd "ddd/shared/base/command"
+	"fmt"
 )
 
 const (
@@ -43,4 +44,11 @@ type PermissionProvider interface {
 	DeletePermission(ctx context.Context, tenantID, clientID, permissionID string) error
 	GetPermission(ctx context.Context, tenantID, clientID, permissionID string) (*Permission, error)
 	ListPermissions(ctx context.Context, input *baseCmd.BaseInput) ([]Permission, error)
+}
+
+func NameNonAdmin(roleName, resourceName string) string {
+	return fmt.Sprintf("%s-%s-permission", roleName, resourceName)
+}
+func NameAdmin() string {
+	return fmt.Sprintf("%s-permission", role.RoleAdmin)
 }

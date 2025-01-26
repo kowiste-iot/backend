@@ -3,6 +3,7 @@ package resource
 import (
 	"context"
 	"ddd/pkg/config"
+	resourceCmd "ddd/shared/auth/domain/resource/command"
 	"ddd/shared/auth/domain/scope"
 	baseCmd "ddd/shared/base/command"
 )
@@ -23,9 +24,11 @@ const (
 type ResourceProvider interface {
 	CreateResource(ctx context.Context, tenantID, clientID string, resource Resource) (*Resource, error) //Should we allow crate resource?
 	UpdateResource(ctx context.Context, tenantID, clientID string, resource Resource) error
-	//DeleteResource(ctx context.Context, tenantID, clientID, resourceID string) error
-	GetResource(ctx context.Context, tenantID, clientID, resourceID string) (*Resource, error)
+	GetResource(ctx context.Context, input *resourceCmd.ResourceIDInput) (*Resource, error)
 	ListResources(ctx context.Context, input *baseCmd.BaseInput) ([]Resource, error)
+	//roles in resource
+	AssignRoleToResource(ctx context.Context, input *resourceCmd.ResourceAssignRoleInput) error
+	RemoveRolesFromResource(ctx context.Context,input *resourceCmd.ResourceAssignRoleInput) error
 }
 
 type Resource struct {
@@ -53,5 +56,3 @@ func EndpointsResources(input map[string]config.Resource) (resources []Resource)
 	}
 	return
 }
-
-

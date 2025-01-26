@@ -2,10 +2,12 @@ package app
 
 import (
 	"context"
-	"ddd/shared/auth/domain/command"
 	"ddd/shared/auth/domain/permission"
 	"ddd/shared/auth/domain/resource"
+	resourceCmd "ddd/shared/auth/domain/resource/command"
+	"ddd/shared/auth/domain/role"
 	baseCmd "ddd/shared/base/command"
+	"fmt"
 )
 
 func (s *Service) GetResources(ctx context.Context, input *baseCmd.BaseInput) (resources []resource.ResourcePermission, err error) {
@@ -23,7 +25,7 @@ func (s *Service) GetResources(ctx context.Context, input *baseCmd.BaseInput) (r
 	if err != nil {
 		return
 	}
-	roles, err := s.tenantProvider.GetRoles(ctx, input)
+	roles, err := s.roleProvider.GetRoles(ctx, input)
 	if err != nil {
 		return
 	}
@@ -39,12 +41,48 @@ func (s *Service) GetResources(ctx context.Context, input *baseCmd.BaseInput) (r
 	return
 }
 
-func (s *Service) UpdateResource(ctx context.Context, input *command.UpdateResourceInput) (resurce resource.ResourcePermission, err error) {
-	
-	//get policty of role
-	//get resource
-	//delete permissions
-	//create permissions
+func (s *Service) UpdateResource(ctx context.Context, input *resourceCmd.UpdateResourceInput) (resource *resource.ResourcePermission, err error) {
 
+	r, err := s.resourceProvider.GetResource(ctx, &resourceCmd.ResourceIDInput{
+		BaseInput:  input.BaseInput,
+		ResourceID: input.ID,
+	})
+	if err != nil {
+		return
+	}
+	mRoles := make(map[string]role.Role)
+	//get policty of role
+	roles, err := s.GetRoles(ctx, &input.BaseInput)
+	if err != nil {
+		return
+	}
+	for i := range roles {
+		mRoles[roles[i].Name] = roles[i]
+	}
+
+	inputAssign := resourceCmd.ResourceAssignRoleInput{
+		BaseInput:    input.BaseInput,
+		ResourceID:   r.ID,
+		ResourceName: r.DisplayName,
+	}
+	err = s.resourceProvider.RemoveRolesFromResource(ctx, &inputAssign)
+	if err != nil {
+		return
+	}
+
+	//create permissions shoudl be Assign Role to Resource
+	for name, scopes := range input.Roles {
+		role, ok := mRoles[name]
+		if !ok {
+			return nil, fmt.Errorf("error ")
+		}
+		inputAssign.RoleID = role.ID
+		inputAssign.RoleName = name
+		inputAssign.Scopes = scopes
+		err = s.resourceProvider.AssignRoleToResource(ctx, &inputAssign)
+		if err != nil {
+			return
+		}
+	}
 	return
 }

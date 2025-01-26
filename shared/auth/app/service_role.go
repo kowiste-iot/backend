@@ -24,7 +24,7 @@ func (s *Service) GetRoles(ctx context.Context, input *baseCmd.BaseInput) ([]rol
 	if err != nil {
 		return nil, err
 	}
-	return s.tenantProvider.GetRoles(ctx, input)
+	return s.roleProvider.GetRoles(ctx, input)
 }
 
 // GetTenantRole retrieves a specific role from a tenant
@@ -37,7 +37,7 @@ func (s *Service) GetRole(ctx context.Context, input *command.RoleIDInput) (*rol
 	if err != nil {
 		return nil, err
 	}
-	return s.tenantProvider.GetRole(ctx, input)
+	return s.roleProvider.GetRole(ctx, input)
 }
 
 // CreateRole creates a new role for a tenant
@@ -53,7 +53,7 @@ func (s *Service) CreateRole(ctx context.Context, input *command.CreateRoleInput
 	if s.isDefaultRole(input.Name) {
 		return "", fmt.Errorf("cannot create role with reserved name: %s", input.Name)
 	}
-	id, err = s.tenantProvider.CreateRole(ctx, input)
+	id, err = s.roleProvider.CreateRole(ctx, input)
 	if err != nil {
 		return
 	}
@@ -97,7 +97,7 @@ func (s *Service) DeleteRole(ctx context.Context, input *command.RoleIDInput) (e
 	if err != nil {
 		return fmt.Errorf("failed to delete policy %w", err)
 	}
-	err = s.tenantProvider.DeleteRole(ctx, input)
+	err = s.roleProvider.DeleteRole(ctx, input)
 	if err != nil {
 		return err
 	}
@@ -114,7 +114,7 @@ func (s *Service) AssignRoles(ctx context.Context, input *command.AssignRolesInp
 	// if err != nil {
 	// 	return err
 	// }
-	return s.tenantProvider.AssignRoles(ctx, input)
+	return s.roleProvider.AssignRoles(ctx, input)
 }
 
 // RemoveRoles removes roles from a user
@@ -127,7 +127,7 @@ func (s *Service) RemoveRoles(ctx context.Context, input *command.RemoveRolesInp
 	if err != nil {
 		return err
 	}
-	return s.tenantProvider.RemoveRoles(ctx, input)
+	return s.roleProvider.RemoveRoles(ctx, input)
 }
 
 // GetUserRoles gets all roles assigned to a user
@@ -140,7 +140,7 @@ func (s *Service) GetUserRoles(ctx context.Context, input *command.UserRolesInpu
 	if err != nil {
 		return nil, err
 	}
-	return s.tenantProvider.GetUserRoles(ctx, input)
+	return s.roleProvider.GetUserRoles(ctx, input)
 }
 
 // isDefaultRole checks if a role name or ID matches any default roles
