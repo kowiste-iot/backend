@@ -36,9 +36,16 @@ func NewService(base *base.BaseService, auth auth.IdentityProvider, repo domain.
 	}
 }
 
-func (s *userService) CreateUser(ctx context.Context, input *command.CreateUserInput) (*domain.User, error) {
-
-	user, err := domain.New(input.TenantDomain, input.BranchName, input.Email, input.FirstName, input.LastName)
+func (s *userService) CreateUser(ctx context.Context, input *command.CreateUserInput) (user *domain.User, err error) {
+	err = s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
+		BaseInput: input.BaseInput,
+		Resource:  resource.User,
+		Scope:     scope.Create,
+	})
+	if err != nil {
+		return
+	}
+	user, err = domain.New(input.TenantDomain, input.BranchName, input.Email, input.FirstName, input.LastName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}

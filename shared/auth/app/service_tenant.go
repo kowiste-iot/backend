@@ -159,7 +159,7 @@ func (s *Service) createClientPermissions(ctx context.Context, input *baseCmd.Ba
 		if !exist {
 			return fmt.Errorf("error fetching resource %s", res.Name)
 		}
-
+		//TODO: modify this to use assign role to resource interface
 		for roleName, scopes := range resourceConfig.Permissions {
 
 			p, exist := policies[roleName]

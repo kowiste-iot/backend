@@ -41,7 +41,7 @@ func (s *Service) GetResources(ctx context.Context, input *baseCmd.BaseInput) (r
 	return
 }
 
-func (s *Service) UpdateResource(ctx context.Context, input *resourceCmd.UpdateResourceInput) (resource *resource.ResourcePermission, err error) {
+func (s *Service) UpdateResource(ctx context.Context, input *resourceCmd.UpdateResourceInput) (res *resource.ResourcePermission, err error) {
 
 	r, err := s.resourceProvider.GetResource(ctx, &resourceCmd.ResourceIDInput{
 		BaseInput:  input.BaseInput,
@@ -84,5 +84,7 @@ func (s *Service) UpdateResource(ctx context.Context, input *resourceCmd.UpdateR
 			return
 		}
 	}
+	//TODO: resource should return a resource permission?
+	res = new(resource.ResourcePermission)
 	return
 }
