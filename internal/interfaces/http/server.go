@@ -7,6 +7,7 @@ import (
 	"time"
 
 	assethandler "ddd/internal/features/asset/interface/rest"
+	dashboardhandler "ddd/internal/features/dashboard/interface/rest"
 	tenanthandler "ddd/internal/features/tenant/interface/rest"
 	userhandler "ddd/internal/features/user/interface/rest"
 	branchhandler "ddd/internal/interfaces/http/handlers/branch"
@@ -24,32 +25,34 @@ import (
 )
 
 type Server struct {
-	config          *config.Config
-	logger          logger.Logger
-	router          *gin.Engine
-	httpServer      *http.Server
-	auth            validation.AuthProvider
-	tenantHandler   *tenanthandler.TenantHandler
-	assetHandler    *assethandler.AssetHandler
-	userHandler     *userhandler.UserHandler
-	rolesHandler    *rolehandler.RoleHandler
-	resourceHandler *resourcehandler.ResourceHandler
-	tokenHandler    *wshandler.TokenHandler
-	wsNotifyHandler *wshandler.NotificationHandler
-	scopesHandler   *scopehandler.ScopeHandler
+	config           *config.Config
+	logger           logger.Logger
+	router           *gin.Engine
+	httpServer       *http.Server
+	auth             validation.AuthProvider
+	tenantHandler    *tenanthandler.TenantHandler
+	assetHandler     *assethandler.AssetHandler
+	dashboardHandler *dashboardhandler.DashboardHandler
+	userHandler      *userhandler.UserHandler
+	rolesHandler     *rolehandler.RoleHandler
+	resourceHandler  *resourcehandler.ResourceHandler
+	tokenHandler     *wshandler.TokenHandler
+	wsNotifyHandler  *wshandler.NotificationHandler
+	scopesHandler    *scopehandler.ScopeHandler
 }
 
 type ServerDependencies struct {
-	Authentication  validation.AuthProvider
-	RolesHandler    *rolehandler.RoleHandler
-	ResourceHandler *resourcehandler.ResourceHandler
-	BranchHandler   *branchhandler.BranchHandler
-	TenantHandler   *tenanthandler.TenantHandler
-	AssetHandler    *assethandler.AssetHandler
-	UserHandler     *userhandler.UserHandler
-	ScopeHandler    *scopehandler.ScopeHandler
-	TokenHandler    *wshandler.TokenHandler
-	WSNotifyHandler *wshandler.NotificationHandler
+	Authentication   validation.AuthProvider
+	RolesHandler     *rolehandler.RoleHandler
+	ResourceHandler  *resourcehandler.ResourceHandler
+	BranchHandler    *branchhandler.BranchHandler
+	TenantHandler    *tenanthandler.TenantHandler
+	AssetHandler     *assethandler.AssetHandler
+	DashboardHandler *dashboardhandler.DashboardHandler
+	UserHandler      *userhandler.UserHandler
+	ScopeHandler     *scopehandler.ScopeHandler
+	TokenHandler     *wshandler.TokenHandler
+	WSNotifyHandler  *wshandler.NotificationHandler
 }
 
 func NewServer(cfg *config.Config, logger logger.Logger, deps ServerDependencies) *Server {
@@ -68,18 +71,19 @@ func NewServer(cfg *config.Config, logger logger.Logger, deps ServerDependencies
 	)
 
 	return &Server{
-		config:          cfg,
-		logger:          logger,
-		router:          router,
-		auth:            deps.Authentication,
-		rolesHandler:    deps.RolesHandler,
-		resourceHandler: deps.ResourceHandler,
-		tenantHandler:   deps.TenantHandler,
-		assetHandler:    deps.AssetHandler,
-		userHandler:     deps.UserHandler,
-		scopesHandler:   deps.ScopeHandler,
-		wsNotifyHandler: deps.WSNotifyHandler,
-		tokenHandler:    deps.TokenHandler,
+		config:           cfg,
+		logger:           logger,
+		router:           router,
+		auth:             deps.Authentication,
+		rolesHandler:     deps.RolesHandler,
+		resourceHandler:  deps.ResourceHandler,
+		tenantHandler:    deps.TenantHandler,
+		assetHandler:     deps.AssetHandler,
+		dashboardHandler: deps.DashboardHandler,
+		userHandler:      deps.UserHandler,
+		scopesHandler:    deps.ScopeHandler,
+		wsNotifyHandler:  deps.WSNotifyHandler,
+		tokenHandler:     deps.TokenHandler,
 		// measureHandler:   deps.MeasureHandler,
 		// dashboardHandler: deps.DashboardHandler,
 		// widgetHandler:    deps.WidgetHandler,

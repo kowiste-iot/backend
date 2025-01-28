@@ -37,14 +37,14 @@ func NewService(base *base.BaseService, auth auth.IdentityProvider, repo domain.
 }
 
 func (s *userService) CreateUser(ctx context.Context, input *command.CreateUserInput) (user *domain.User, err error) {
-	err = s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
-		BaseInput: input.BaseInput,
-		Resource:  resource.User,
-		Scope:     scope.Create,
-	})
-	if err != nil {
-		return
-	}
+	// err = s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
+	// 	BaseInput: input.BaseInput,
+	// 	Resource:  resource.User,
+	// 	Scope:     scope.Create,
+	// })
+	// if err != nil {
+	// 	return
+	// }
 	user, err = domain.New(input.TenantDomain, input.BranchName, input.Email, input.FirstName, input.LastName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create user: %w", err)
@@ -86,12 +86,16 @@ func (s *userService) ListUsers(ctx context.Context, input *baseCmd.BaseInput) (
 	return users, nil
 }
 
-func (s *userService) UpdateUser(ctx context.Context, input *command.UpdateUserInput) (*domain.User, error) {
-	// err := s.CheckPermission(ctx, resource.Asset, scope.Update)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	user, err := s.repo.FindByID(ctx, &command.UserIDInput{
+func (s *userService) UpdateUser(ctx context.Context, input *command.UpdateUserInput) (user *domain.User, err error) {
+	err = s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
+		BaseInput: input.BaseInput,
+		Resource:  resource.User,
+		Scope:     scope.Update,
+	})
+	if err != nil {
+		return
+	}
+	user, err = s.repo.FindByID(ctx, &command.UserIDInput{
 		BaseInput: baseCmd.BaseInput{
 			TenantDomain: input.TenantDomain,
 			BranchName:   input.BranchName,
@@ -99,14 +103,24 @@ func (s *userService) UpdateUser(ctx context.Context, input *command.UpdateUserI
 		UserID: input.ID,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to get user: %w", err)
+		return nil, fmt.Errorf("user not found: %w", err)
 	}
 
 	err = user.Update(input.Email, input.FirstName, input.LastName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update user: %w", err)
 	}
-
+	err = s.auth.UpdateUser(ctx, &command.UpdateUserInput{
+		BaseInput: input.BaseInput,
+		ID:        user.AuthID(),
+		Email:     user.Email(),
+		FirstName: user.FirstName(),
+		LastName:  user.LastName(),
+		Roles:     input.Roles,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to update auth user: %w", err)
+	}
 	if err := s.repo.Update(ctx, input); err != nil {
 		return nil, fmt.Errorf("failed to save updated user: %w", err)
 	}
@@ -114,8 +128,27 @@ func (s *userService) UpdateUser(ctx context.Context, input *command.UpdateUserI
 	return user, nil
 }
 
-func (s *userService) DeleteUser(ctx context.Context, input *command.UserIDInput) error {
-	err := s.repo.Remove(ctx, input)
+func (s *userService) DeleteUser(ctx context.Context, input *command.UserIDInput) (err error) {
+	err = s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
+		BaseInput: input.BaseInput,
+		Resource:  resource.User,
+		Scope:     scope.Update,
+	})
+	if err != nil {
+		return
+	}
+	userRepo, err := s.repo.FindByID(ctx, input)
+	if err != nil {
+		return fmt.Errorf("failed to get auth user: %w", err)
+	}
+	err = s.auth.DeleteUser(ctx, &command.UserIDInput{
+		BaseInput: input.BaseInput,
+		UserID:    userRepo.AuthID(),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to delete auth user: %w", err)
+	}
+	err = s.repo.Remove(ctx, input)
 	if err != nil {
 		return fmt.Errorf("failed to delete user: %w", err)
 	}

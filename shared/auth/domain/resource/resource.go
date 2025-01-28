@@ -10,12 +10,13 @@ import (
 
 const (
 	//TODO: have to keep this for now until think if is possible to use the config one.
-	Asset  string = "asset-resource"
-	Tenant string = "tenant-resource"
-	Branch string = "branch-resource"
-	User   string = "user-resource"
-	Role   string = "role-resource"
-	Admin  string = "admin-resource"
+	Asset     string = "asset-resource"
+	Dashboard string = "dashboard-resource"
+	Tenant    string = "tenant-resource"
+	Branch    string = "branch-resource"
+	User      string = "user-resource"
+	Role      string = "role-resource"
+	Admin     string = "admin-resource"
 
 	//
 	defaultResource string = "Default Resource"
@@ -28,7 +29,7 @@ type ResourceProvider interface {
 	ListResources(ctx context.Context, input *baseCmd.BaseInput) ([]Resource, error)
 	//roles in resource
 	AssignRoleToResource(ctx context.Context, input *resourceCmd.ResourceAssignRoleInput) error
-	RemoveRolesFromResource(ctx context.Context,input *resourceCmd.ResourceAssignRoleInput) error
+	RemoveRolesFromResource(ctx context.Context, input *resourceCmd.ResourceAssignRoleInput) error
 }
 
 type Resource struct {
