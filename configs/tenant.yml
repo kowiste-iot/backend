@@ -43,6 +43,9 @@ authorization:
       permissions:
         worker:
           - view
+    device-resource:
+      name: device
+      type: base
     user-resource:
       name: user
       type: base

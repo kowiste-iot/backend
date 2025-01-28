@@ -10,6 +10,10 @@ import (
 	repoDashboard "ddd/internal/features/dashboard/infra/gorm"
 	dashboardhandler "ddd/internal/features/dashboard/interface/rest"
 
+	appDevice "ddd/internal/features/device/app"
+	repoDevice "ddd/internal/features/device/infra/gorm"
+	devicehandler "ddd/internal/features/device/interface/rest"
+
 	appMeasure "ddd/internal/features/measure/app"
 	repoMeasure "ddd/internal/features/measure/infra/gorm"
 	measurehandler "ddd/internal/features/measure/interface/rest"
@@ -153,6 +157,9 @@ func (c *Core) initServer(ctx context.Context) error {
 	//Dashboard
 	dashboardRepo := repoDashboard.NewRepository(c.db)
 	dashboardService := appDashboard.NewService(base, dashboardRepo)
+	//Device
+	deviceRepo := repoDevice.NewRepository(c.db)
+	deviceService := appDevice.NewService(base, deviceRepo)
 	//User
 	userRepo := repoUser.NewRepository(c.db)
 	userService := appUser.NewService(base, kc, userRepo)
@@ -201,6 +208,10 @@ func (c *Core) initServer(ctx context.Context) error {
 		DashboardHandler: dashboardhandler.New(dashboardhandler.Dependencies{
 			Logger:           c.logger,
 			DashboardService: dashboardService,
+		}),
+		DeviceHandler: devicehandler.New(devicehandler.Dependencies{
+			Logger:        c.logger,
+			DeviceService: deviceService,
 		}),
 		UserHandler: userhandler.New(userhandler.Dependencies{
 			Logger:      c.logger,

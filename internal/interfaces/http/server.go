@@ -8,6 +8,7 @@ import (
 
 	assethandler "ddd/internal/features/asset/interface/rest"
 	dashboardhandler "ddd/internal/features/dashboard/interface/rest"
+	devicehandler "ddd/internal/features/device/interface/rest"
 	measurehandler "ddd/internal/features/measure/interface/rest"
 	tenanthandler "ddd/internal/features/tenant/interface/rest"
 	userhandler "ddd/internal/features/user/interface/rest"
@@ -33,8 +34,9 @@ type Server struct {
 	auth             validation.AuthProvider
 	tenantHandler    *tenanthandler.TenantHandler
 	assetHandler     *assethandler.AssetHandler
-	measureHandler     *measurehandler.MeasureHandler
+	measureHandler   *measurehandler.MeasureHandler
 	dashboardHandler *dashboardhandler.DashboardHandler
+	deviceHandler    *devicehandler.DeviceHandler
 	userHandler      *userhandler.UserHandler
 	rolesHandler     *rolehandler.RoleHandler
 	resourceHandler  *resourcehandler.ResourceHandler
@@ -50,8 +52,9 @@ type ServerDependencies struct {
 	BranchHandler    *branchhandler.BranchHandler
 	TenantHandler    *tenanthandler.TenantHandler
 	AssetHandler     *assethandler.AssetHandler
-	MeasureHandler     *measurehandler.MeasureHandler
+	MeasureHandler   *measurehandler.MeasureHandler
 	DashboardHandler *dashboardhandler.DashboardHandler
+	DeviceHandler    *devicehandler.DeviceHandler
 	UserHandler      *userhandler.UserHandler
 	ScopeHandler     *scopehandler.ScopeHandler
 	TokenHandler     *wshandler.TokenHandler
@@ -83,6 +86,7 @@ func NewServer(cfg *config.Config, logger logger.Logger, deps ServerDependencies
 		tenantHandler:    deps.TenantHandler,
 		assetHandler:     deps.AssetHandler,
 		dashboardHandler: deps.DashboardHandler,
+		deviceHandler:    deps.DeviceHandler,
 		userHandler:      deps.UserHandler,
 		scopesHandler:    deps.ScopeHandler,
 		wsNotifyHandler:  deps.WSNotifyHandler,
