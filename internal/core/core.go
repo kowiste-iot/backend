@@ -5,9 +5,14 @@ import (
 	appAsset "ddd/internal/features/asset/app"
 	repoAsset "ddd/internal/features/asset/infra/gorm"
 	assethandler "ddd/internal/features/asset/interface/rest"
+
 	appDashboard "ddd/internal/features/dashboard/app"
 	repoDashboard "ddd/internal/features/dashboard/infra/gorm"
 	dashboardhandler "ddd/internal/features/dashboard/interface/rest"
+
+	appMeasure "ddd/internal/features/measure/app"
+	repoMeasure "ddd/internal/features/measure/infra/gorm"
+	measurehandler "ddd/internal/features/measure/interface/rest"
 	"errors"
 
 	appTenant "ddd/internal/features/tenant/app"
@@ -142,6 +147,9 @@ func (c *Core) initServer(ctx context.Context) error {
 	//Asset
 	assetRepo := repoAsset.NewRepository(c.db)
 	assetService := appAsset.NewService(base, assetRepo)
+	//Measure
+	measureRepo := repoMeasure.NewRepository(c.db)
+	measureService := appMeasure.NewService(base, measureRepo)
 	//Dashboard
 	dashboardRepo := repoDashboard.NewRepository(c.db)
 	dashboardService := appDashboard.NewService(base, dashboardRepo)
@@ -185,6 +193,10 @@ func (c *Core) initServer(ctx context.Context) error {
 		AssetHandler: assethandler.New(assethandler.Dependencies{
 			Logger:       c.logger,
 			AssetService: assetService,
+		}),
+		MeasureHandler: measurehandler.New(measurehandler.Dependencies{
+			Logger:         c.logger,
+			MeasureService: measureService,
 		}),
 		DashboardHandler: dashboardhandler.New(dashboardhandler.Dependencies{
 			Logger:           c.logger,

@@ -10,6 +10,7 @@ import (
 
 const (
 	//TODO: have to keep this for now until think if is possible to use the config one.
+	Measure   string = "measure-resource"
 	Asset     string = "asset-resource"
 	Dashboard string = "dashboard-resource"
 	Tenant    string = "tenant-resource"

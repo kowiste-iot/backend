@@ -31,6 +31,18 @@ authorization:
       permissions:
         worker:
           - view
+    measure-resource:
+      name: measure
+      type: base
+      permissions:
+        worker:
+          - view
+    dashboard-resource:
+      name: dashboard
+      type: base
+      permissions:
+        worker:
+          - view
     user-resource:
       name: user
       type: base

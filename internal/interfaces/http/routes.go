@@ -43,6 +43,15 @@ func (s *Server) setupRoutes() {
 					assets.PUT(":id", s.assetHandler.UpdateAsset)
 					assets.DELETE(":id", s.assetHandler.DeleteAsset)
 				}
+				// Measure routes
+				measures := apiBranch.Group("measures")
+				{
+					measures.POST("", s.measureHandler.CreateMeasure)
+					measures.GET("", s.measureHandler.ListMeasures)
+					measures.GET(":id", s.measureHandler.GetMeasure)
+					measures.PUT(":id", s.measureHandler.UpdateMeasure)
+					measures.DELETE(":id", s.measureHandler.DeleteMeasure)
+				}
 				// Dashboard routes
 				dashboards := apiBranch.Group("dashboards")
 				{
