@@ -46,6 +46,12 @@ authorization:
     device-resource:
       name: device
       type: base
+    action-resource:
+      name: action
+      type: base
+    alert-resource:
+      name: alert
+      type: base
     user-resource:
       name: user
       type: base
