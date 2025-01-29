@@ -14,6 +14,8 @@ const (
 	Asset     string = "asset-resource"
 	Device    string = "device-resource"
 	Dashboard string = "dashboard-resource"
+	Action    string = "action-resource"
+	Alert     string = "alert-resource"
 	Tenant    string = "tenant-resource"
 	Branch    string = "branch-resource"
 	User      string = "user-resource"

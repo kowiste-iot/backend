@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"time"
 
+	actionhandler "ddd/internal/features/action/interface/rest"
+	alerthandler "ddd/internal/features/alert/interface/rest"
 	assethandler "ddd/internal/features/asset/interface/rest"
 	dashboardhandler "ddd/internal/features/dashboard/interface/rest"
 	devicehandler "ddd/internal/features/device/interface/rest"
@@ -37,6 +39,8 @@ type Server struct {
 	measureHandler   *measurehandler.MeasureHandler
 	dashboardHandler *dashboardhandler.DashboardHandler
 	deviceHandler    *devicehandler.DeviceHandler
+	actionHandler    *actionhandler.ActionHandler
+	alertHandler     *alerthandler.AlertHandler
 	userHandler      *userhandler.UserHandler
 	rolesHandler     *rolehandler.RoleHandler
 	resourceHandler  *resourcehandler.ResourceHandler
@@ -55,6 +59,8 @@ type ServerDependencies struct {
 	MeasureHandler   *measurehandler.MeasureHandler
 	DashboardHandler *dashboardhandler.DashboardHandler
 	DeviceHandler    *devicehandler.DeviceHandler
+	ActionHandler    *actionhandler.ActionHandler
+	AlertHandler     *alerthandler.AlertHandler
 	UserHandler      *userhandler.UserHandler
 	ScopeHandler     *scopehandler.ScopeHandler
 	TokenHandler     *wshandler.TokenHandler
@@ -87,6 +93,8 @@ func NewServer(cfg *config.Config, logger logger.Logger, deps ServerDependencies
 		assetHandler:     deps.AssetHandler,
 		dashboardHandler: deps.DashboardHandler,
 		deviceHandler:    deps.DeviceHandler,
+		actionHandler:    deps.ActionHandler,
+		alertHandler:     deps.AlertHandler,
 		userHandler:      deps.UserHandler,
 		scopesHandler:    deps.ScopeHandler,
 		wsNotifyHandler:  deps.WSNotifyHandler,

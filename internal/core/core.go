@@ -14,6 +14,14 @@ import (
 	repoDevice "ddd/internal/features/device/infra/gorm"
 	devicehandler "ddd/internal/features/device/interface/rest"
 
+	appAction "ddd/internal/features/action/app"
+	repoAction "ddd/internal/features/action/infra/gorm"
+	actionhandler "ddd/internal/features/action/interface/rest"
+
+	appAlert "ddd/internal/features/alert/app"
+	repoAlert "ddd/internal/features/alert/infra/gorm"
+	alerthandler "ddd/internal/features/alert/interface/rest"
+
 	appMeasure "ddd/internal/features/measure/app"
 	repoMeasure "ddd/internal/features/measure/infra/gorm"
 	measurehandler "ddd/internal/features/measure/interface/rest"
@@ -160,6 +168,12 @@ func (c *Core) initServer(ctx context.Context) error {
 	//Device
 	deviceRepo := repoDevice.NewRepository(c.db)
 	deviceService := appDevice.NewService(base, deviceRepo)
+	//Action
+	actionRepo := repoAction.NewRepository(c.db)
+	actionService := appAction.NewService(base, actionRepo)
+	//Alert
+	alertRepo := repoAlert.NewRepository(c.db)
+	alertService := appAlert.NewService(base, alertRepo)
 	//User
 	userRepo := repoUser.NewRepository(c.db)
 	userService := appUser.NewService(base, kc, userRepo)
@@ -212,6 +226,14 @@ func (c *Core) initServer(ctx context.Context) error {
 		DeviceHandler: devicehandler.New(devicehandler.Dependencies{
 			Logger:        c.logger,
 			DeviceService: deviceService,
+		}),
+		ActionHandler: actionhandler.New(actionhandler.Dependencies{
+			Logger:        c.logger,
+			ActionService: actionService,
+		}),
+		AlertHandler: alerthandler.New(alerthandler.Dependencies{
+			Logger:        c.logger,
+			AlertService: alertService,
 		}),
 		UserHandler: userhandler.New(userhandler.Dependencies{
 			Logger:      c.logger,

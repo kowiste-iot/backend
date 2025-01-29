@@ -70,6 +70,24 @@ func (s *Server) setupRoutes() {
 					devices.PUT(":id", s.deviceHandler.UpdateDevice)
 					devices.DELETE(":id", s.deviceHandler.DeleteDevice)
 				}
+				// Action routes
+				actions := apiBranch.Group("actions")
+				{
+					actions.POST("", s.actionHandler.CreateAction)
+					actions.GET("", s.actionHandler.ListActions)
+					actions.GET(":id", s.actionHandler.GetAction)
+					actions.PUT(":id", s.actionHandler.UpdateAction)
+					actions.DELETE(":id", s.actionHandler.DeleteAction)
+				}
+				// Alert routes
+				alerts := apiBranch.Group("alerts")
+				{
+					alerts.POST("", s.alertHandler.CreateAlert)
+					alerts.GET("", s.alertHandler.ListAlerts)
+					alerts.GET(":id", s.alertHandler.GetAlert)
+					alerts.PUT(":id", s.alertHandler.UpdateAlert)
+					alerts.DELETE(":id", s.alertHandler.DeleteAlert)
+				}
 				// User routes
 				users := apiBranch.Group("users")
 				{
