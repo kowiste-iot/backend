@@ -19,8 +19,6 @@ type TenantProvider interface {
 	GetBranchUsers(ctx context.Context, input *command.BaseInput) ([]User, error)
 	AssignUserToBranch(ctx context.Context, input *authCmd.UserToBranch) error
 	RemoveUserFromBranch(ctx context.Context, input *authCmd.UserToBranch) error
-
-
 }
 
 type Tenant struct {
