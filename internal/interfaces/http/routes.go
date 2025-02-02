@@ -1,8 +1,8 @@
 package http
 
 import (
-	ginhelp "ddd/shared/http/gin"
-	"ddd/shared/http/httputil"
+	ginhelp "backend/shared/http/gin"
+	"backend/shared/http/httputil"
 	"net/http"
 	"strings"
 

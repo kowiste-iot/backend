@@ -1,7 +1,7 @@
 package scopehandler
 
 import (
-	"ddd/shared/auth/domain/scope"
+	"backend/shared/auth/domain/scope"
 )
 
 // Responses

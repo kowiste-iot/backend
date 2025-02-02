@@ -1,11 +1,11 @@
 package resource
 
 import (
+	"backend/pkg/config"
+	resourceCmd "backend/shared/auth/domain/resource/command"
+	"backend/shared/auth/domain/scope"
+	baseCmd "backend/shared/base/command"
 	"context"
-	"ddd/pkg/config"
-	resourceCmd "ddd/shared/auth/domain/resource/command"
-	"ddd/shared/auth/domain/scope"
-	baseCmd "ddd/shared/base/command"
 )
 
 const (

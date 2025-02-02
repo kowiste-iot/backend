@@ -1,14 +1,13 @@
 package rolehandler
 
 import (
-	authApp "ddd/shared/auth/app"
-	"ddd/shared/auth/domain/command"
-	authCmd "ddd/shared/auth/domain/command"
-	baseCmd "ddd/shared/base/command"
-	ginhelp "ddd/shared/http/gin"
-	"ddd/shared/http/httputil"
-	"ddd/shared/logger"
-	"ddd/shared/pagination"
+	"backend/internal/features/role/app"
+	"backend/internal/features/role/domain/command"
+	baseCmd "backend/shared/base/command"
+	ginhelp "backend/shared/http/gin"
+	"backend/shared/http/httputil"
+	"backend/shared/logger"
+	"backend/shared/pagination"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -16,18 +15,18 @@ import (
 
 type RoleHandler struct {
 	logger      logger.Logger
-	authService *authApp.Service
+	roleService app.RoleService
 }
 
 type Dependencies struct {
 	Logger      logger.Logger
-	AuthService *authApp.Service
+	RoleService app.RoleService
 }
 
 func New(deps Dependencies) *RoleHandler {
 	return &RoleHandler{
 		logger:      deps.Logger,
-		authService: deps.AuthService,
+		roleService: deps.RoleService,
 	}
 }
 
@@ -45,16 +44,16 @@ func (h *RoleHandler) CreateRole(c *gin.Context) {
 		return
 	}
 
-	input := authCmd.CreateRoleInput{
-		BaseInput: baseCmd.NewInput(tenant.Domain(), branch),
-		Name:      req.Name,
+	input := command.CreateRoleInput{
+		BaseInput:   baseCmd.NewInput(tenant.Domain(), branch),
+		Name:        req.Name,
 		Description: req.Description,
 	}
 
-	_, err = h.authService.CreateRole(ctx, &input)
+	_, err = h.roleService.CreateRole(ctx, &input)
 	if err != nil {
 		h.logger.Error(ctx, err, "Failed to create role", nil)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create role"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create role " + err.Error()})
 		return
 	}
 
@@ -74,7 +73,7 @@ func (h *RoleHandler) GetRole(c *gin.Context) {
 		BaseInput: baseCmd.NewInput(tenant.Domain(), branch),
 		RoleID:    roleName,
 	}
-	role, err := h.authService.GetRole(c.Request.Context(), &input)
+	role, err := h.roleService.GetRole(c.Request.Context(), &input)
 	if err != nil {
 		h.logger.Error(c.Request.Context(), err, "Failed to get role", nil)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get role"})
@@ -101,7 +100,7 @@ func (h *RoleHandler) ListRoles(c *gin.Context) {
 		return
 	}
 	inputBase := baseCmd.NewInput(tenant.Domain(), branch)
-	roles, err := h.authService.GetRoles(ctx, &inputBase)
+	roles, err := h.roleService.ListRoles(ctx, &inputBase)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to list roles"})
 		return
@@ -128,39 +127,10 @@ func (h *RoleHandler) DeleteRole(c *gin.Context) {
 		BaseInput: baseCmd.NewInput(tenant.Domain(), branch),
 		RoleID:    roleName,
 	}
-	err = h.authService.DeleteRole(c.Request.Context(), &input)
+	err = h.roleService.DeleteRole(c.Request.Context(), &input)
 	if err != nil {
 		h.logger.Error(c.Request.Context(), err, "Failed to delete role", nil)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete role"})
-		return
-	}
-
-	c.Status(http.StatusNoContent)
-}
-
-// Additional handlers for role assignments if needed
-func (h *RoleHandler) AssignRole(c *gin.Context) {
-	ctx := c.Request.Context()
-	userID := c.Param("userId")
-	var req CreateRoleRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	tenant, branch, err := httputil.GetBase(ctx)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get base: " + err.Error()})
-		return
-	}
-	input := authCmd.AssignRolesInput{
-		BaseInput: baseCmd.NewInput(tenant.Domain(), branch),
-		UserID:    userID,
-		Roles:     []string{req.Name},
-	}
-	err = h.authService.AssignRoles(c.Request.Context(), &input)
-	if err != nil {
-		h.logger.Error(c.Request.Context(), err, "Failed to assign role", nil)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to assign role"})
 		return
 	}
 

@@ -1,6 +1,6 @@
 package userhandler
 
-import "ddd/internal/features/user/domain"
+import "backend/internal/features/user/domain"
 
 type CreateUserRequest struct {
 	Email     string   `json:"email" binding:"required,email"`

@@ -1,17 +1,17 @@
 package app
 
 import (
+	auth "backend/shared/auth/domain"
+	"backend/shared/auth/domain/command"
+	"backend/shared/auth/domain/permission"
+	"backend/shared/auth/domain/policy"
+	"backend/shared/auth/domain/resource"
+	resourceCmd "backend/shared/auth/domain/resource/command"
+	"backend/shared/auth/domain/role"
+	"backend/shared/auth/domain/scope"
+	baseCmd "backend/shared/base/command"
+	"backend/shared/util"
 	"context"
-	auth "ddd/shared/auth/domain"
-	"ddd/shared/auth/domain/command"
-	"ddd/shared/auth/domain/permission"
-	"ddd/shared/auth/domain/policy"
-	"ddd/shared/auth/domain/resource"
-	resourceCmd "ddd/shared/auth/domain/resource/command"
-	"ddd/shared/auth/domain/role"
-	"ddd/shared/auth/domain/scope"
-	baseCmd "ddd/shared/base/command"
-	"ddd/shared/util"
 	"fmt"
 )
 

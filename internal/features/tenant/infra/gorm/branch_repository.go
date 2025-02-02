@@ -1,9 +1,9 @@
 package repository
 
 import (
+	"backend/internal/features/tenant/domain"
+	"backend/shared/pagination"
 	"context"
-	"ddd/internal/features/tenant/domain"
-	"ddd/shared/pagination"
 	"errors"
 	"time"
 

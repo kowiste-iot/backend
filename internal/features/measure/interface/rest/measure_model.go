@@ -1,7 +1,7 @@
 package measurehandler
 
 import (
-	"ddd/internal/features/measure/domain"
+	"backend/internal/features/measure/domain"
 )
 
 type CreateMeasureRequest struct {
@@ -17,12 +17,12 @@ type UpdateMeasureRequest struct {
 }
 
 type MeasureResponse struct {
-	ID          string  `json:"id"`
-	TenantID    string  `json:"tenantId"`
+	ID          string `json:"id"`
+	TenantID    string `json:"tenantId"`
 	Parent      string `json:"parent,omitempty"`
-	Name        string  `json:"name"`
-	Description string  `json:"description"`
-	UpdatedAt   int64   `json:"updatedAt"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	UpdatedAt   int64  `json:"updatedAt"`
 }
 
 func ToMeasureResponse(a *domain.Measure) MeasureResponse {

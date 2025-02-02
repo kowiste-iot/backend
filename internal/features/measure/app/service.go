@@ -1,14 +1,14 @@
 package app
 
 import (
+	"backend/internal/features/measure/domain"
+	"backend/internal/features/measure/domain/command"
+	"backend/shared/auth/domain/resource"
+	"backend/shared/auth/domain/scope"
+	"backend/shared/base"
+	baseCmd "backend/shared/base/command"
+	"backend/shared/validator"
 	"context"
-	"ddd/internal/features/measure/domain"
-	"ddd/internal/features/measure/domain/command"
-	"ddd/shared/auth/domain/resource"
-	"ddd/shared/auth/domain/scope"
-	"ddd/shared/base"
-	baseCmd "ddd/shared/base/command"
-	"ddd/shared/validator"
 	"fmt"
 )
 

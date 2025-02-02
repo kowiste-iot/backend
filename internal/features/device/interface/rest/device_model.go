@@ -1,7 +1,7 @@
 package devicehandler
 
 import (
-	"ddd/internal/features/device/domain"
+	"backend/internal/features/device/domain"
 )
 
 type CreateDeviceRequest struct {
@@ -17,12 +17,12 @@ type UpdateDeviceRequest struct {
 }
 
 type DeviceResponse struct {
-	ID          string  `json:"id"`
-	TenantID    string  `json:"tenantId"`
+	ID          string `json:"id"`
+	TenantID    string `json:"tenantId"`
 	Parent      string `json:"parent,omitempty"`
-	Name        string  `json:"name"`
-	Description string  `json:"description"`
-	UpdatedAt   int64   `json:"updatedAt"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	UpdatedAt   int64  `json:"updatedAt"`
 }
 
 func ToDeviceResponse(a *domain.Device) DeviceResponse {

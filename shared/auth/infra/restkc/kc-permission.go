@@ -1,13 +1,12 @@
 package restkc
 
 import (
+	"backend/shared/auth/domain/permission"
 	"context"
-	"ddd/shared/auth/domain/permission"
 	"fmt"
 
 	"github.com/go-resty/resty/v2"
 )
-
 
 func CreatePermission(ctx context.Context, url, token, tenantID, IDofClient string, p permission.Permission) (*permission.Permission, error) {
 	baseURL := url + "/admin/realms/%s/clients/%s/authz/resource-server/permission/%s"

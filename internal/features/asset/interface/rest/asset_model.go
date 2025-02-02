@@ -1,7 +1,7 @@
 package assethandler
 
 import (
-	"ddd/internal/features/asset/domain"
+	"backend/internal/features/asset/domain"
 )
 
 type CreateAssetRequest struct {

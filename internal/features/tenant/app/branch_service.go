@@ -1,14 +1,14 @@
 package app
 
 import (
+	"backend/internal/features/tenant/domain"
+	"backend/internal/features/tenant/domain/command"
+	appAuth "backend/shared/auth/app"
+	authCmd "backend/shared/auth/domain/command"
+	"backend/shared/base"
+	baseCmd "backend/shared/base/command"
+	"backend/shared/validator"
 	"context"
-	"ddd/internal/features/tenant/domain"
-	"ddd/internal/features/tenant/domain/command"
-	appAuth "ddd/shared/auth/app"
-	authCmd "ddd/shared/auth/domain/command"
-	"ddd/shared/base"
-	baseCmd "ddd/shared/base/command"
-	"ddd/shared/validator"
 	"fmt"
 )
 

@@ -1,8 +1,8 @@
 package scope
 
 import (
+	baseCmd "backend/shared/base/command"
 	"context"
-	baseCmd "ddd/shared/base/command"
 )
 
 const (
@@ -20,9 +20,6 @@ type Scope struct {
 
 type ScopeProvider interface {
 	CreateScope(ctx context.Context, tenantID, clientID string, scope Scope) (*Scope, error)
-	UpdateScope(ctx context.Context, tenantID, clientID string, scope Scope) error
-	DeleteScope(ctx context.Context, tenantID, clientID, scopeID string) error
-	GetScope(ctx context.Context, tenantID, clientID, scopeID string) (*Scope, error)
 	ListScopes(ctx context.Context, input *baseCmd.BaseInput) ([]Scope, error)
 }
 

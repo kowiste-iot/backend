@@ -1,8 +1,8 @@
 package resource
 
 import (
-	"ddd/shared/auth/domain/permission"
-	"ddd/shared/auth/domain/scope"
+	"backend/shared/auth/domain/permission"
+	"backend/shared/auth/domain/scope"
 )
 
 type Resources []Resource

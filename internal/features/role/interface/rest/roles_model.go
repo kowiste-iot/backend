@@ -1,7 +1,7 @@
 package rolehandler
 
 import (
-	"ddd/shared/auth/domain/role"
+	"backend/internal/features/role/domain"
 )
 
 // Requests
@@ -34,7 +34,7 @@ type RoleAssignmentResponse struct {
 }
 
 // Conversion helpers
-func ToRoleResponse(role role.Role) RoleResponse {
+func ToRoleResponse(role domain.Role) RoleResponse {
 	return RoleResponse{
 		ID:          role.ID,
 		Name:        role.Name,
@@ -43,7 +43,7 @@ func ToRoleResponse(role role.Role) RoleResponse {
 	}
 }
 
-func ToRoleResponses(roles []role.Role) []RoleResponse {
+func ToRoleResponses(roles []domain.Role) []RoleResponse {
 	responses := make([]RoleResponse, len(roles))
 	for i, role := range roles {
 		responses[i] = ToRoleResponse(role)

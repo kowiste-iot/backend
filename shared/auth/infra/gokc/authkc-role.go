@@ -1,10 +1,10 @@
 package keycloak
 
 import (
+	"backend/shared/auth/domain/command"
+	"backend/shared/auth/domain/role"
+	baseCmd "backend/shared/base/command"
 	"context"
-	"ddd/shared/auth/domain/command"
-	"ddd/shared/auth/domain/role"
-	baseCmd "ddd/shared/base/command"
 	"fmt"
 
 	"github.com/Nerzal/gocloak/v13"
@@ -103,7 +103,7 @@ func (ks *KeycloakService) GetRoles(ctx context.Context, input *baseCmd.BaseInpu
 	if err != nil {
 		return nil, fmt.Errorf("failed to get token: %w", err)
 	}
-	err=ks.fetchClient(ctx,input)
+	err = ks.fetchClient(ctx, input)
 	if err != nil {
 		return nil, fmt.Errorf("error getting client: %w", err)
 	}

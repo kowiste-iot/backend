@@ -1,7 +1,7 @@
 package httputil
 
 import (
-	"ddd/shared/errors"
+	"backend/shared/errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"

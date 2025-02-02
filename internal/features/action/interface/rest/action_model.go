@@ -1,7 +1,7 @@
 package actionhandler
 
 import (
-	"ddd/internal/features/action/domain"
+	"backend/internal/features/action/domain"
 )
 
 type CreateActionRequest struct {

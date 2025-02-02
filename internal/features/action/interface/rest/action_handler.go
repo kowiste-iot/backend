@@ -3,31 +3,31 @@ package actionhandler
 import (
 	"net/http"
 
-	"ddd/internal/features/action/app"
-	"ddd/internal/features/action/domain"
-	"ddd/internal/features/action/domain/command"
-	baseCmd "ddd/shared/base/command"
-	ginhelp "ddd/shared/http/gin"
-	"ddd/shared/http/httputil"
-	"ddd/shared/logger"
-	"ddd/shared/pagination"
+	"backend/internal/features/action/app"
+	"backend/internal/features/action/domain"
+	"backend/internal/features/action/domain/command"
+	baseCmd "backend/shared/base/command"
+	ginhelp "backend/shared/http/gin"
+	"backend/shared/http/httputil"
+	"backend/shared/logger"
+	"backend/shared/pagination"
 
 	"github.com/gin-gonic/gin"
 )
 
 type ActionHandler struct {
-	logger         logger.Logger
+	logger        logger.Logger
 	actionService app.ActionService
 }
 
 type Dependencies struct {
-	Logger         logger.Logger
+	Logger        logger.Logger
 	ActionService app.ActionService
 }
 
 func New(deps Dependencies) *ActionHandler {
 	return &ActionHandler{
-		logger:         deps.Logger,
+		logger:        deps.Logger,
 		actionService: deps.ActionService,
 	}
 }
@@ -101,8 +101,8 @@ func (h *ActionHandler) GetAction(c *gin.Context) {
 		return
 	}
 	input := command.ActionIDInput{
-		BaseInput:   baseCmd.NewInput(tenant.Domain(), branch),
-		ActionID: actionID,
+		BaseInput: baseCmd.NewInput(tenant.Domain(), branch),
+		ActionID:  actionID,
 	}
 	result, err := h.actionService.GetAction(ctx, &input)
 	if err != nil {
@@ -112,8 +112,8 @@ func (h *ActionHandler) GetAction(c *gin.Context) {
 		}
 
 		h.logger.Error(c.Request.Context(), err, "Failed to get measure", map[string]interface{}{
-			"error":       err.Error(),
-			"tenantID":    tenant.Domain(),
+			"error":    err.Error(),
+			"tenantID": tenant.Domain(),
 			"actionID": actionID,
 		})
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get measure"})
@@ -209,8 +209,8 @@ func (h *ActionHandler) UpdateAction(c *gin.Context) {
 		}
 		tenantID, _ := httputil.GetTenant(ctx)
 		h.logger.Error(c.Request.Context(), err, "Failed to update measure", map[string]interface{}{
-			"error":       err.Error(),
-			"tenantID":    tenantID,
+			"error":    err.Error(),
+			"tenantID": tenantID,
 			"actionID": actionID,
 		})
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update measure"})
@@ -244,8 +244,8 @@ func (h *ActionHandler) DeleteAction(c *gin.Context) {
 		return
 	}
 	input := command.ActionIDInput{
-		BaseInput:   baseCmd.NewInput(tenant.Domain(), branch),
-		ActionID: actionID,
+		BaseInput: baseCmd.NewInput(tenant.Domain(), branch),
+		ActionID:  actionID,
 	}
 	err = h.actionService.DeleteAction(ctx, &input)
 	if err != nil {
@@ -255,8 +255,8 @@ func (h *ActionHandler) DeleteAction(c *gin.Context) {
 		}
 		tenantID, _ := httputil.GetTenant(ctx)
 		h.logger.Error(c.Request.Context(), err, "Failed to delete measure", map[string]interface{}{
-			"error":       err.Error(),
-			"tenantID":    tenantID,
+			"error":    err.Error(),
+			"tenantID": tenantID,
 			"actionID": actionID,
 		})
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

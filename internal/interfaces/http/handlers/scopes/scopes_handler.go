@@ -1,12 +1,12 @@
 package scopehandler
 
 import (
-	authApp "ddd/shared/auth/app"
-	baseCmd "ddd/shared/base/command"
-	ginhelp "ddd/shared/http/gin"
-	"ddd/shared/http/httputil"
-	"ddd/shared/logger"
-	"ddd/shared/pagination"
+	authApp "backend/shared/auth/app"
+	baseCmd "backend/shared/base/command"
+	ginhelp "backend/shared/http/gin"
+	"backend/shared/http/httputil"
+	"backend/shared/logger"
+	"backend/shared/pagination"
 	"net/http"
 
 	"github.com/gin-gonic/gin"

@@ -1,7 +1,7 @@
 package branchhandler
 
 import (
-	"ddd/internal/features/tenant/domain"
+	"backend/internal/features/tenant/domain"
 )
 
 type CreateBranchRequest struct {

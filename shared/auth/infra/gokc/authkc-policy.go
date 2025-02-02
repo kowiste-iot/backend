@@ -1,11 +1,11 @@
 package keycloak
 
 import (
+	"backend/shared/auth/domain/command"
+	"backend/shared/auth/domain/permission"
+	"backend/shared/auth/domain/policy"
+	"backend/shared/auth/infra/restkc"
 	"context"
-	"ddd/shared/auth/domain/command"
-	"ddd/shared/auth/domain/permission"
-	"ddd/shared/auth/domain/policy"
-	"ddd/shared/auth/infra/restkc"
 	"fmt"
 
 	"github.com/Nerzal/gocloak/v13"

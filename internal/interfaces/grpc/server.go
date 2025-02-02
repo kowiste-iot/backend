@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"net"
 
-	"ddd/pkg/config"
-	"ddd/shared/logger"
+	"backend/pkg/config"
+	"backend/shared/logger"
 
 	"google.golang.org/grpc"
-	//"ddd/internal/shared/trace"
+	//"backend/internal/shared/trace"
 )
 
 type Server struct {

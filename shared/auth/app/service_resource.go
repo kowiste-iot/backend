@@ -1,12 +1,12 @@
 package app
 
 import (
+	"backend/shared/auth/domain/permission"
+	"backend/shared/auth/domain/resource"
+	resourceCmd "backend/shared/auth/domain/resource/command"
+	"backend/shared/auth/domain/role"
+	baseCmd "backend/shared/base/command"
 	"context"
-	"ddd/shared/auth/domain/permission"
-	"ddd/shared/auth/domain/resource"
-	resourceCmd "ddd/shared/auth/domain/resource/command"
-	"ddd/shared/auth/domain/role"
-	baseCmd "ddd/shared/base/command"
 	"fmt"
 )
 

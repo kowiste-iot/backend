@@ -1,14 +1,14 @@
 package branchhandler
 
 import (
-	"ddd/internal/features/tenant/app"
-	"ddd/internal/features/tenant/domain"
-	"ddd/internal/features/tenant/domain/command"
-	baseCmd "ddd/shared/base/command"
-	ginhelp "ddd/shared/http/gin"
-	"ddd/shared/http/httputil"
-	"ddd/shared/logger"
-	"ddd/shared/pagination"
+	"backend/internal/features/tenant/app"
+	"backend/internal/features/tenant/domain"
+	"backend/internal/features/tenant/domain/command"
+	baseCmd "backend/shared/base/command"
+	ginhelp "backend/shared/http/gin"
+	"backend/shared/http/httputil"
+	"backend/shared/logger"
+	"backend/shared/pagination"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -175,10 +175,10 @@ func (h *BranchHandler) UpdateBranch(c *gin.Context) {
 	}
 
 	input := command.UpdateBranchInput{
-		ID:branch,
+		ID:           branch,
 		TenantDomain: tenant.Domain(),
-		Name:        req.Name,
-		Description: req.Description,
+		Name:         req.Name,
+		Description:  req.Description,
 	}
 
 	result, err := h.branchService.UpdateBranch(ctx, &input)

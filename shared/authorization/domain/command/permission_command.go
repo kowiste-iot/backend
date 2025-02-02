@@ -5,4 +5,5 @@ type PermissionInput struct {
     Resource  string
     Action    string  
     TenantID  string 
+    BranchID string
 }

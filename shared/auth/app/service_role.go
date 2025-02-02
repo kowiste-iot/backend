@@ -1,15 +1,15 @@
 package app
 
 import (
+	"backend/shared/auth/domain/command"
+	"backend/shared/auth/domain/permission"
+	"backend/shared/auth/domain/policy"
+	"backend/shared/auth/domain/resource"
+	"backend/shared/auth/domain/role"
+	"backend/shared/auth/domain/scope"
+	baseCmd "backend/shared/base/command"
+	"backend/shared/util"
 	"context"
-	"ddd/shared/auth/domain/command"
-	"ddd/shared/auth/domain/permission"
-	"ddd/shared/auth/domain/policy"
-	"ddd/shared/auth/domain/resource"
-	"ddd/shared/auth/domain/role"
-	"ddd/shared/auth/domain/scope"
-	baseCmd "ddd/shared/base/command"
-	"ddd/shared/util"
 	"fmt"
 	"slices"
 )
@@ -90,8 +90,8 @@ func (s *Service) DeleteRole(ctx context.Context, input *command.RoleIDInput) (e
 		return fmt.Errorf("cannot delete default role: %s", input.RoleID)
 	}
 	inputPolicy := command.PolicyNameInput{
-		BaseInput: input.BaseInput,
-		PolicyName:  command.PolicyName(input.RoleID),
+		BaseInput:  input.BaseInput,
+		PolicyName: command.PolicyName(input.RoleID),
 	}
 	err = s.policyProvider.DeletePolicy(ctx, &inputPolicy)
 	if err != nil {

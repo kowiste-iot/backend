@@ -1,9 +1,9 @@
 package domain
 
 import (
+	"backend/shared/authorization/domain/command"
+	baseCmd "backend/shared/base/command"
 	"context"
-	"ddd/shared/authorization/domain/command"
-	baseCmd "ddd/shared/base/command"
 )
 
 const (
@@ -15,9 +15,6 @@ const (
 
 type ActionProvider interface {
 	CreateAction(ctx context.Context, input *command.CreateActionInput) (*Action, error)
-	UpdateAction(ctx context.Context, input *command.UpdateActionInput) error
-	DeleteAction(ctx context.Context, input *command.ActionIDInput) error
-	GetAction(ctx context.Context, input *command.ActionIDInput) (*Action, error)
 	ListActions(ctx context.Context, input *baseCmd.BaseInput) ([]Action, error)
 }
 

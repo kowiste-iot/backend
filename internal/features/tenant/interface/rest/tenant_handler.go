@@ -3,15 +3,15 @@ package tenanthandler
 import (
 	"net/http"
 
-	"ddd/internal/features/tenant/app"
-	"ddd/internal/features/tenant/domain"
-	"ddd/internal/features/tenant/domain/command"
-	appAuth "ddd/shared/auth/app"
-	"ddd/shared/errors"
-	ginhelp "ddd/shared/http/gin"
-	"ddd/shared/http/httputil"
-	"ddd/shared/logger"
-	"ddd/shared/pagination"
+	"backend/internal/features/tenant/app"
+	"backend/internal/features/tenant/domain"
+	"backend/internal/features/tenant/domain/command"
+	appAuth "backend/shared/auth/app"
+	"backend/shared/errors"
+	ginhelp "backend/shared/http/gin"
+	"backend/shared/http/httputil"
+	"backend/shared/logger"
+	"backend/shared/pagination"
 
 	"github.com/gin-gonic/gin"
 )
@@ -75,8 +75,8 @@ func (h *TenantHandler) CreateTenant(c *gin.Context) {
 			"err":    err.Error(),
 		})
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to create tenant", 
-			"data": err.Error(),
+			"error": "Failed to create tenant",
+			"data":  err.Error(),
 		})
 		return
 	}

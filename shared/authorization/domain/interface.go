@@ -1,8 +1,8 @@
 package domain
 
 import (
+	"backend/shared/authorization/domain/command"
 	"context"
-	"ddd/shared/authorization/domain/command"
 )
 
 type PermissionProvider interface {

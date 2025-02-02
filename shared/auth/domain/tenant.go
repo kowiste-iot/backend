@@ -1,9 +1,9 @@
 package auth
 
 import (
+	authCmd "backend/shared/auth/domain/command"
+	"backend/shared/base/command"
 	"context"
-	authCmd "ddd/shared/auth/domain/command"
-	"ddd/shared/base/command"
 )
 
 type TenantProvider interface {

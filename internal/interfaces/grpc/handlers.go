@@ -1,8 +1,8 @@
 package grpc
 
 // import (
-// 	"ddd/internal/shared/logging"
-// 	pb "ddd/shared/proto"
+// 	"backend/internal/shared/logging"
+// 	pb "backend/shared/proto"
 // )
 
 // type AssetServiceHandler struct {

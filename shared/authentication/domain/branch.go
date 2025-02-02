@@ -1,9 +1,10 @@
 package domain
 
 import (
+	userDomain "backend/internal/features/user/domain"
+	"backend/shared/authentication/domain/command"
+	baseCmd "backend/shared/base/command"
 	"context"
-	"ddd/shared/authentication/domain/command"
-	baseCmd "ddd/shared/base/command"
 )
 
 type IBranch interface {
@@ -11,7 +12,7 @@ type IBranch interface {
 	UpdateBranch(ctx context.Context, input *command.UpdateBranchInput) error
 	DeleteBranch(ctx context.Context, input *baseCmd.BaseInput) error
 	GetBranch(ctx context.Context, input *baseCmd.BaseInput) (*Branch, error)
-	GetBranchUsers(ctx context.Context, input *baseCmd.BaseInput) ([]User, error)
+	GetBranchUsers(ctx context.Context, input *baseCmd.BaseInput) ([]userDomain.User, error)
 	AssignUserToBranch(ctx context.Context, input *command.UserToBranch) error
 	RemoveUserFromBranch(ctx context.Context, input *command.UserToBranch) error
 }

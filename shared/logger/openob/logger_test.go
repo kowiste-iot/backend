@@ -1,8 +1,8 @@
 package openob
 
 import (
+	"backend/shared/logger"
 	"context"
-	"ddd/shared/logger"
 	"fmt"
 	"io"
 	"net/http"
@@ -25,12 +25,12 @@ func TestNewLogger(t *testing.T) {
 			name: "valid config",
 			config: Config{
 				ServiceName:   "test-service",
-				Environment:  "test",
-				Endpoint:     "localhost:8080",
-				Headers:      "test-headers",
-				TenantID:        "default",
-				StreamName:   "test-stream",
-				MinLevel:     logger.InfoLevel,
+				Environment:   "test",
+				Endpoint:      "localhost:8080",
+				Headers:       "test-headers",
+				TenantID:      "default",
+				StreamName:    "test-stream",
+				MinLevel:      logger.InfoLevel,
 				ConsoleOutput: true,
 				EnableTracing: true,
 			},
@@ -57,7 +57,7 @@ func TestNewLogger(t *testing.T) {
 }
 
 func TestShouldLog(t *testing.T) {
-	log:= &Logger{
+	log := &Logger{
 		minLevel: logger.InfoLevel,
 	}
 
@@ -141,9 +141,9 @@ func TestConvertToMap(t *testing.T) {
 
 func TestFormatFields(t *testing.T) {
 	tests := []struct {
-		name   string
-		fields map[string]interface{}
-		want   string
+		name        string
+		fields      map[string]interface{}
+		want        string
 		containsStr string
 	}{
 		{
@@ -191,9 +191,9 @@ func TestLoggerMethods(t *testing.T) {
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		body := new(strings.Builder)
-		_, err := io.Copy(body,r.Body)
+		_, err := io.Copy(body, r.Body)
 		require.NoError(t, err)
-		
+
 		receivedRequests = append(receivedRequests, r)
 		receivedBodies = append(receivedBodies, body.String())
 		w.WriteHeader(http.StatusOK)
@@ -203,11 +203,11 @@ func TestLoggerMethods(t *testing.T) {
 	cfg := Config{
 		ServiceName:   "test-service",
 		Environment:   "test",
-		Endpoint:     strings.TrimPrefix(server.URL, "http://"),
-		Headers:      "test-headers",
-		TenantID:        "default",
-		StreamName:   "test-stream",
-		MinLevel:     logger.DebugLevel,
+		Endpoint:      strings.TrimPrefix(server.URL, "http://"),
+		Headers:       "test-headers",
+		TenantID:      "default",
+		StreamName:    "test-stream",
+		MinLevel:      logger.DebugLevel,
 		ConsoleOutput: true,
 		EnableTracing: true,
 	}
@@ -275,18 +275,18 @@ func TestLoggerMethods(t *testing.T) {
 			// Verify request was made
 			assert.Equal(t, initialReqCount+1, len(receivedRequests), "Expected one new request")
 			req := receivedRequests[len(receivedRequests)-1]
-			
+
 			// Verify request headers
 			assert.Equal(t, "application/json", req.Header.Get("Content-Type"))
 			assert.Equal(t, fmt.Sprintf("Basic %s", cfg.Headers), req.Header.Get("Authorization"))
-			
+
 			// Verify request body
 			body := receivedBodies[len(receivedBodies)-1]
 			assert.Contains(t, body, tt.message)
 			assert.Contains(t, body, tt.level)
 			assert.Contains(t, body, "test_key")
 			assert.Contains(t, body, "test_value")
-			
+
 			if tt.hasError {
 				assert.Contains(t, body, "test error")
 			}
@@ -298,18 +298,18 @@ func TestLoggerWithoutTracing(t *testing.T) {
 	cfg := Config{
 		ServiceName:   "test-service",
 		Environment:   "test",
-		Endpoint:     "localhost:8080",
-		Headers:      "test-headers",
-		TenantID:        "default",
-		StreamName:   "test-stream",
-		MinLevel:     logger.DebugLevel,
+		Endpoint:      "localhost:8080",
+		Headers:       "test-headers",
+		TenantID:      "default",
+		StreamName:    "test-stream",
+		MinLevel:      logger.DebugLevel,
 		ConsoleOutput: true,
 		EnableTracing: false,
 	}
 
 	logger, err := NewLogger(cfg)
 	require.NoError(t, err)
-	
+
 	ctx := context.Background()
 	// This shouldn't make any HTTP requests since tracing is disabled
 	logger.Info(ctx, "test message", nil)

@@ -1,7 +1,7 @@
 package tenanthandler
 
 import (
-	"ddd/internal/features/tenant/domain"
+	"backend/internal/features/tenant/domain"
 )
 
 type CreateTenantRequest struct {

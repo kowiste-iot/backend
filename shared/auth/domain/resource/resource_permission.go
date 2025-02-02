@@ -1,6 +1,6 @@
 package resource
 
-import "ddd/shared/auth/domain/scope"
+import "backend/shared/auth/domain/scope"
 
 type ResourcePermission struct {
 	ID          string                   `json:"id,omitempty"`

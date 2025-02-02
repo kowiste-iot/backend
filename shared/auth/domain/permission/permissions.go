@@ -1,8 +1,8 @@
 package permission
 
 import (
-	"ddd/shared/auth/domain/command"
-	"ddd/shared/auth/domain/role"
+	"backend/shared/auth/domain/command"
+	"backend/shared/auth/domain/role"
 	"errors"
 )
 

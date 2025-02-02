@@ -1,6 +1,6 @@
 package command
 
-import "ddd/shared/base/command"
+import "backend/shared/base/command"
 
 type CreateRoleInput struct {
 	command.BaseInput
@@ -18,3 +18,14 @@ type RoleIDInput struct {
 	RoleID string
 }
 
+type AssignRolesInput struct {
+	command.BaseInput
+	UserID string
+	Roles  []string
+}
+
+type RemoveRolesInput struct {
+	command.BaseInput
+	UserID string
+	Roles  []string
+}

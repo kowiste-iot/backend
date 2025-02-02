@@ -3,31 +3,31 @@ package devicehandler
 import (
 	"net/http"
 
-	"ddd/internal/features/device/app"
-	"ddd/internal/features/device/domain"
-	"ddd/internal/features/device/domain/command"
-	baseCmd "ddd/shared/base/command"
-	ginhelp "ddd/shared/http/gin"
-	"ddd/shared/http/httputil"
-	"ddd/shared/logger"
-	"ddd/shared/pagination"
+	"backend/internal/features/device/app"
+	"backend/internal/features/device/domain"
+	"backend/internal/features/device/domain/command"
+	baseCmd "backend/shared/base/command"
+	ginhelp "backend/shared/http/gin"
+	"backend/shared/http/httputil"
+	"backend/shared/logger"
+	"backend/shared/pagination"
 
 	"github.com/gin-gonic/gin"
 )
 
 type DeviceHandler struct {
-	logger         logger.Logger
+	logger        logger.Logger
 	deviceService app.DeviceService
 }
 
 type Dependencies struct {
-	Logger         logger.Logger
+	Logger        logger.Logger
 	DeviceService app.DeviceService
 }
 
 func New(deps Dependencies) *DeviceHandler {
 	return &DeviceHandler{
-		logger:         deps.Logger,
+		logger:        deps.Logger,
 		deviceService: deps.DeviceService,
 	}
 }
@@ -101,8 +101,8 @@ func (h *DeviceHandler) GetDevice(c *gin.Context) {
 		return
 	}
 	input := command.DeviceIDInput{
-		BaseInput:   baseCmd.NewInput(tenant.Domain(), branch),
-		DeviceID: deviceID,
+		BaseInput: baseCmd.NewInput(tenant.Domain(), branch),
+		DeviceID:  deviceID,
 	}
 	result, err := h.deviceService.GetDevice(ctx, &input)
 	if err != nil {
@@ -112,8 +112,8 @@ func (h *DeviceHandler) GetDevice(c *gin.Context) {
 		}
 
 		h.logger.Error(c.Request.Context(), err, "Failed to get measure", map[string]interface{}{
-			"error":       err.Error(),
-			"tenantID":    tenant.Domain(),
+			"error":    err.Error(),
+			"tenantID": tenant.Domain(),
 			"deviceID": deviceID,
 		})
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get measure"})
@@ -209,8 +209,8 @@ func (h *DeviceHandler) UpdateDevice(c *gin.Context) {
 		}
 		tenantID, _ := httputil.GetTenant(ctx)
 		h.logger.Error(c.Request.Context(), err, "Failed to update measure", map[string]interface{}{
-			"error":       err.Error(),
-			"tenantID":    tenantID,
+			"error":    err.Error(),
+			"tenantID": tenantID,
 			"deviceID": deviceID,
 		})
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update measure"})
@@ -244,8 +244,8 @@ func (h *DeviceHandler) DeleteDevice(c *gin.Context) {
 		return
 	}
 	input := command.DeviceIDInput{
-		BaseInput:   baseCmd.NewInput(tenant.Domain(), branch),
-		DeviceID: deviceID,
+		BaseInput: baseCmd.NewInput(tenant.Domain(), branch),
+		DeviceID:  deviceID,
 	}
 	err = h.deviceService.DeleteDevice(ctx, &input)
 	if err != nil {
@@ -255,8 +255,8 @@ func (h *DeviceHandler) DeleteDevice(c *gin.Context) {
 		}
 		tenantID, _ := httputil.GetTenant(ctx)
 		h.logger.Error(c.Request.Context(), err, "Failed to delete measure", map[string]interface{}{
-			"error":       err.Error(),
-			"tenantID":    tenantID,
+			"error":    err.Error(),
+			"tenantID": tenantID,
 			"deviceID": deviceID,
 		})
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

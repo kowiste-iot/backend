@@ -1,9 +1,9 @@
 package app
 
 import (
+	"backend/shared/auth/domain/scope"
+	baseCmd "backend/shared/base/command"
 	"context"
-	"ddd/shared/auth/domain/scope"
-	baseCmd "ddd/shared/base/command"
 )
 
 // GetTenantRoles retrieves all roles for a tenant

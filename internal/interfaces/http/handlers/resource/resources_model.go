@@ -1,8 +1,8 @@
 package resourcehandler
 
 import (
-	"ddd/shared/auth/domain/resource"
-	"ddd/shared/auth/domain/scope"
+	"backend/shared/auth/domain/resource"
+	"backend/shared/auth/domain/scope"
 )
 
 type UpdateResourceRequest struct {

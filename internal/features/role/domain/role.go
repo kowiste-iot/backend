@@ -1,15 +1,15 @@
 package domain
 
 import (
+	"backend/internal/features/role/domain/command"
+	baseCmd "backend/shared/base/command"
+	"backend/shared/util"
 	"context"
-	"ddd/shared/authorization/domain/command"
-	baseCmd "ddd/shared/base/command"
-	"ddd/shared/util"
 )
 
 const (
 	RoleAdmin = "admin"
-	RoleUma   = "uma_protection" //TODO:move inside keycloak, never return 
+	RoleUma   = "uma_protection" //TODO:move inside keycloak, never return
 )
 
 type RoleProvider interface {
@@ -25,7 +25,7 @@ type Role struct {
 	Description string
 }
 
-func NewRole(id string, Name string) *Role {
+func New(id string, Name string) *Role {
 	return &Role{
 		ID:   id,
 		Name: Name,

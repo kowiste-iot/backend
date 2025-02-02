@@ -1,11 +1,11 @@
 package repository
 
 import (
+	"backend/internal/features/alert/domain"
+	baseCmd "backend/shared/base/command"
+	gormhelper "backend/shared/gorm"
+	"backend/shared/pagination"
 	"context"
-	"ddd/internal/features/alert/domain"
-	baseCmd "ddd/shared/base/command"
-	gormhelper "ddd/shared/gorm"
-	"ddd/shared/pagination"
 	"errors"
 	"time"
 

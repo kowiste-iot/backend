@@ -1,7 +1,7 @@
 package command
 
 import (
-	"ddd/shared/base/command"
+	"backend/shared/base/command"
 	"fmt"
 	"strings"
 )

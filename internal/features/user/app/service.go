@@ -3,13 +3,13 @@ package app
 
 import (
 	"context"
-	"ddd/internal/features/user/domain"
-	"ddd/internal/features/user/domain/command"
-	auth "ddd/shared/auth/domain"
-	"ddd/shared/auth/domain/resource"
-	"ddd/shared/auth/domain/scope"
-	"ddd/shared/base"
-	baseCmd "ddd/shared/base/command"
+
+	"backend/internal/features/user/domain"
+	"backend/internal/features/user/domain/command"
+	"backend/shared/auth/domain/resource"
+	"backend/shared/auth/domain/scope"
+	"backend/shared/base"
+	baseCmd "backend/shared/base/command"
 
 	"fmt"
 )
@@ -21,17 +21,20 @@ type UserService interface {
 	UpdateUser(ctx context.Context, input *command.UpdateUserInput) (*domain.User, error)
 	DeleteUser(ctx context.Context, input *command.UserIDInput) error
 }
-
+type ServiceDependencies struct {
+	Repo domain.UserRepository
+	Auth domain.IdentityProvider
+}
 type userService struct {
 	repo domain.UserRepository
-	auth auth.IdentityProvider
+	auth domain.IdentityProvider
 	*base.BaseService
 }
 
-func NewService(base *base.BaseService, auth auth.IdentityProvider, repo domain.UserRepository) UserService {
+func NewService(base *base.BaseService, dep *ServiceDependencies) UserService {
 	return &userService{
-		repo:        repo,
-		auth:        auth,
+		repo:        dep.Repo,
+		auth:        dep.Auth,
 		BaseService: base,
 	}
 }
@@ -50,12 +53,21 @@ func (s *userService) CreateUser(ctx context.Context, input *command.CreateUserI
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
 
-	//user keycloak
+	//user in authentication
 	id, err := s.auth.CreateUser(ctx, input)
 	if err != nil {
 		return nil, fmt.Errorf("failed to save user auth: %w", err)
 	}
 	user.SetAuthID(id)
+	//assign roles
+	err = s.auth.AssignRolesToUser(ctx, &command.AssignRolesInput{
+		BaseInput: input.BaseInput,
+		UserID:    id,
+		Roles:     input.Roles,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to assign user role auth: %w", err)
+	}
 	if err := s.repo.Create(ctx, user); err != nil {
 		return nil, fmt.Errorf("failed to save user: %w", err)
 	}

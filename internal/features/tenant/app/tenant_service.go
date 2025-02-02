@@ -1,18 +1,18 @@
 package app
 
 import (
+	"backend/internal/features/tenant/domain"
+	"backend/internal/features/tenant/domain/command"
+	appUser "backend/internal/features/user/app"
+	userCmd "backend/internal/features/user/domain/command"
+	appAuth "backend/shared/auth/app"
+	auth "backend/shared/auth/domain"
+	authCmd "backend/shared/auth/domain/command"
+	"backend/shared/auth/domain/role"
+	"backend/shared/base"
+	baseCmd "backend/shared/base/command"
+	"backend/shared/validator"
 	"context"
-	"ddd/internal/features/tenant/domain"
-	"ddd/internal/features/tenant/domain/command"
-	appUser "ddd/internal/features/user/app"
-	userCmd "ddd/internal/features/user/domain/command"
-	appAuth "ddd/shared/auth/app"
-	auth "ddd/shared/auth/domain"
-	authCmd "ddd/shared/auth/domain/command"
-	"ddd/shared/auth/domain/role"
-	"ddd/shared/base"
-	baseCmd "ddd/shared/base/command"
-	"ddd/shared/validator"
 
 	"errors"
 	"fmt"
@@ -125,8 +125,8 @@ func (s tenantService) CreateTenant(ctx context.Context, input *command.CreateTe
 	//Assign to branch
 	ub := authCmd.UserToBranch{
 		TenantDomain: tenant.Domain(),
-		UserID:   user.AuthID(),
-		Branchs:  []string{createdBranch.AuthBranchID(), adminBranch.AuthBranchID()},
+		UserID:       user.AuthID(),
+		Branchs:      []string{createdBranch.AuthBranchID(), adminBranch.AuthBranchID()},
 	}
 	err = s.auth.AssignUserToBranch(ctx, &ub)
 	if err != nil {

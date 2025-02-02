@@ -1,6 +1,6 @@
 package command
 
-import "ddd/shared/base/command"
+import "backend/shared/base/command"
 
 type CreateUserInput struct {
 	command.BaseInput
@@ -22,4 +22,20 @@ type UpdateUserInput struct {
 type UserIDInput struct {
 	command.BaseInput
 	UserID string `validate:"required,uuidv7"`
+}
+type AssignRolesInput struct {
+	command.BaseInput
+	UserID string
+	Roles  []string
+}
+
+type RemoveRolesInput struct {
+	command.BaseInput
+	UserID string
+	Roles  []string
+}
+
+type UserRolesInput struct {
+	command.BaseInput
+	UserID string
 }

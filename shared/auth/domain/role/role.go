@@ -1,10 +1,10 @@
 package role
 
 import (
+	authCmd "backend/shared/auth/domain/command"
+	"backend/shared/base/command"
+	"backend/shared/util"
 	"context"
-	authCmd "ddd/shared/auth/domain/command"
-	"ddd/shared/base/command"
-	"ddd/shared/util"
 )
 
 type Role struct {

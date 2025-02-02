@@ -1,9 +1,9 @@
 package permission
 
 import (
+	"backend/shared/auth/domain/role"
+	baseCmd "backend/shared/base/command"
 	"context"
-	"ddd/shared/auth/domain/role"
-	baseCmd "ddd/shared/base/command"
 	"fmt"
 )
 

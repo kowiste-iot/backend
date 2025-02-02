@@ -2,14 +2,14 @@
 package repository
 
 import (
+	"backend/internal/features/user/domain"
+	"backend/internal/features/user/domain/command"
+	baseCmd "backend/shared/base/command"
 	"context"
-	"ddd/internal/features/user/domain"
-	"ddd/internal/features/user/domain/command"
-	baseCmd "ddd/shared/base/command"
 
-	gormhelper "ddd/shared/gorm"
-	"ddd/shared/http/httputil"
-	"ddd/shared/pagination"
+	gormhelper "backend/shared/gorm"
+	"backend/shared/http/httputil"
+	"backend/shared/pagination"
 	"errors"
 	"time"
 

@@ -1,10 +1,10 @@
 package keycloak
 
 import (
+	auth "backend/shared/auth/domain"
+	"backend/shared/auth/domain/command"
+	baseCmd "backend/shared/base/command"
 	"context"
-	auth "ddd/shared/auth/domain"
-	"ddd/shared/auth/domain/command"
-	baseCmd "ddd/shared/base/command"
 	"fmt"
 
 	"github.com/Nerzal/gocloak/v13"
