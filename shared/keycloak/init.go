@@ -36,7 +36,7 @@ func New(config *KeycloakConfig) (*Keycloak, error) {
 
 func (ks *Keycloak) initialize(ctx context.Context) error {
 	// Get initial token
-	token, err := ks.getNewToken(ctx)
+	token, err := ks.GetNewToken(ctx)
 	if err != nil {
 		return err
 	}
@@ -47,7 +47,7 @@ func (ks *Keycloak) initialize(ctx context.Context) error {
 
 	return nil
 }
-func (ks *Keycloak) getNewToken(ctx context.Context) (token *gocloak.JWT, err error) {
+func (ks *Keycloak) GetNewToken(ctx context.Context) (token *gocloak.JWT, err error) {
 	token, err = ks.Client.GetToken(ctx, ks.config.Realm, gocloak.TokenOptions{
 		ClientID:     &ks.config.ClientID,
 		ClientSecret: &ks.config.ClientSecret,
@@ -81,7 +81,7 @@ func (ks *Keycloak) GetValidToken(ctx context.Context) (*gocloak.JWT, error) {
 	defer ks.mutex.Unlock()
 
 	// Get new token
-	newToken, err := ks.getNewToken(ctx)
+	newToken, err := ks.GetNewToken(ctx)
 	if err != nil {
 		return nil, err
 	}

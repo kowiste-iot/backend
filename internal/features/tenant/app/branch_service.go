@@ -3,10 +3,10 @@ package app
 import (
 	"backend/internal/features/tenant/domain"
 	"backend/internal/features/tenant/domain/command"
-	appAuth "backend/shared/auth/app"
-	authCmd "backend/shared/auth/domain/command"
+	"backend/internal/features/user/dto"
 	"backend/shared/base"
 	baseCmd "backend/shared/base/command"
+
 	"backend/shared/validator"
 	"context"
 	"fmt"
@@ -18,18 +18,24 @@ type BranchService interface {
 	ListBranches(ctx context.Context, tenantID string) ([]*domain.Branch, error)
 	UpdateBranch(ctx context.Context, input *command.UpdateBranchInput) (*domain.Branch, error)
 	DeleteBranch(ctx context.Context, input *baseCmd.BaseInput) error
+	GetBranchUsers(ctx context.Context, input *baseCmd.BaseInput) ([]dto.UserDTO, error)
+	AssignUserToBranch(ctx context.Context, input *command.UserToBranch) error
+	RemoveUserFromBranch(ctx context.Context, input *command.UserToBranch) error
 }
-
+type BranchDependencies struct {
+	Branch domain.BranchProvider
+	Repo   domain.BranchRepository
+}
 type branchService struct {
-	repo domain.BranchRepository
-	auth *appAuth.Service
+	repo   domain.BranchRepository
+	branch domain.BranchProvider
 	*base.BaseService
 }
 
-func NewBranchService(base *base.BaseService, auth *appAuth.Service, repo domain.BranchRepository) BranchService {
+func NewBranchService(base *base.BaseService, dep *BranchDependencies) BranchService {
 	return &branchService{
-		repo:        repo,
-		auth:        auth,
+		repo:        dep.Repo,
+		branch:      dep.Branch,
 		BaseService: base,
 	}
 }
@@ -49,10 +55,10 @@ func (s *branchService) CreateBranch(ctx context.Context, input *command.CreateB
 	}
 
 	// Create Keycloak group
-	branchID, err := s.auth.CreateBranch(ctx, &authCmd.CreateBranchInput{
-		TenantID:    input.TenantDomain,
-		Name:        input.Name,
-		Description: input.Description,
+	branchID, err := s.branch.CreateBranch(ctx, &command.CreateBranchInput{
+		TenantDomain: input.TenantDomain,
+		Name:         input.Name,
+		Description:  input.Description,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create auth branch: %w", err)
@@ -63,7 +69,7 @@ func (s *branchService) CreateBranch(ctx context.Context, input *command.CreateB
 	if err := s.repo.Create(ctx, input.TenantDomain, branch); err != nil {
 		// Cleanup Keycloak group if DB save fails
 		i := baseCmd.NewInput(input.TenantDomain, branchID)
-		if delErr := s.auth.DeleteBranch(ctx, &i); delErr != nil {
+		if delErr := s.branch.DeleteBranch(ctx, &i); delErr != nil {
 			s.Logger.Error(ctx, err, "failed to cleanup auth group after branch creation failure", nil)
 		}
 		return nil, fmt.Errorf("failed to save branch: %w", err)
@@ -103,11 +109,11 @@ func (s *branchService) UpdateBranch(ctx context.Context, cmd *command.UpdateBra
 	}
 
 	// Update Keycloak group
-	err = s.auth.UpdateBranch(ctx, &authCmd.UpdateBranchInput{
-		TenantID:    cmd.TenantDomain,
-		ID:          cmd.ID,
-		Name:        cmd.Name,
-		Description: cmd.Description,
+	err = s.branch.UpdateBranch(ctx, &command.UpdateBranchInput{
+		TenantDomain: cmd.TenantDomain,
+		ID:           cmd.ID,
+		Name:         cmd.Name,
+		Description:  cmd.Description,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to update auth group: %w", err)
@@ -127,7 +133,7 @@ func (s *branchService) DeleteBranch(ctx context.Context, input *baseCmd.BaseInp
 		return fmt.Errorf("failed to get branch: %w", err)
 	}
 
-	err = s.auth.DeleteBranch(ctx, input)
+	err = s.branch.DeleteBranch(ctx, input)
 	if err != nil {
 		return fmt.Errorf("failed to delete auth branch: %w", err)
 	}
@@ -136,5 +142,14 @@ func (s *branchService) DeleteBranch(ctx context.Context, input *baseCmd.BaseInp
 		return fmt.Errorf("failed to delete branch: %w", err)
 	}
 
+	return nil
+}
+func (s *branchService) GetBranchUsers(ctx context.Context, input *baseCmd.BaseInput) ([]dto.UserDTO, error) {
+	return nil, nil
+}
+func (s *branchService) AssignUserToBranch(ctx context.Context, input *command.UserToBranch) error {
+	return nil
+}
+func (s *branchService) RemoveUserFromBranch(ctx context.Context, input *command.UserToBranch) error {
 	return nil
 }

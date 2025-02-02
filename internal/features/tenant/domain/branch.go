@@ -7,6 +7,21 @@ import (
 	"github.com/google/uuid"
 )
 
+const (
+	AdminBranch     string = "admin"
+	DefaultBranch   string = "default"
+	UndefinedBranch string = "undefined"
+)
+
+func ForbiddenBranch() []string {
+	return []string{
+		AdminBranch,
+		DefaultBranch,
+		UndefinedBranch,
+	}
+
+}
+
 type Branch struct {
 	id           string
 	tenantID     string

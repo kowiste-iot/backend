@@ -6,7 +6,6 @@ import (
 	"backend/internal/features/tenant/app"
 	"backend/internal/features/tenant/domain"
 	"backend/internal/features/tenant/domain/command"
-	appAuth "backend/shared/auth/app"
 	"backend/shared/errors"
 	ginhelp "backend/shared/http/gin"
 	"backend/shared/http/httputil"
@@ -24,7 +23,6 @@ type TenantHandler struct {
 type Dependencies struct {
 	Logger        logger.Logger
 	TenantService app.TenantService
-	AuthService   *appAuth.Service
 }
 
 func New(deps Dependencies) *TenantHandler {

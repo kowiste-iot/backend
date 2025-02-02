@@ -1,11 +1,6 @@
 package http
 
 import (
-	"context"
-	"fmt"
-	"net/http"
-	"time"
-
 	actionhandler "backend/internal/features/action/interface/rest"
 	alerthandler "backend/internal/features/alert/interface/rest"
 	assethandler "backend/internal/features/asset/interface/rest"
@@ -19,8 +14,12 @@ import (
 	resourcehandler "backend/internal/interfaces/http/handlers/resource"
 	scopehandler "backend/internal/interfaces/http/handlers/scopes"
 	"backend/pkg/config"
-	"backend/shared/auth/domain/validation"
+	"backend/shared/authentication/domain"
 	"backend/shared/logger"
+	"context"
+	"fmt"
+	"net/http"
+	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -33,7 +32,7 @@ type Server struct {
 	logger           logger.Logger
 	router           *gin.Engine
 	httpServer       *http.Server
-	auth             validation.AuthProvider
+	auth             domain.TokenValidator
 	tenantHandler    *tenanthandler.TenantHandler
 	assetHandler     *assethandler.AssetHandler
 	measureHandler   *measurehandler.MeasureHandler
@@ -50,7 +49,7 @@ type Server struct {
 }
 
 type ServerDependencies struct {
-	Authentication   validation.AuthProvider
+	Authentication    domain.TokenValidator
 	RolesHandler     *rolehandler.RoleHandler
 	ResourceHandler  *resourcehandler.ResourceHandler
 	BranchHandler    *branchhandler.BranchHandler

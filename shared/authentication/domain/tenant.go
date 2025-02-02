@@ -2,7 +2,7 @@ package domain
 
 import "context"
 
-type ITenant interface {
+type TenantProvider interface {
 	CreateTenant(ctx context.Context, tenant *Tenant) (string, error)
 	UpdateTenant(ctx context.Context, tenant *Tenant) error
 	DeleteTenant(ctx context.Context, tenantID string) error

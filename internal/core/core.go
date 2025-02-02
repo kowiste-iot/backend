@@ -29,6 +29,8 @@ import (
 
 	appTenant "backend/internal/features/tenant/app"
 	repoTenant "backend/internal/features/tenant/infra/gorm"
+	tenantKeycloak "backend/internal/features/tenant/infra/keycloak"
+
 	tenanthandler "backend/internal/features/tenant/interface/rest"
 
 	appUser "backend/internal/features/user/app"
@@ -42,13 +44,11 @@ import (
 
 	"backend/internal/interfaces/http"
 	branchhandler "backend/internal/interfaces/http/handlers/branch"
-	resourcehandler "backend/internal/interfaces/http/handlers/resource"
+	// resourcehandler "backend/internal/interfaces/http/handlers/resource"
 
-	scopehandler "backend/internal/interfaces/http/handlers/scopes"
+	// scopehandler "backend/internal/interfaces/http/handlers/scopes"
 	wshandler "backend/internal/interfaces/http/handlers/websocket"
 	"backend/pkg/config"
-	appAuth "backend/shared/auth/app"
-	keycloak "backend/shared/auth/infra/gokc"
 	"backend/shared/base"
 	"backend/shared/logger"
 	"backend/shared/logger/openob"
@@ -151,27 +151,11 @@ func (c *Core) initServer(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	kc, err := keycloak.NewKeycloakService(keycloak.KeycloakConfig{
-		Host:         c.cfg.Authentication.Host,
-		Realm:        c.cfg.Authentication.Realm,
-		ClientID:     c.cfg.Authentication.ClientID,
-		ClientSecret: c.cfg.Authentication.ClientSecret,
-		WebClientID:  c.cfg.Authentication.WebClientID,
-	})
-	if err != nil {
-		return err
-	}
 
 	base := &base.BaseService{
 		Logger: c.logger,
 		Perm:   kCore,
 	}
-
-	authService := appAuth.NewAuthService(tenantConfig, base, kc, kc, kc, kc, kc, kc, kc, kc)
-
-	//Branch
-	branchRepo := repoTenant.NewBranchRepository(c.db)
-	branchService := appTenant.NewBranchService(base, authService, branchRepo)
 
 	//Asset
 	assetRepo := repoAsset.NewRepository(c.db)
@@ -203,12 +187,22 @@ func (c *Core) initServer(ctx context.Context) error {
 	roleService := appRole.NewService(base, roleKC, appRole.Config{
 		DefaultRoles: tenantConfig.Authorization.Roles,
 	})
+
+	//Branch
+	branchRepo := repoTenant.NewBranchRepository(c.db)
+	branchKC := tenantKeycloak.NewBranch(kCore)
+
+	branchService := appTenant.NewBranchService(base, &appTenant.BranchDependencies{
+		Branch: branchKC,
+		Repo:   branchRepo,
+	})
 	//Tenant
 
 	tenantRepo := repoTenant.NewTenantRepository(c.db)
+	tenantKC := tenantKeycloak.New(kCore)
 	tenantDep := appTenant.ServiceDependencies{
 		Branch: branchService,
-		Auth:   authService,
+		Tenant: tenantKC,
 		Repo:   tenantRepo,
 		User:   userService,
 	}
@@ -224,7 +218,7 @@ func (c *Core) initServer(ctx context.Context) error {
 	appT := appToken.NewTokenService("wA7pH9#kL$mN4@vX2*qR8", 8*time.Hour)
 	appH := appWS.NewHub()
 	deps := http.ServerDependencies{
-		Authentication: kc,
+		Authentication: kCore,
 		BranchHandler: branchhandler.New(branchhandler.Dependencies{
 			Logger:        c.logger,
 			BranchService: branchService,
@@ -232,7 +226,6 @@ func (c *Core) initServer(ctx context.Context) error {
 		TenantHandler: tenanthandler.New(tenanthandler.Dependencies{
 			Logger:        c.logger,
 			TenantService: tenantService,
-			AuthService:   authService,
 		}),
 		AssetHandler: assethandler.New(assethandler.Dependencies{
 			Logger:       c.logger,
@@ -266,14 +259,14 @@ func (c *Core) initServer(ctx context.Context) error {
 			Logger:      c.logger,
 			RoleService: roleService,
 		}),
-		ResourceHandler: resourcehandler.New(resourcehandler.Dependencies{
-			Logger:      c.logger,
-			AuthService: authService,
-		}),
-		ScopeHandler: scopehandler.New(scopehandler.Dependencies{
-			Logger:      c.logger,
-			AuthService: authService,
-		}),
+		// ResourceHandler: resourcehandler.New(resourcehandler.Dependencies{
+		// 	Logger:      c.logger,
+		// 	AuthService: authService,
+		// }),
+		// ScopeHandler: scopehandler.New(scopehandler.Dependencies{
+		// 	Logger:      c.logger,
+		// 	AuthService: authService,
+		// }),
 
 		TokenHandler:    wshandler.NewTokenHandler(appT),
 		WSNotifyHandler: wshandler.NewNotificationHandler(appH, natsClient, appT),

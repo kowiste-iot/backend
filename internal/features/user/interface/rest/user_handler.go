@@ -58,7 +58,7 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, ToUserResponse(result))
+	c.JSON(http.StatusCreated, result)
 }
 
 func (h *UserHandler) GetUser(c *gin.Context) {
@@ -84,7 +84,7 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, ToUserResponse(result))
+	c.JSON(http.StatusOK, result)
 }
 
 func (h *UserHandler) ListUsers(c *gin.Context) {
@@ -108,7 +108,7 @@ func (h *UserHandler) ListUsers(c *gin.Context) {
 
 	pg, _ := pagination.GetPagination(ctx)
 	response := pagination.PaginatedResponse{
-		Data:       ToUserResponses(results),
+		Data:       results,
 		Pagination: *pg,
 	}
 
@@ -148,7 +148,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, ToUserResponse(result))
+	c.JSON(http.StatusOK, result)
 }
 
 func (h *UserHandler) DeleteUser(c *gin.Context) {
