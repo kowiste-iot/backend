@@ -10,7 +10,6 @@ import (
 	rolehandler "backend/internal/features/role/interface/rest"
 	tenanthandler "backend/internal/features/tenant/interface/rest"
 	userhandler "backend/internal/features/user/interface/rest"
-	branchhandler "backend/internal/interfaces/http/handlers/branch"
 	resourcehandler "backend/internal/interfaces/http/handlers/resource"
 	scopehandler "backend/internal/interfaces/http/handlers/scopes"
 	"backend/pkg/config"
@@ -37,6 +36,7 @@ type Server struct {
 	assetHandler     *assethandler.AssetHandler
 	measureHandler   *measurehandler.MeasureHandler
 	dashboardHandler *dashboardhandler.DashboardHandler
+	widgetHandler    *dashboardhandler.WidgetHandler
 	deviceHandler    *devicehandler.DeviceHandler
 	actionHandler    *actionhandler.ActionHandler
 	alertHandler     *alerthandler.AlertHandler
@@ -49,14 +49,15 @@ type Server struct {
 }
 
 type ServerDependencies struct {
-	Authentication    domain.TokenValidator
+	Authentication   domain.TokenValidator
 	RolesHandler     *rolehandler.RoleHandler
 	ResourceHandler  *resourcehandler.ResourceHandler
-	BranchHandler    *branchhandler.BranchHandler
+	BranchHandler    *tenanthandler.BranchHandler
 	TenantHandler    *tenanthandler.TenantHandler
 	AssetHandler     *assethandler.AssetHandler
 	MeasureHandler   *measurehandler.MeasureHandler
 	DashboardHandler *dashboardhandler.DashboardHandler
+	WidgetHandler    *dashboardhandler.WidgetHandler
 	DeviceHandler    *devicehandler.DeviceHandler
 	ActionHandler    *actionhandler.ActionHandler
 	AlertHandler     *alerthandler.AlertHandler
@@ -91,6 +92,7 @@ func NewServer(cfg *config.Config, logger logger.Logger, deps ServerDependencies
 		tenantHandler:    deps.TenantHandler,
 		assetHandler:     deps.AssetHandler,
 		dashboardHandler: deps.DashboardHandler,
+		widgetHandler:    deps.WidgetHandler,
 		deviceHandler:    deps.DeviceHandler,
 		actionHandler:    deps.ActionHandler,
 		alertHandler:     deps.AlertHandler,
@@ -99,7 +101,6 @@ func NewServer(cfg *config.Config, logger logger.Logger, deps ServerDependencies
 		wsNotifyHandler:  deps.WSNotifyHandler,
 		tokenHandler:     deps.TokenHandler,
 		measureHandler:   deps.MeasureHandler,
-		// widgetHandler:    deps.WidgetHandler,
 	}
 }
 

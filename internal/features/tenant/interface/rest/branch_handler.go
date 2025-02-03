@@ -1,4 +1,4 @@
-package branchhandler
+package tenanthandler
 
 import (
 	"backend/internal/features/tenant/app"
@@ -19,12 +19,12 @@ type BranchHandler struct {
 	branchService app.BranchService
 }
 
-type Dependencies struct {
+type BranchDependencies struct {
 	Logger        logger.Logger
 	BranchService app.BranchService
 }
 
-func New(deps Dependencies) *BranchHandler {
+func NewBranch(deps BranchDependencies) *BranchHandler {
 	return &BranchHandler{
 		logger:        deps.Logger,
 		branchService: deps.BranchService,

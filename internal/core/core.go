@@ -43,7 +43,6 @@ import (
 	rolehandler "backend/internal/features/role/interface/rest"
 
 	"backend/internal/interfaces/http"
-	branchhandler "backend/internal/interfaces/http/handlers/branch"
 	// resourcehandler "backend/internal/interfaces/http/handlers/resource"
 
 	// scopehandler "backend/internal/interfaces/http/handlers/scopes"
@@ -219,7 +218,7 @@ func (c *Core) initServer(ctx context.Context) error {
 	appH := appWS.NewHub()
 	deps := http.ServerDependencies{
 		Authentication: kCore,
-		BranchHandler: branchhandler.New(branchhandler.Dependencies{
+		BranchHandler: tenanthandler.NewBranch(tenanthandler.BranchDependencies{
 			Logger:        c.logger,
 			BranchService: branchService,
 		}),

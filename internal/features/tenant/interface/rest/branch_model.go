@@ -1,4 +1,4 @@
-package branchhandler
+package tenanthandler
 
 import (
 	"backend/internal/features/tenant/domain"

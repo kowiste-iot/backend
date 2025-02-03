@@ -60,6 +60,14 @@ func (s *Server) setupRoutes() {
 					dashboards.GET(":id", s.dashboardHandler.GetDashboard)
 					dashboards.PUT(":id", s.dashboardHandler.UpdateDashboard)
 					dashboards.DELETE(":id", s.dashboardHandler.DeleteDashboard)
+					widgets := dashboards.Group(":id/widgets")
+					{
+						widgets.POST("", s.widgetHandler.CreateWidget)
+						widgets.GET("", s.widgetHandler.ListWidgets)
+						widgets.GET(":wid", s.widgetHandler.GetWidget)
+						widgets.PUT(":wid", s.widgetHandler.UpdateWidget)
+						widgets.DELETE(":wid", s.widgetHandler.DeleteWidget)
+					}
 				}
 				// Device routes
 				devices := apiBranch.Group("devices")
