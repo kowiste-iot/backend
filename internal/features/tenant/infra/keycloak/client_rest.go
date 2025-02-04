@@ -1,4 +1,4 @@
-package restkc
+package keycloak
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
-type ClientSettings struct {
+type clientSettings struct {
 	ID                            string   `json:"id"`
 	ClientID                      string   `json:"clientId"`
 	Name                          string   `json:"name"`
@@ -19,7 +19,7 @@ type ClientSettings struct {
 	DecisionStrategy              string   `json:"decisionStrategy"`
 }
 
-func UpdateClientSettings(ctx context.Context, url, token, tenantID, IDofClient string, p *ClientSettings) error {
+func (ks *BranchKeycloak) updateClientSettings(ctx context.Context, url, token, tenantID, IDofClient string, p *clientSettings) error {
 	baseURL := url + "/admin/realms/%s/clients/%s/authz/resource-server"
 	endpoint := fmt.Sprintf(baseURL, tenantID, IDofClient)
 

@@ -4,9 +4,9 @@ import (
 	"backend/internal/features/tenant/domain"
 	"backend/internal/features/tenant/domain/command"
 
+	roleDomain "backend/internal/features/role/domain"
 	appUser "backend/internal/features/user/app"
 	userCmd "backend/internal/features/user/domain/command"
-	roleDomain "backend/internal/features/role/domain"
 
 	"backend/shared/base"
 	baseCmd "backend/shared/base/command"
@@ -27,13 +27,13 @@ type TenantService interface {
 type ServiceDependencies struct {
 	Branch BranchService
 	User   appUser.UserService
-	Tenant   domain.TenantProvider
+	Tenant domain.TenantProvider
 	Repo   domain.TenantRepository
 }
 
 type tenantService struct {
 	repo   domain.TenantRepository
-	tenant   domain.TenantProvider
+	tenant domain.TenantProvider
 	user   appUser.UserService
 	branch BranchService
 	*base.BaseService
@@ -42,7 +42,7 @@ type tenantService struct {
 func NewTenantService(base *base.BaseService, dep *ServiceDependencies) TenantService {
 	return &tenantService{
 		repo:        dep.Repo,
-		tenant:        dep.Tenant,
+		tenant:      dep.Tenant,
 		user:        dep.User,
 		branch:      dep.Branch,
 		BaseService: base,
@@ -69,24 +69,14 @@ func (s tenantService) CreateTenant(ctx context.Context, input *command.CreateTe
 	}
 	tenant.SetAuthID(id)
 
-	//Create default branch
+	//Create default branch + admin group
 	defaultB := command.CreateBranchInput{
 		TenantDomain: tenant.Domain(),
 		Name:         input.Branch,
 		Description:  "Default Branch",
+		Default:      true,
 	}
 	createdBranch, err := s.branch.CreateBranch(ctx, &defaultB)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create default branch: %w", err)
-	}
-
-	//Create admins branch they are tenant admin
-	adminB := command.CreateBranchInput{
-		TenantDomain: tenant.Domain(),
-		Name:         domain.AdminBranch,
-		Description:  "Admin Group",
-	}
-	adminBranch, err := s.branch.CreateBranch(ctx, &adminB)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create default branch: %w", err)
 	}
@@ -108,7 +98,7 @@ func (s tenantService) CreateTenant(ctx context.Context, input *command.CreateTe
 	ub := command.UserToBranch{
 		TenantDomain: tenant.Domain(),
 		UserID:       user.AuthID,
-		Branchs:      []string{createdBranch.AuthBranchID(), adminBranch.AuthBranchID()},
+		Branchs:      []string{createdBranch.AuthBranchID(), createdBranch.AdminBranchID()},
 	}
 	err = s.branch.AssignUserToBranch(ctx, &ub)
 	if err != nil {

@@ -11,7 +11,7 @@ import (
 
 type Keycloak struct {
 	Client      *gocloak.GoCloak
-	config      *KeycloakConfig
+	Config      *KeycloakConfig
 	realmToken  *gocloak.JWT
 	mutex       sync.RWMutex
 	lastRefresh time.Time
@@ -27,7 +27,7 @@ type KeycloakConfig struct {
 func New(config *KeycloakConfig) (*Keycloak, error) {
 	kc := new(Keycloak)
 	kc.Client = gocloak.NewClient(config.Host)
-	kc.config = config
+	kc.Config = config
 	if err := kc.initialize(context.Background()); err != nil {
 		return nil, err
 	}
@@ -48,9 +48,9 @@ func (ks *Keycloak) initialize(ctx context.Context) error {
 	return nil
 }
 func (ks *Keycloak) GetNewToken(ctx context.Context) (token *gocloak.JWT, err error) {
-	token, err = ks.Client.GetToken(ctx, ks.config.Realm, gocloak.TokenOptions{
-		ClientID:     &ks.config.ClientID,
-		ClientSecret: &ks.config.ClientSecret,
+	token, err = ks.Client.GetToken(ctx, ks.Config.Realm, gocloak.TokenOptions{
+		ClientID:     &ks.Config.ClientID,
+		ClientSecret: &ks.Config.ClientSecret,
 		GrantType:    gocloak.StringP("client_credentials"),
 	})
 	if err != nil {
@@ -90,7 +90,7 @@ func (ks *Keycloak) GetValidToken(ctx context.Context) (*gocloak.JWT, error) {
 }
 
 func (k *Keycloak) getTenantOrDefault(ctx context.Context) string {
-	domain := k.config.Realm
+	domain := k.Config.Realm
 	tenant, ok := httputil.GetTenant(ctx)
 	if ok {
 		domain = tenant.Domain()

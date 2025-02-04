@@ -4,8 +4,13 @@ import (
 	"backend/internal/features/tenant/domain"
 	"backend/internal/features/tenant/domain/command"
 	"backend/internal/features/user/dto"
+	"backend/pkg/config"
+	"backend/shared/auth/domain/role"
 	"backend/shared/base"
 	baseCmd "backend/shared/base/command"
+
+	appRole "backend/internal/features/role/app"
+	roleCmd "backend/internal/features/role/domain/command"
 
 	"backend/shared/validator"
 	"context"
@@ -24,11 +29,15 @@ type BranchService interface {
 }
 type BranchDependencies struct {
 	Branch domain.BranchProvider
+	Role   appRole.RoleService
 	Repo   domain.BranchRepository
+	Config *config.TenantConfiguration
 }
 type branchService struct {
 	repo   domain.BranchRepository
 	branch domain.BranchProvider
+	role   appRole.RoleService
+	config *config.TenantConfiguration
 	*base.BaseService
 }
 
@@ -36,6 +45,8 @@ func NewBranchService(base *base.BaseService, dep *BranchDependencies) BranchSer
 	return &branchService{
 		repo:        dep.Repo,
 		branch:      dep.Branch,
+		role:        dep.Role,
+		config:      dep.Config,
 		BaseService: base,
 	}
 }
@@ -54,17 +65,33 @@ func (s *branchService) CreateBranch(ctx context.Context, input *command.CreateB
 		return nil, fmt.Errorf("failed to create branch: %w", err)
 	}
 
-	// Create Keycloak group
+	// Create auth group
 	branchID, err := s.branch.CreateBranch(ctx, &command.CreateBranchInput{
 		TenantDomain: input.TenantDomain,
 		Name:         input.Name,
 		Description:  input.Description,
+		Default:      input.Default,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create auth branch: %w", err)
 	}
 
 	branch.SetAuthBranchID(branchID)
+
+	for _, role := range role.AllRoles(s.config.Authorization.Roles) {
+		input := roleCmd.CreateRoleInput{
+			BaseInput: baseCmd.BaseInput{
+				TenantDomain: input.TenantDomain,
+				BranchName:   input.Name,
+			},
+			Name:        role.Name,
+			Description: role.Description,
+		}
+		_, err = s.role.CreateRole(ctx, &input)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create auth role: %w", err)
+		}
+	}
 
 	if err := s.repo.Create(ctx, input.TenantDomain, branch); err != nil {
 		// Cleanup Keycloak group if DB save fails

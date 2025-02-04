@@ -4,6 +4,7 @@ import (
 	"backend/internal/features/tenant/domain"
 	"backend/internal/features/tenant/domain/command"
 	userDomain "backend/internal/features/user/domain"
+	"backend/pkg/config"
 	baseCmd "backend/shared/base/command"
 	"backend/shared/keycloak"
 	"context"
@@ -15,11 +16,13 @@ import (
 
 type BranchKeycloak struct {
 	*keycloak.Keycloak
+	tenantConfig *config.TenantConfiguration
 }
 
-func NewBranch(core *keycloak.Keycloak) *BranchKeycloak {
+func NewBranch(cfg *config.TenantConfiguration, core *keycloak.Keycloak) *BranchKeycloak {
 	return &BranchKeycloak{
-		Keycloak: core,
+		Keycloak:     core,
+		tenantConfig: cfg,
 	}
 }
 
@@ -40,7 +43,22 @@ func (rk BranchKeycloak) CreateBranch(ctx context.Context, input *command.Create
 	if err != nil {
 		return "", fmt.Errorf("failed to create branch: %w", err)
 	}
-
+	//front
+	_, err = rk.createClient2(ctx, false, &baseCmd.BaseInput{
+		TenantDomain: input.TenantDomain,
+		BranchName:   input.Name,
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to create front client: %w", err)
+	}
+	//back
+	_, err = rk.createClient2(ctx, true, &baseCmd.BaseInput{
+		TenantDomain: input.TenantDomain,
+		BranchName:   input.Name,
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to create back client: %w", err)
+	}
 	return groupID, nil
 }
 func (rk BranchKeycloak) DeleteBranch(ctx context.Context, input *baseCmd.BaseInput) error {
@@ -102,7 +120,7 @@ func (rk BranchKeycloak) UpdateBranch(ctx context.Context, input *command.Update
 	if err != nil {
 		return fmt.Errorf("failed to update branch: %w", err)
 	}
-	return 
+	return
 }
 func (rk BranchKeycloak) GetBranchUsers(ctx context.Context, input *baseCmd.BaseInput) ([]userDomain.User, error) {
 	token, err := rk.GetValidToken(ctx)
@@ -187,6 +205,6 @@ func mapGroupToBranch(group *gocloak.Group) *domain.Branch {
 			description = desc[0]
 		}
 	}
-	return domain.NewBranchFromRepository(*group.ID, "", *group.ID, *group.Name, description, time.Now(), nil)
+	return domain.NewBranchFromRepository(*group.ID, "", *group.ID, "", *group.Name, description, time.Now(), nil)
 
 }

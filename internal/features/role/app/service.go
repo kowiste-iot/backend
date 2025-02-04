@@ -23,28 +23,28 @@ type Config struct {
 	DefaultRoles []string
 }
 type roleService struct {
-	roleProvaider domain.RoleProvider
+	roleProvider domain.RoleProvider
 	config        *Config
 	*base.BaseService
 }
 
 func NewService(base *base.BaseService, repo domain.RoleProvider, config Config) RoleService {
 	return &roleService{
-		roleProvaider: repo,
+		roleProvider: repo,
 		BaseService:   base,
 		config:        &config,
 	}
 }
 func (s *roleService) CreateRole(ctx context.Context, input *command.CreateRoleInput) (*domain.Role, error) {
-	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
-		BaseInput: input.BaseInput,
-		Resource:  resource.ResourceAsset,
-		Scope:     scope.Create,
-	})
-	if err != nil {
-		return nil, err
-	}
-	err = validator.Validate(input)
+	// err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
+	// 	BaseInput: input.BaseInput,
+	// 	Resource:  resource.ResourceAsset,
+	// 	Scope:     scope.Create,
+	// })
+	// if err != nil {
+	// 	return nil, err
+	// }
+	err := validator.Validate(input)
 	if err != nil {
 		return nil, fmt.Errorf("validation error %s", err.Error())
 	}
@@ -52,7 +52,7 @@ func (s *roleService) CreateRole(ctx context.Context, input *command.CreateRoleI
 	if isDefault {
 		return nil, fmt.Errorf("default role")
 	}
-	id, err := s.roleProvaider.CreateRole(ctx, &command.CreateRoleInput{
+	id, err := s.roleProvider.CreateRole(ctx, &command.CreateRoleInput{
 		BaseInput:   input.BaseInput,
 		Name:        input.Name,
 		Description: input.Description,
@@ -73,7 +73,7 @@ func (s *roleService) GetRole(ctx context.Context, input *command.RoleIDInput) (
 	if err != nil {
 		return nil, err
 	}
-	asset, err := s.roleProvaider.GetRole(ctx, input)
+	asset, err := s.roleProvider.GetRole(ctx, input)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get asset: %w", err)
 	}
@@ -89,7 +89,7 @@ func (s *roleService) ListRoles(ctx context.Context, input *baseCmd.BaseInput) (
 	if err != nil {
 		return nil, err
 	}
-	roles, err := s.roleProvaider.GetRoles(ctx, input)
+	roles, err := s.roleProvider.GetRoles(ctx, input)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list assets: %w", err)
 	}
@@ -106,7 +106,7 @@ func (s *roleService) DeleteRole(ctx context.Context, input *command.RoleIDInput
 	if err != nil {
 		return err
 	}
-	role, err := s.roleProvaider.GetRole(ctx, input)
+	role, err := s.roleProvider.GetRole(ctx, input)
 	if err != nil {
 		return err
 	}
@@ -114,7 +114,7 @@ func (s *roleService) DeleteRole(ctx context.Context, input *command.RoleIDInput
 	if isDefault {
 		return fmt.Errorf("default role")
 	}
-	err = s.roleProvaider.DeleteRole(ctx, input)
+	err = s.roleProvider.DeleteRole(ctx, input)
 	if err != nil {
 		return err
 	}

@@ -165,6 +165,9 @@ func (c *Core) initServer(ctx context.Context) error {
 	//Dashboard
 	dashboardRepo := repoDashboard.NewRepository(c.db)
 	dashboardService := appDashboard.NewService(base, dashboardRepo)
+	//Widget
+	widgetRepo := repoDashboard.NewWidgetRepository(c.db)
+	widgetService := appDashboard.NewWidgetService(base, widgetRepo)
 	//Device
 	deviceRepo := repoDevice.NewRepository(c.db)
 	deviceService := appDevice.NewService(base, deviceRepo)
@@ -189,16 +192,18 @@ func (c *Core) initServer(ctx context.Context) error {
 
 	//Branch
 	branchRepo := repoTenant.NewBranchRepository(c.db)
-	branchKC := tenantKeycloak.NewBranch(kCore)
+	branchKC := tenantKeycloak.NewBranch(tenantConfig, kCore)
 
 	branchService := appTenant.NewBranchService(base, &appTenant.BranchDependencies{
 		Branch: branchKC,
 		Repo:   branchRepo,
+		Role:   roleService,
+		Config: tenantConfig,
 	})
 	//Tenant
 
 	tenantRepo := repoTenant.NewTenantRepository(c.db)
-	tenantKC := tenantKeycloak.New(kCore)
+	tenantKC := tenantKeycloak.New(tenantConfig, kCore)
 	tenantDep := appTenant.ServiceDependencies{
 		Branch: branchService,
 		Tenant: tenantKC,
@@ -237,6 +242,10 @@ func (c *Core) initServer(ctx context.Context) error {
 		DashboardHandler: dashboardhandler.New(dashboardhandler.Dependencies{
 			Logger:           c.logger,
 			DashboardService: dashboardService,
+		}),
+		WidgetHandler: dashboardhandler.NewWidget(dashboardhandler.DependenciesWidget{
+			Logger:        c.logger,
+			WidgetService: widgetService,
 		}),
 		DeviceHandler: devicehandler.New(devicehandler.Dependencies{
 			Logger:        c.logger,

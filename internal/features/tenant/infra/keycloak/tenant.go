@@ -2,6 +2,7 @@ package keycloak
 
 import (
 	"backend/internal/features/tenant/domain"
+	"backend/pkg/config"
 	"context"
 	"fmt"
 	"time"
@@ -13,11 +14,13 @@ import (
 
 type TenantKeycloak struct {
 	*keycloak.Keycloak
+	tenantConfig *config.TenantConfiguration
 }
 
-func New(core *keycloak.Keycloak) *TenantKeycloak {
+func New(cfg *config.TenantConfiguration, core *keycloak.Keycloak) *TenantKeycloak {
 	return &TenantKeycloak{
-		Keycloak: core,
+		Keycloak:     core,
+		tenantConfig: cfg,
 	}
 }
 
@@ -39,6 +42,7 @@ func (rk TenantKeycloak) CreateTenant(ctx context.Context, tenant *domain.Tenant
 	if err != nil {
 		return
 	}
+
 	return
 }
 func (rk TenantKeycloak) DeleteTenant(ctx context.Context, tenantID string) error {

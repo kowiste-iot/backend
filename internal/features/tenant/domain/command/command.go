@@ -21,6 +21,7 @@ type CreateBranchInput struct {
 	TenantDomain string `validate:"required,min=3,max=255,alphanum"`
 	Name         string `validate:"required,min=3,max=255"`
 	Description  string `validate:"omitempty,min=3,max=512"`
+	Default      bool   
 }
 
 type UpdateBranchInput struct {
