@@ -1,128 +1,141 @@
 package app
 
 import (
-	"backend/internal/features/role/domain"
-	"backend/internal/features/role/domain/command"
+	"backend/internal/features/resource/domain"
+	"backend/internal/features/resource/domain/command"
+
+	appRole "backend/internal/features/role/app"
+	rolesDomain "backend/internal/features/role/domain"
 	"backend/shared/auth/domain/scope"
-	resource "backend/shared/authorization/domain"
 	"backend/shared/base"
 	baseCmd "backend/shared/base/command"
 	"backend/shared/validator"
 	"context"
 	"fmt"
-	"slices"
 )
 
-type RoleService interface {
-	CreateRole(ctx context.Context, input *command.CreateRoleInput) (*domain.Role, error)
-	GetRole(ctx context.Context, input *command.RoleIDInput) (*domain.Role, error)
-	ListRoles(ctx context.Context, input *baseCmd.BaseInput) ([]domain.Role, error)
+type ResourceService interface {
+	CreateResource(ctx context.Context, input *command.CreateResourceInput) (*domain.Resource, error)
+	UpdateResource(ctx context.Context, input *command.UpdateResourceInput) (*domain.Resource, error)
+	ListResources(ctx context.Context, input *baseCmd.BaseInput) ([]domain.Resource, error)
 }
 type Config struct {
 	DefaultRoles []string
 }
-type roleService struct {
-	roleProvaider domain.RoleProvider
-	config        *Config
+
+type ServiceDependencies struct {
+	Repo   domain.ResourceProvider
+	Roles  appRole.RoleService
+	Config *Config
+}
+type resourceService struct {
+	resourceProvider domain.ResourceProvider
+	roles            appRole.RoleService
+	config           *Config
 	*base.BaseService
 }
 
-func NewService(base *base.BaseService, repo domain.RoleProvider, config Config) RoleService {
-	return &roleService{
-		roleProvaider: repo,
-		BaseService:   base,
-		config:        &config,
+func NewService(base *base.BaseService, deps *ServiceDependencies) ResourceService {
+	return &resourceService{
+		resourceProvider: deps.Repo,
+		roles:            deps.Roles,
+		BaseService:      base,
+		config:           deps.Config,
 	}
 }
-func (s *roleService) CreateRole(ctx context.Context, input *command.CreateRoleInput) (*domain.Role, error) {
-	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
-		BaseInput: input.BaseInput,
-		Resource:  resource.ResourceAsset,
-		Scope:     scope.Create,
-	})
-	if err != nil {
-		return nil, err
-	}
+func (s *resourceService) CreateResource(ctx context.Context, input *command.CreateResourceInput) (resource *domain.Resource, err error) {
+	// err = s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
+	// 	BaseInput: input.BaseInput,
+	// 	Resource:  domain.ResourceR,
+	// 	Scope:     scope.Create,
+	// })
+	// if err != nil {
+	// 	return nil, err
+	// }
 	err = validator.Validate(input)
 	if err != nil {
 		return nil, fmt.Errorf("validation error %s", err.Error())
 	}
-	isDefault := s.isDefaultRole(input.Name)
-	if isDefault {
-		return nil, fmt.Errorf("default role")
-	}
-	id, err := s.roleProvaider.CreateRole(ctx, &command.CreateRoleInput{
-		BaseInput:   input.BaseInput,
-		Name:        input.Name,
-		Description: input.Description,
-	})
+	r, err := domain.New(command.ResourceName(input.Name), input.Type, input.Scopes, input.DisplayName)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create asset: %w", err)
+		return
+	}
+	resource, err = s.resourceProvider.CreateResource(ctx, &input.BaseInput, *r)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create resource: %w", err)
 	}
 
-	return domain.New(id, input.Name), nil
+	return resource, nil
 }
 
-func (s *roleService) GetRole(ctx context.Context, input *command.RoleIDInput) (*domain.Role, error) {
+func (s *resourceService) ListResources(ctx context.Context, input *baseCmd.BaseInput) ([]domain.Resource, error) {
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
-		BaseInput: input.BaseInput,
-		Resource:  resource.ResourceAsset,
+		BaseInput: *input,
+		Resource:  domain.ResourceR,
 		Scope:     scope.View,
 	})
 	if err != nil {
 		return nil, err
 	}
-	asset, err := s.roleProvaider.GetRole(ctx, input)
+	resources, err := s.resourceProvider.ListResources(ctx, input)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get asset: %w", err)
 	}
-	return asset, nil
+	return resources, nil
 }
 
-func (s *roleService) ListRoles(ctx context.Context, input *baseCmd.BaseInput) ([]domain.Role, error) {
-	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
-		BaseInput: *input,
-		Resource:  resource.ResourceAsset,
-		Scope:     scope.View,
+func (s *resourceService) UpdateResource(ctx context.Context, input *command.UpdateResourceInput) (resource *domain.Resource, err error) {
+	err = s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
+		BaseInput: input.BaseInput,
+		Resource:  domain.ResourceR,
+		Scope:     scope.Update,
 	})
 	if err != nil {
 		return nil, err
 	}
-	roles, err := s.roleProvaider.GetRoles(ctx, input)
-	if err != nil {
-		return nil, fmt.Errorf("failed to list assets: %w", err)
-	}
-	return roles, nil
-}
 
-func (s *roleService) DeleteRole(ctx context.Context, input *command.RoleIDInput) error {
-
-	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
-		BaseInput: input.BaseInput,
-		Resource:  resource.ResourceAsset,
-		Scope:     scope.Delete,
+	r, err := s.resourceProvider.GetResource(ctx, &command.ResourceIDInput{
+		BaseInput:  input.BaseInput,
+		ResourceID: input.ID,
 	})
 	if err != nil {
-		return err
+		return
 	}
-	role, err := s.roleProvaider.GetRole(ctx, input)
+	mRoles := make(map[string]rolesDomain.Role)
+	//get policty of role
+	roles, err := s.roles.ListRoles(ctx, &input.BaseInput)
 	if err != nil {
-		return err
+		return
 	}
-	isDefault := s.isDefaultRole(role.Name)
-	if isDefault {
-		return fmt.Errorf("default role")
+	for i := range roles {
+		mRoles[roles[i].Name] = roles[i]
 	}
-	err = s.roleProvaider.DeleteRole(ctx, input)
-	if err != nil {
-		return err
-	}
-	return nil
-}
 
-// isDefaultRole checks if a role name or ID matches any default roles
-func (s *roleService) isDefaultRole(identifier string) bool {
-	return slices.ContainsFunc(domain.AllRoles(s.config.DefaultRoles), func(role domain.Role) bool {
-		return role.Name == identifier
-	})
+	inputAssign := command.ResourceAssignRoleInput{
+		BaseInput:    input.BaseInput,
+		ResourceID:   r.ID,
+		ResourceName: r.DisplayName,
+	}
+	err = s.resourceProvider.RemoveRolesFromResource(ctx, &inputAssign)
+	if err != nil {
+		return
+	}
+
+	//create permissions shoudl be Assign Role to Resource
+	for name, scopes := range input.Roles {
+		role, ok := mRoles[name]
+		if !ok {
+			return nil, fmt.Errorf("error ")
+		}
+		inputAssign.RoleID = role.ID
+		inputAssign.RoleName = name
+		inputAssign.Scopes = scopes
+		err = s.resourceProvider.AssignRoleToResource(ctx, &inputAssign)
+		if err != nil {
+			return
+		}
+	}
+	//TODO: resource should return a resource permission?
+
+	return
 }

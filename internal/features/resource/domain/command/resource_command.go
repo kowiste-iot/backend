@@ -26,6 +26,14 @@ type UpdateResourceInput struct {
 	DisplayName string
 	Roles       map[string][]scope.Scope
 }
+type CreateResourceInput struct {
+	command.BaseInput
+	ID          string
+	Name        string
+	Type        string
+	DisplayName string
+	Scopes      []string
+}
 
 func ResourceName(roleName string) string {
 	return fmt.Sprintf("%s-resource", roleName)

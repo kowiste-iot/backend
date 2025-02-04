@@ -1,11 +1,14 @@
 package domain
 
 import (
+	"backend/internal/features/resource/domain/command"
 	"backend/pkg/config"
 	"backend/shared/auth/domain/scope"
-	resourceCmd "backend/shared/authorization/domain/command"
+
 	baseCmd "backend/shared/base/command"
 	"context"
+
+	"github.com/google/uuid"
 )
 
 const (
@@ -15,37 +18,64 @@ const (
 	Device    string = "device-resource"
 	Dashboard string = "dashboard-resource"
 	Widget    string = "widget-resource"
-	Action string = "action-resource"
-	Alert  string = "alert-resource"
-	Tenant string = "tenant-resource"
-	Branch string = "branch-resource"
-	User   string = "user-resource"
-	Role   string = "role-resource"
-	Admin  string = "admin-resource"
+	Action    string = "action-resource"
+	Alert     string = "alert-resource"
+	ResourceR string = "resource-resource"
+	Tenant    string = "tenant-resource"
+	Branch    string = "branch-resource"
+	User      string = "user-resource"
+	Role      string = "role-resource"
+	Admin     string = "admin-resource"
 
 	//
 	defaultResource string = "Default Resource"
 )
 
 type ResourceProvider interface {
-	CreateResource(ctx context.Context, tenantID, clientID string, resource Resource) (*Resource, error) //Should we allow crate resource?
-	GetResource(ctx context.Context, input *resourceCmd.ResourceIDInput) (*Resource, error)
+	CreateResource(ctx context.Context,  input *baseCmd.BaseInput, resource Resource) (*Resource, error) 
+	GetResource(ctx context.Context, input *command.ResourceIDInput) (*Resource, error)
 	ListResources(ctx context.Context, input *baseCmd.BaseInput) ([]Resource, error)
-	AssignRoleToResource(ctx context.Context, input *resourceCmd.ResourceAssignRoleInput) error
-	RemoveRolesFromResource(ctx context.Context, input *resourceCmd.ResourceAssignRoleInput) error
+	AssignRoleToResource(ctx context.Context, input *command.ResourceAssignRoleInput) error
+	RemoveRolesFromResource(ctx context.Context, input *command.ResourceAssignRoleInput) error
 }
 
 type Resource struct {
-	ID          string              `json:"id,omitempty"`
-	Name        string              `json:"name"`
-	Type        string              `json:"type,omitempty"`
-	URIs        []string            `json:"uris,omitempty"`
-	Scopes      []string            `json:"scopes,omitempty"`
-	Attributes  map[string][]string `json:"attributes,omitempty"`
-	DisplayName string              `json:"displayName,omitempty"`
-	IconURI     string              `json:"icon_uri,omitempty"`
+	ID          string   `json:"id,omitempty"`
+	Name        string   `json:"name"`
+	Type        string   `json:"type,omitempty"`
+	Scopes      []string `json:"scopes,omitempty"`
+	DisplayName string   `json:"displayName,omitempty"`
+}
+func (a *Resource) SetID(id string) {
+	a.ID = id
 }
 
+func New(name string, resourceType string, scopes []string, displayName string) (resource *Resource, err error) {
+	id, err := uuid.NewV7()
+	if err != nil {
+		return
+	}
+
+	resource = &Resource{
+		ID:   id.String(),
+		Name: name,
+		Type: resourceType,
+
+		Scopes:      scopes,
+		DisplayName: displayName,
+	}
+	return
+}
+
+func NewFromRepository(id string, name string, resourceType string, scopes []string, displayName string) *Resource {
+	return &Resource{
+		ID:          id,
+		Name:        name,
+		Type:        resourceType,
+		Scopes:      scopes,
+		DisplayName: displayName,
+	}
+}
 func EndpointsResources(input map[string]config.Resource) (resources []Resource) {
 	for i := range input {
 		scopes := scope.AllScopes()

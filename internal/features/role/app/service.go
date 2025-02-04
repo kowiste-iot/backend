@@ -15,6 +15,7 @@ import (
 
 type RoleService interface {
 	CreateRole(ctx context.Context, input *command.CreateRoleInput) (*domain.Role, error)
+	CreateDefaultRoles(ctx context.Context, input *command.CreateRoleInput) error
 	GetRole(ctx context.Context, input *command.RoleIDInput) (*domain.Role, error)
 	ListRoles(ctx context.Context, input *baseCmd.BaseInput) ([]domain.Role, error)
 	DeleteRole(ctx context.Context, input *command.RoleIDInput) error
@@ -24,15 +25,15 @@ type Config struct {
 }
 type roleService struct {
 	roleProvider domain.RoleProvider
-	config        *Config
+	config       *Config
 	*base.BaseService
 }
 
 func NewService(base *base.BaseService, repo domain.RoleProvider, config Config) RoleService {
 	return &roleService{
 		roleProvider: repo,
-		BaseService:   base,
-		config:        &config,
+		BaseService:  base,
+		config:       &config,
 	}
 }
 func (s *roleService) CreateRole(ctx context.Context, input *command.CreateRoleInput) (*domain.Role, error) {
@@ -62,6 +63,29 @@ func (s *roleService) CreateRole(ctx context.Context, input *command.CreateRoleI
 	}
 
 	return domain.New(id, input.Name), nil
+}
+
+//CreateDefaultRoles use for 
+func (s *roleService) CreateDefaultRoles(ctx context.Context, input *command.CreateRoleInput) error {
+	// err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
+	// 	BaseInput: input.BaseInput,
+	// 	Resource:  resource.ResourceAsset,
+	// 	Scope:     scope.Create,
+	// })
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	_, err := s.roleProvider.CreateRole(ctx, &command.CreateRoleInput{
+		BaseInput:   input.BaseInput,
+		Name:        input.Name,
+		Description: input.Description,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to create initial role %s: %w", input.Name, err)
+	}
+
+	return nil
 }
 
 func (s *roleService) GetRole(ctx context.Context, input *command.RoleIDInput) (*domain.Role, error) {

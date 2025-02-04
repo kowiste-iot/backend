@@ -6,11 +6,16 @@ import (
 	"backend/internal/features/user/dto"
 	"backend/pkg/config"
 	"backend/shared/auth/domain/role"
+
 	"backend/shared/base"
 	baseCmd "backend/shared/base/command"
 
 	appRole "backend/internal/features/role/app"
 	roleCmd "backend/internal/features/role/domain/command"
+
+	appResource "backend/internal/features/resource/app"
+	resourceDomain "backend/internal/features/resource/domain"
+	resourceCmd "backend/internal/features/resource/domain/command"
 
 	"backend/shared/validator"
 	"context"
@@ -28,16 +33,18 @@ type BranchService interface {
 	RemoveUserFromBranch(ctx context.Context, input *command.UserToBranch) error
 }
 type BranchDependencies struct {
-	Branch domain.BranchProvider
-	Role   appRole.RoleService
-	Repo   domain.BranchRepository
-	Config *config.TenantConfiguration
+	Branch   domain.BranchProvider
+	Role     appRole.RoleService
+	Resource appResource.ResourceService
+	Repo     domain.BranchRepository
+	Config   *config.TenantConfiguration
 }
 type branchService struct {
-	repo   domain.BranchRepository
-	branch domain.BranchProvider
-	role   appRole.RoleService
-	config *config.TenantConfiguration
+	repo     domain.BranchRepository
+	branch   domain.BranchProvider
+	role     appRole.RoleService
+	resource appResource.ResourceService
+	config   *config.TenantConfiguration
 	*base.BaseService
 }
 
@@ -46,6 +53,7 @@ func NewBranchService(base *base.BaseService, dep *BranchDependencies) BranchSer
 		repo:        dep.Repo,
 		branch:      dep.Branch,
 		role:        dep.Role,
+		resource:    dep.Resource,
 		config:      dep.Config,
 		BaseService: base,
 	}
@@ -75,26 +83,42 @@ func (s *branchService) CreateBranch(ctx context.Context, input *command.CreateB
 	if err != nil {
 		return nil, fmt.Errorf("failed to create auth branch: %w", err)
 	}
-
+	baseInput := baseCmd.BaseInput{
+		TenantDomain: input.TenantDomain,
+		BranchName:   input.Name,
+	}
 	branch.SetAuthBranchID(branchID)
 
+	//Roles, create default roles
 	for _, role := range role.AllRoles(s.config.Authorization.Roles) {
 		input := roleCmd.CreateRoleInput{
-			BaseInput: baseCmd.BaseInput{
-				TenantDomain: input.TenantDomain,
-				BranchName:   input.Name,
-			},
+			BaseInput:   baseInput,
 			Name:        role.Name,
 			Description: role.Description,
 		}
-		_, err = s.role.CreateRole(ctx, &input)
+		err = s.role.CreateDefaultRoles(ctx, &input)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create auth role: %w", err)
 		}
 	}
 
+	//create resources (and permissions) in branch
+	resources := resourceDomain.EndpointsResources(s.config.Authorization.Resources)
+	for _, res := range resources {
+		_, err = s.resource.CreateResource(ctx, &resourceCmd.CreateResourceInput{
+			BaseInput:   baseInput,
+			Name:        resourceCmd.ResourceName(res.Name),
+			DisplayName: res.Name,
+			Type:        res.Type,
+			Scopes:      res.Scopes,
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	if err := s.repo.Create(ctx, input.TenantDomain, branch); err != nil {
-		// Cleanup Keycloak group if DB save fails
+		// Cleanup auth group if DB save fails
 		i := baseCmd.NewInput(input.TenantDomain, branchID)
 		if delErr := s.branch.DeleteBranch(ctx, &i); delErr != nil {
 			s.Logger.Error(ctx, err, "failed to cleanup auth group after branch creation failure", nil)

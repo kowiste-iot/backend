@@ -8,6 +8,7 @@ type CreateRoleInput struct {
 	Description string
 }
 
+
 type UpdateRoleInput struct {
 	command.BaseInput
 	Name        string
