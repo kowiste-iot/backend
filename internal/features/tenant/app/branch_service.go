@@ -6,6 +6,7 @@ import (
 	"backend/internal/features/user/dto"
 	"backend/pkg/config"
 	"backend/shared/auth/domain/role"
+	"backend/shared/util"
 
 	"backend/shared/base"
 	baseCmd "backend/shared/base/command"
@@ -16,6 +17,10 @@ import (
 	appResource "backend/internal/features/resource/app"
 	resourceDomain "backend/internal/features/resource/domain"
 	resourceCmd "backend/internal/features/resource/domain/command"
+
+	appScope "backend/internal/features/scope/app"
+	scopeDomain "backend/internal/features/scope/domain"
+	scopeCmd "backend/internal/features/scope/domain/command"
 
 	"backend/shared/validator"
 	"context"
@@ -35,6 +40,7 @@ type BranchService interface {
 type BranchDependencies struct {
 	Branch   domain.BranchProvider
 	Role     appRole.RoleService
+	Scope    appScope.ScopeService
 	Resource appResource.ResourceService
 	Repo     domain.BranchRepository
 	Config   *config.TenantConfiguration
@@ -43,6 +49,7 @@ type branchService struct {
 	repo     domain.BranchRepository
 	branch   domain.BranchProvider
 	role     appRole.RoleService
+	scope    appScope.ScopeService
 	resource appResource.ResourceService
 	config   *config.TenantConfiguration
 	*base.BaseService
@@ -53,6 +60,7 @@ func NewBranchService(base *base.BaseService, dep *BranchDependencies) BranchSer
 		repo:        dep.Repo,
 		branch:      dep.Branch,
 		role:        dep.Role,
+		scope:       dep.Scope,
 		resource:    dep.Resource,
 		config:      dep.Config,
 		BaseService: base,
@@ -89,6 +97,19 @@ func (s *branchService) CreateBranch(ctx context.Context, input *command.CreateB
 	}
 	branch.SetAuthBranchID(branchID)
 
+	//add scopes to group
+	for _, scName := range scopeDomain.AllScopes() {
+		_, err := s.scope.CreateScope(ctx, &scopeCmd.CreateScopeInput{
+			BaseInput:   baseInput,
+			ID:          branchID,
+			Name:        scName,
+			DisplayName: util.CapitalizeFirst(scName),
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+	
 	//Roles, create default roles
 	for _, role := range role.AllRoles(s.config.Authorization.Roles) {
 		input := roleCmd.CreateRoleInput{

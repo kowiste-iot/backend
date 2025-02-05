@@ -17,6 +17,8 @@ type RoleProvider interface {
 	DeleteRole(ctx context.Context, input *command.RoleIDInput) error
 	GetRole(ctx context.Context, input *command.RoleIDInput) (*Role, error)
 	GetRoles(ctx context.Context, input *baseCmd.BaseInput) ([]Role, error)
+	AssignRoleToResource(ctx context.Context, input *command.ResourceAssignRoleInput) error
+	RemoveRolesFromResource(ctx context.Context, input *command.ResourceAssignRoleInput) error
 }
 
 type Role struct {
@@ -55,7 +57,7 @@ func AllRoles(nonAdminRoles []string) []Role {
 
 }
 
-func (r Role) IsDefaultRole() bool {
+func (r Role) IsAdminRole() bool {
 	for _, defaultRole := range AdminRoles() {
 		if r.Name == defaultRole.Name {
 			return true

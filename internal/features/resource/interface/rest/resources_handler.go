@@ -1,8 +1,9 @@
 package resourcehandler
 
 import (
-	"backend/internal/features/resource/domain"
-	resourceCmd "backend/shared/auth/domain/resource/command"
+	"backend/internal/features/resource/app"
+
+	"backend/internal/features/resource/domain/command"
 	baseCmd "backend/shared/base/command"
 	ginhelp "backend/shared/http/gin"
 	"backend/shared/http/httputil"
@@ -15,17 +16,17 @@ import (
 
 type ResourceHandler struct {
 	logger   logger.Logger
-	resource domain.ResourceProvider
+	resource app.ResourceService
 }
 
 type Dependencies struct {
 	Logger   logger.Logger
-	Resource domain.ResourceProvider
+	Resource app.ResourceService
 }
 
 func New(deps Dependencies) *ResourceHandler {
 	return &ResourceHandler{
-		logger:      deps.Logger,
+		logger:   deps.Logger,
 		resource: deps.Resource,
 	}
 }
@@ -68,7 +69,7 @@ func (h *ResourceHandler) UpdateResource(c *gin.Context) {
 	}
 
 	inputBase := baseCmd.NewInput(tenant.Domain(), branch)
-	input := resourceCmd.UpdateResourceInput{
+	input := command.UpdateResourceInput{
 		BaseInput:   inputBase,
 		ID:          resourceID,
 		Name:        req.Name,

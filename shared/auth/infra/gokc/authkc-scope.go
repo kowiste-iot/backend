@@ -37,29 +37,7 @@ func (ks *KeycloakService) CreateScope(ctx context.Context, tenantID, clientID s
 		DisplayName: *createdScope.DisplayName,
 	}, nil
 }
-func (ks *KeycloakService) GetScope(ctx context.Context, tenantID, clientID, scopeID string) (*scope.Scope, error) {
-	token, err := ks.GetValidToken(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get token: %w", err)
-	}
 
-	kcScope, err := ks.client.GetScope(
-		ctx,
-		token.AccessToken,
-		tenantID,
-		clientID,
-		scopeID,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get scope: %w", err)
-	}
-
-	return &scope.Scope{
-		ID:          *kcScope.ID,
-		Name:        *kcScope.Name,
-		DisplayName: *kcScope.DisplayName,
-	}, nil
-}
 
 func (ks *KeycloakService) ListScopes(ctx context.Context, input *baseCmd.BaseInput) ([]scope.Scope, error) {
 	token, err := ks.GetValidToken(ctx)
@@ -92,48 +70,5 @@ func (ks *KeycloakService) ListScopes(ctx context.Context, input *baseCmd.BaseIn
 
 	return scopes, nil
 }
-func (ks *KeycloakService) UpdateScope(ctx context.Context, tenantID, clientID string, scope scope.Scope) error {
-	token, err := ks.GetValidToken(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to get token: %w", err)
-	}
 
-	kcScope := gocloak.ScopeRepresentation{
-		ID:          &scope.ID,
-		Name:        &scope.Name,
-		DisplayName: &scope.DisplayName,
-	}
 
-	err = ks.client.UpdateScope(
-		ctx,
-		token.AccessToken,
-		tenantID,
-		clientID,
-		kcScope,
-	)
-	if err != nil {
-		return fmt.Errorf("failed to update scope: %w", err)
-	}
-
-	return nil
-}
-
-func (ks *KeycloakService) DeleteScope(ctx context.Context, tenantID, clientID, scopeID string) error {
-	token, err := ks.GetValidToken(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to get token: %w", err)
-	}
-
-	err = ks.client.DeleteScope(
-		ctx,
-		token.AccessToken,
-		tenantID,
-		clientID,
-		scopeID,
-	)
-	if err != nil {
-		return fmt.Errorf("failed to delete scope: %w", err)
-	}
-
-	return nil
-}

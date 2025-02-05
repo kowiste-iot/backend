@@ -35,8 +35,6 @@ type ResourceProvider interface {
 	CreateResource(ctx context.Context,  input *baseCmd.BaseInput, resource Resource) (*Resource, error) 
 	GetResource(ctx context.Context, input *command.ResourceIDInput) (*Resource, error)
 	ListResources(ctx context.Context, input *baseCmd.BaseInput) ([]Resource, error)
-	AssignRoleToResource(ctx context.Context, input *command.ResourceAssignRoleInput) error
-	RemoveRolesFromResource(ctx context.Context, input *command.ResourceAssignRoleInput) error
 }
 
 type Resource struct {

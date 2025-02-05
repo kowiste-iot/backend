@@ -38,7 +38,7 @@ func ToRoleResponse(role domain.Role) RoleResponse {
 	return RoleResponse{
 		ID:          role.ID,
 		Name:        role.Name,
-		ReadOnly:    role.IsDefaultRole(),
+		ReadOnly:    role.IsAdminRole(),
 		Description: role.Description,
 	}
 }

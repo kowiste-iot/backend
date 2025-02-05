@@ -19,6 +19,8 @@ type RoleService interface {
 	GetRole(ctx context.Context, input *command.RoleIDInput) (*domain.Role, error)
 	ListRoles(ctx context.Context, input *baseCmd.BaseInput) ([]domain.Role, error)
 	DeleteRole(ctx context.Context, input *command.RoleIDInput) error
+	AssignRoleToResource(ctx context.Context, input *command.ResourceAssignRoleInput) error
+	RemoveRolesFromResource(ctx context.Context, input *command.ResourceAssignRoleInput) error
 }
 type Config struct {
 	DefaultRoles []string
@@ -65,7 +67,7 @@ func (s *roleService) CreateRole(ctx context.Context, input *command.CreateRoleI
 	return domain.New(id, input.Name), nil
 }
 
-//CreateDefaultRoles use for 
+// CreateDefaultRoles use for
 func (s *roleService) CreateDefaultRoles(ctx context.Context, input *command.CreateRoleInput) error {
 	// err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 	// 	BaseInput: input.BaseInput,
@@ -142,6 +144,40 @@ func (s *roleService) DeleteRole(ctx context.Context, input *command.RoleIDInput
 	if err != nil {
 		return err
 	}
+	return nil
+}
+func (s *roleService) AssignRoleToResource(ctx context.Context, input *command.ResourceAssignRoleInput) error {
+
+	// err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
+	// 	BaseInput: input.BaseInput,
+	// 	Resource:  resource.ResourceAsset,
+	// 	Scope:     scope.Delete,
+	// })
+	// if err != nil {
+	// 	return err
+	// }
+	err := s.roleProvider.AssignRoleToResource(ctx, input)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+func (s *roleService) RemoveRolesFromResource(ctx context.Context, input *command.ResourceAssignRoleInput) error {
+
+	// err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
+	// 	BaseInput: input.BaseInput,
+	// 	Resource:  resource.ResourceAsset,
+	// 	Scope:     scope.Delete,
+	// })
+	// if err != nil {
+	// 	return err
+	// }
+	err := s.roleProvider.RemoveRolesFromResource(ctx, input)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
