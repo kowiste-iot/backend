@@ -1,20 +1,28 @@
 package base
 
 import (
+	authzDomain "backend/shared/authorization/domain"
+	authzCmd "backend/shared/authorization/domain/command"
+	"backend/shared/base/command"
+	"backend/shared/http/httputil"
 	"context"
-	authCmd "ddd/shared/auth/domain/command"
-	"ddd/shared/auth/domain/validation"
-	"ddd/shared/base/command"
-	"ddd/shared/http/httputil"
 	"fmt"
 
-	"ddd/shared/logger"
+	"backend/shared/logger"
 	"errors"
 )
 
 type BaseService struct {
 	Logger logger.Logger
-	Auth   validation.AuthProvider
+	// Auth   validation.AuthProvider
+	Perm authzDomain.PermissionProvider
+}
+
+func New(log logger.Logger, permission authzDomain.PermissionProvider) *BaseService {
+	return &BaseService{
+		Logger: log,
+		Perm:   permission,
+	}
 }
 
 func (b *BaseService) CheckPermission(ctx context.Context, input *command.CheckPermissionInput) (err error) {
@@ -22,8 +30,13 @@ func (b *BaseService) CheckPermission(ctx context.Context, input *command.CheckP
 	if !ok {
 		return fmt.Errorf("not token present")
 	}
-	hasPermission, err := b.Auth.ValidatePermissionUser(ctx, token,
-		authCmd.ClientName(input.BranchName), input.Resource, input.Scope)
+	hasPermission, err := b.Perm.HasPermission(ctx, &authzCmd.PermissionInput{
+		Token:    token,
+		Resource: input.Resource,
+		Action:   input.Scope,
+		TenantID: input.TenantDomain,
+		BranchID: input.BranchName,
+	})
 	if err != nil {
 		return err
 	}

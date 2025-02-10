@@ -1,9 +1,9 @@
 package auth
 
 import (
+	authCmd "backend/shared/auth/domain/command"
+	"backend/shared/base/command"
 	"context"
-	authCmd "ddd/shared/auth/domain/command"
-	"ddd/shared/base/command"
 )
 
 type TenantProvider interface {
@@ -19,16 +19,6 @@ type TenantProvider interface {
 	GetBranchUsers(ctx context.Context, input *command.BaseInput) ([]User, error)
 	AssignUserToBranch(ctx context.Context, input *authCmd.UserToBranch) error
 	RemoveUserFromBranch(ctx context.Context, input *authCmd.UserToBranch) error
-
-	// Role management methods
-	CreateRole(ctx context.Context, input *authCmd.CreateRoleInput) (string, error)
-	DeleteRole(ctx context.Context, input *authCmd.RoleIDInput) error
-	GetRole(ctx context.Context, input *authCmd.RoleIDInput) (*Role, error)
-	GetRoles(ctx context.Context, input *command.BaseInput) ([]Role, error)
-	// Role assignment methods
-	AssignRoles(ctx context.Context, input *authCmd.AssignRolesInput) error
-	RemoveRoles(ctx context.Context, input *authCmd.RemoveRolesInput) error
-	GetUserRoles(ctx context.Context, input *authCmd.UserRolesInput) ([]Role, error)
 }
 
 type Tenant struct {
@@ -48,4 +38,3 @@ type TenantSettings struct {
 	Features       map[string]bool   `json:"features"`
 	CustomConfig   map[string]string `json:"customConfig"`
 }
-

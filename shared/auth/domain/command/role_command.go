@@ -1,6 +1,6 @@
 package command
 
-import "ddd/shared/base/command"
+import "backend/shared/base/command"
 
 type CreateRoleInput struct {
 	command.BaseInput

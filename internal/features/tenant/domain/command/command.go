@@ -1,5 +1,7 @@
 package command
 
+import "fmt"
+
 type CreateTenantInput struct {
 	Name        string `validate:"required,min=3,max=255"`
 	Domain      string `validate:"required,min=3,max=255,alphanum"`
@@ -19,6 +21,7 @@ type CreateBranchInput struct {
 	TenantDomain string `validate:"required,min=3,max=255,alphanum"`
 	Name         string `validate:"required,min=3,max=255"`
 	Description  string `validate:"omitempty,min=3,max=512"`
+	Default      bool   
 }
 
 type UpdateBranchInput struct {
@@ -26,4 +29,13 @@ type UpdateBranchInput struct {
 	TenantDomain string `validate:"required,min=3,max=255,alphanum"`
 	Name         string `validate:"required,min=3,max=255"`
 	Description  string `validate:"omitempty,min=3,max=512"`
+}
+type UserToBranch struct {
+	TenantDomain string
+	UserID       string
+	Branchs      []string
+}
+
+func ClientName(branchName string) string {
+	return fmt.Sprintf("%s-service", branchName)
 }

@@ -1,8 +1,8 @@
 package domain
 
 import (
+	baseCmd "backend/shared/base/command"
 	"context"
-	baseCmd "ddd/shared/base/command"
 )
 
 type AssetRepository interface {

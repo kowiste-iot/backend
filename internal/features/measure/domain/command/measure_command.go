@@ -1,0 +1,24 @@
+package command
+
+import "backend/shared/base/command"
+
+type CreateMeasureInput struct {
+	command.BaseInput
+	ID          string `validate:"omitempty,uuidv7"`
+	Name        string `validate:"required,min=3,max=255"`
+	Parent      string `validate:"omitempty,uuidv7"`
+	Description string `validate:"omitempty,min=3,max=512"`
+}
+
+type UpdateMeasureInput struct {
+	command.BaseInput
+	ID          string `validate:"required,uuidv7"`
+	Name        string `validate:"required,min=3,max=255"`
+	Parent      string `validate:"omitempty,uuidv7"`
+	Description string `validate:"omitempty,min=3,max=512"`
+}
+
+type MeasureIDInput struct {
+	command.BaseInput
+	MeasureID string `validate:"required,uuidv7"`
+}

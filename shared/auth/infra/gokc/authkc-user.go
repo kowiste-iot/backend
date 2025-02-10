@@ -1,10 +1,10 @@
 package keycloak
 
 import (
+	userCmd "backend/internal/features/user/domain/command"
+	auth "backend/shared/auth/domain"
+	"backend/shared/auth/domain/command"
 	"context"
-	userCmd "ddd/internal/features/user/domain/command"
-	auth "ddd/shared/auth/domain"
-	"ddd/shared/auth/domain/command"
 	"fmt"
 
 	"github.com/Nerzal/gocloak/v13"
@@ -30,12 +30,12 @@ func (ks *KeycloakService) CreateUser(ctx context.Context, input *userCmd.Create
 	if err != nil {
 		return "", fmt.Errorf("failed to create user: %w", err)
 	}
-	err=ks.AssignRoles(ctx, &command.AssignRolesInput{
+	err = ks.AssignRoles(ctx, &command.AssignRolesInput{
 		BaseInput: input.BaseInput,
 		UserID:    userID,
 		Roles:     input.Roles,
 	})
-		if err != nil {
+	if err != nil {
 		return "", fmt.Errorf("failed to set user role: %w", err)
 	}
 	return userID, nil

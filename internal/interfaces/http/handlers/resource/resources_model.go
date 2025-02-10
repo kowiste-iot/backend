@@ -1,23 +1,34 @@
 package resourcehandler
 
 import (
-	"ddd/shared/auth/domain/resource"
+	"backend/shared/auth/domain/resource"
+	"backend/shared/auth/domain/scope"
 )
 
+type UpdateResourceRequest struct {
+	ID          string                   `json:"id" binding:"required"`
+	Name        string                   `json:"name" binding:"required"`
+	DisplayName string                   `json:"displayname"`
+	Roles       map[string][]scope.Scope `json:"roles"`
+}
 type ResourceResponse struct {
-	Name        string `json:"name"`
-	DisplayName string `json:"displaName"`
+	ID          string                   `json:"id"`
+	Name        string                   `json:"name"`
+	DisplayName string                   `json:"displayName"`
+	Roles       map[string][]scope.Scope `json:"roles"`
 }
 
 // Conversion helpers
-func ToResourcesResponse(resource resource.Resource) ResourceResponse {
+func ToResourcesResponse(resource resource.ResourcePermission) ResourceResponse {
 	return ResourceResponse{
+		ID:          resource.ID,
 		Name:        resource.Name,
 		DisplayName: resource.DisplayName,
+		Roles:       resource.Roles,
 	}
 }
 
-func ToResourcesResponses(resources []resource.Resource) []ResourceResponse {
+func ToResourcesResponses(resources []resource.ResourcePermission) []ResourceResponse {
 	responses := make([]ResourceResponse, len(resources))
 	for i, resource := range resources {
 		responses[i] = ToResourcesResponse(resource)

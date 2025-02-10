@@ -1,9 +1,9 @@
 package app
 
 import (
+	"backend/shared/token/domain"
 	"crypto/hmac"
 	"crypto/sha256"
-	"ddd/shared/token/domain"
 	"encoding/base64"
 	"encoding/json"
 	"errors"

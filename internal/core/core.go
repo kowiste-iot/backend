@@ -1,38 +1,71 @@
 package core
 
 import (
+	appAsset "backend/internal/features/asset/app"
+	repoAsset "backend/internal/features/asset/infra/gorm"
+	assethandler "backend/internal/features/asset/interface/rest"
 	"context"
-	appAsset "ddd/internal/features/asset/app"
-	repoAsset "ddd/internal/features/asset/infra/gorm"
+
+	appDashboard "backend/internal/features/dashboard/app"
+	repoDashboard "backend/internal/features/dashboard/infra/gorm"
+	dashboardhandler "backend/internal/features/dashboard/interface/rest"
+
+	appDevice "backend/internal/features/device/app"
+	repoDevice "backend/internal/features/device/infra/gorm"
+	devicehandler "backend/internal/features/device/interface/rest"
+
+	appAction "backend/internal/features/action/app"
+	repoAction "backend/internal/features/action/infra/gorm"
+	actionhandler "backend/internal/features/action/interface/rest"
+
+	appAlert "backend/internal/features/alert/app"
+	repoAlert "backend/internal/features/alert/infra/gorm"
+	alerthandler "backend/internal/features/alert/interface/rest"
+
+	appMeasure "backend/internal/features/measure/app"
+	repoMeasure "backend/internal/features/measure/infra/gorm"
+	measurehandler "backend/internal/features/measure/interface/rest"
 	"errors"
 
-	appTenant "ddd/internal/features/tenant/app"
-	repoTenant "ddd/internal/features/tenant/infra/gorm"
+	appTenant "backend/internal/features/tenant/app"
+	repoTenant "backend/internal/features/tenant/infra/gorm"
+	tenantKeycloak "backend/internal/features/tenant/infra/keycloak"
 
-	appUser "ddd/internal/features/user/app"
-	repoUser "ddd/internal/features/user/infra/gorm"
+	tenanthandler "backend/internal/features/tenant/interface/rest"
 
-	"ddd/internal/interfaces/http"
-	assethandler "ddd/internal/interfaces/http/handlers/asset"
-	branchhandler "ddd/internal/interfaces/http/handlers/branch"
-	resourcehandler "ddd/internal/interfaces/http/handlers/resource"
-	rolehandler "ddd/internal/interfaces/http/handlers/roles"
-	tenanthandler "ddd/internal/interfaces/http/handlers/tenant"
-	userhandler "ddd/internal/interfaces/http/handlers/user"
-	wshandler "ddd/internal/interfaces/http/handlers/websocket"
-	"ddd/pkg/config"
-	appAuth "ddd/shared/auth/app"
-	keycloak "ddd/shared/auth/infra/gokc"
-	"ddd/shared/base"
-	"ddd/shared/logger"
-	"ddd/shared/logger/openob"
-	"ddd/shared/streaming/domain"
-	"ddd/shared/streaming/infrastructure/nats"
-	"ddd/shared/validator"
+	appUser "backend/internal/features/user/app"
+	repoUser "backend/internal/features/user/infra/gorm"
+	userKeycloak "backend/internal/features/user/infra/keycloak"
+	userhandler "backend/internal/features/user/interface/rest"
 
-	//appNats "ddd/shared/nats/app"
-	appToken "ddd/shared/token/app"
-	appWS "ddd/shared/websocket/app"
+	appRole "backend/internal/features/role/app"
+	roleKeycloak "backend/internal/features/role/infra/keycloak"
+	rolehandler "backend/internal/features/role/interface/rest"
+
+	appScope "backend/internal/features/scope/app"
+	scopeKeycloak "backend/internal/features/scope/infra/keycloak"
+
+	appResource "backend/internal/features/resource/app"
+	resourceKeycloak "backend/internal/features/resource/infra/keycloak"
+
+	"backend/internal/interfaces/http"
+	// resourcehandler "backend/internal/interfaces/http/handlers/resource"
+
+	// scopehandler "backend/internal/interfaces/http/handlers/scopes"
+	wshandler "backend/internal/interfaces/http/handlers/websocket"
+	"backend/pkg/config"
+	"backend/shared/base"
+	"backend/shared/logger"
+	"backend/shared/logger/openob"
+	"backend/shared/streaming/domain"
+	"backend/shared/streaming/infrastructure/nats"
+	"backend/shared/validator"
+
+	kcCore "backend/shared/keycloak"
+
+	//appNats "backend/shared/nats/app"
+	appToken "backend/shared/token/app"
+	appWS "backend/shared/websocket/app"
 	"time"
 
 	"gorm.io/driver/sqlite"
@@ -113,7 +146,7 @@ func (c *Core) initServer(ctx context.Context) error {
 	}
 	validator.InitValidator(tenantConfig.Authorization.Roles)
 
-	kc, err := keycloak.NewKeycloakService(keycloak.KeycloakConfig{
+	kCore, err := kcCore.New(&kcCore.KeycloakConfig{
 		Host:         c.cfg.Authentication.Host,
 		Realm:        c.cfg.Authentication.Realm,
 		ClientID:     c.cfg.Authentication.ClientID,
@@ -126,30 +159,75 @@ func (c *Core) initServer(ctx context.Context) error {
 
 	base := &base.BaseService{
 		Logger: c.logger,
-		Auth:   kc,
+		Perm:   kCore,
 	}
-
-	authService := appAuth.NewAuthService(tenantConfig, base, kc, kc, kc, kc, kc, kc, kc)
-
-	//Branch
-	branchRepo := repoTenant.NewBranchRepository(c.db)
-	branchService := appTenant.NewBranchService(base, authService, branchRepo)
 
 	//Asset
 	assetRepo := repoAsset.NewRepository(c.db)
 	assetService := appAsset.NewService(base, assetRepo)
+	//Measure
+	measureRepo := repoMeasure.NewRepository(c.db)
+	measureService := appMeasure.NewService(base, measureRepo)
+	//Dashboard
+	dashboardRepo := repoDashboard.NewRepository(c.db)
+	dashboardService := appDashboard.NewService(base, dashboardRepo)
+	//Widget
+	widgetRepo := repoDashboard.NewWidgetRepository(c.db)
+	widgetService := appDashboard.NewWidgetService(base, widgetRepo)
+	//Device
+	deviceRepo := repoDevice.NewRepository(c.db)
+	deviceService := appDevice.NewService(base, deviceRepo)
+	//Action
+	actionRepo := repoAction.NewRepository(c.db)
+	actionService := appAction.NewService(base, actionRepo)
+	//Alert
+	alertRepo := repoAlert.NewRepository(c.db)
+	alertService := appAlert.NewService(base, alertRepo)
 	//User
 	userRepo := repoUser.NewRepository(c.db)
-	userService := appUser.NewService(base, kc, userRepo)
-
+	userKC := userKeycloak.New(kCore)
+	userService := appUser.NewService(base, &appUser.ServiceDependencies{
+		Repo: userRepo,
+		Auth: userKC,
+	})
 	//Roles
+	roleKC := roleKeycloak.New(kCore)
+	roleService := appRole.NewService(base, roleKC, appRole.Config{
+		DefaultRoles: tenantConfig.Authorization.Roles,
+	})
+	//Roles
+	scopeKC := scopeKeycloak.New(kCore)
+	scopeService := appScope.NewService(base, &appScope.ServiceDependencies{
+		Repo: scopeKC,
+	})
+	//Resource
+	resourceKC := resourceKeycloak.New(kCore)
+	resourceService := appResource.NewService(base, &appResource.ServiceDependencies{
+		Repo:  resourceKC,
+		Roles: roleService,
+		Config: &appResource.Config{
+			DefaultRoles: tenantConfig.Authorization.Roles,
+		},
+	})
+	//Branch
+	branchRepo := repoTenant.NewBranchRepository(c.db)
+	branchKC := tenantKeycloak.NewBranch(tenantConfig, kCore)
 
+	branchService := appTenant.NewBranchService(base, &appTenant.BranchDependencies{
+		Branch:   branchKC,
+		Repo:     branchRepo,
+		Role:     roleService,
+		Scope:    scopeService,
+		Resource: resourceService,
+		Config:   tenantConfig,
+	})
 	//Tenant
 
 	tenantRepo := repoTenant.NewTenantRepository(c.db)
+	tenantKC := tenantKeycloak.New(tenantConfig, kCore)
 	tenantDep := appTenant.ServiceDependencies{
 		Branch: branchService,
-		Auth:   authService,
+		Tenant: tenantKC,
 		Repo:   tenantRepo,
 		User:   userService,
 	}
@@ -165,19 +243,42 @@ func (c *Core) initServer(ctx context.Context) error {
 	appT := appToken.NewTokenService("wA7pH9#kL$mN4@vX2*qR8", 8*time.Hour)
 	appH := appWS.NewHub()
 	deps := http.ServerDependencies{
-		Authentication: kc,
-		BranchHandler: branchhandler.New(branchhandler.Dependencies{
+		Authentication: kCore,
+		BranchHandler: tenanthandler.NewBranch(tenanthandler.BranchDependencies{
 			Logger:        c.logger,
 			BranchService: branchService,
 		}),
 		TenantHandler: tenanthandler.New(tenanthandler.Dependencies{
 			Logger:        c.logger,
 			TenantService: tenantService,
-			AuthService:   authService,
 		}),
 		AssetHandler: assethandler.New(assethandler.Dependencies{
 			Logger:       c.logger,
 			AssetService: assetService,
+		}),
+		MeasureHandler: measurehandler.New(measurehandler.Dependencies{
+			Logger:         c.logger,
+			MeasureService: measureService,
+		}),
+		DashboardHandler: dashboardhandler.New(dashboardhandler.Dependencies{
+			Logger:           c.logger,
+			DashboardService: dashboardService,
+		}),
+		WidgetHandler: dashboardhandler.NewWidget(dashboardhandler.DependenciesWidget{
+			Logger:        c.logger,
+			WidgetService: widgetService,
+		}),
+		DeviceHandler: devicehandler.New(devicehandler.Dependencies{
+			Logger:        c.logger,
+			DeviceService: deviceService,
+		}),
+		ActionHandler: actionhandler.New(actionhandler.Dependencies{
+			Logger:        c.logger,
+			ActionService: actionService,
+		}),
+		AlertHandler: alerthandler.New(alerthandler.Dependencies{
+			Logger:       c.logger,
+			AlertService: alertService,
 		}),
 		UserHandler: userhandler.New(userhandler.Dependencies{
 			Logger:      c.logger,
@@ -185,12 +286,16 @@ func (c *Core) initServer(ctx context.Context) error {
 		}),
 		RolesHandler: rolehandler.New(rolehandler.Dependencies{
 			Logger:      c.logger,
-			AuthService: authService,
+			RoleService: roleService,
 		}),
-		ResourceHandler: resourcehandler.New(resourcehandler.Dependencies{
-			Logger:      c.logger,
-			AuthService: authService,
-		}),
+		// ResourceHandler: resourcehandler.New(resourcehandler.Dependencies{
+		// 	Logger:      c.logger,
+		// 	AuthService: authService,
+		// }),
+		// ScopeHandler: scopehandler.New(scopehandler.Dependencies{
+		// 	Logger:      c.logger,
+		// 	AuthService: authService,
+		// }),
 
 		TokenHandler:    wshandler.NewTokenHandler(appT),
 		WSNotifyHandler: wshandler.NewNotificationHandler(appH, natsClient, appT),

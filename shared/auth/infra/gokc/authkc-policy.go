@@ -1,11 +1,11 @@
 package keycloak
 
 import (
+	"backend/shared/auth/domain/command"
+	"backend/shared/auth/domain/permission"
+	"backend/shared/auth/domain/policy"
+	"backend/shared/auth/infra/restkc"
 	"context"
-	"ddd/shared/auth/domain/command"
-	"ddd/shared/auth/domain/permission"
-	"ddd/shared/auth/domain/policy"
-	"ddd/shared/auth/infra/restkc"
 	"fmt"
 
 	"github.com/Nerzal/gocloak/v13"
@@ -47,61 +47,7 @@ func (ks *KeycloakService) CreatePolicy(ctx context.Context, tenantID, clientID 
 	}, nil
 }
 
-func (ks *KeycloakService) UpdatePolicy(ctx context.Context, tenantID, clientID string, p policy.Policy) error {
-	token, err := ks.GetValidToken(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to get token: %w", err)
-	}
 
-	roleDefs := make([]gocloak.RoleDefinition, len(p.Roles))
-	for i, role := range p.Roles {
-		required := true
-		roleDefs[i] = gocloak.RoleDefinition{
-			ID:       &role,
-			Required: &required,
-		}
-	}
-
-	policyType := policy.TypeRole
-	logic := gocloak.POSITIVE
-	kcPolicy := gocloak.PolicyRepresentation{
-		ID:    &p.ID,
-		Type:  &policyType,
-		Logic: logic,
-		Name:  &p.Name,
-		RolePolicyRepresentation: gocloak.RolePolicyRepresentation{
-			Roles: &roleDefs,
-		},
-	}
-
-	err = ks.client.UpdatePolicy(ctx, token.AccessToken, tenantID, clientID, kcPolicy)
-	if err != nil {
-		return fmt.Errorf("failed to update policy: %w", err)
-	}
-
-	return nil
-}
-func (ks *KeycloakService) DeletePolicy(ctx context.Context, input *command.PolicyNameInput) error {
-	token, err := ks.GetValidToken(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to get token: %w", err)
-	}
-	err = ks.fetchClient(ctx, &input.BaseInput)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-
-	policy, err := ks.GetPolicyByName(ctx, input)
-	if err != nil {
-		return fmt.Errorf("error fetching policy: %w", err)
-	}
-	err = ks.client.DeletePolicy(ctx, token.AccessToken, input.TenantDomain, *input.ClientID, policy.ID)
-	if err != nil {
-		return fmt.Errorf("failed to update policy: %w", err)
-	}
-
-	return nil
-}
 
 func (ks *KeycloakService) GetPolicyByName(ctx context.Context, input *command.PolicyNameInput) (*policy.Policy, error) {
 	token, err := ks.GetValidToken(ctx)

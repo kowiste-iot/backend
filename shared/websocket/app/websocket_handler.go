@@ -1,6 +1,6 @@
 package app
 
-import "ddd/shared/streaming/domain"
+import "backend/shared/streaming/domain"
 
 type WebSocketHandler struct {
 	hub *Hub

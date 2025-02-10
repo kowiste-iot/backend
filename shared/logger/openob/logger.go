@@ -1,9 +1,9 @@
 package openob
 
 import (
+	"backend/shared/logger"
 	"bytes"
 	"context"
-	"ddd/shared/logger"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -29,7 +29,7 @@ type Config struct {
 	Environment   string
 	Endpoint      string // base URL
 	Headers       string
-	TenantID      string 
+	TenantID      string
 	StreamName    string
 	MinLevel      logger.Level
 	ConsoleOutput bool

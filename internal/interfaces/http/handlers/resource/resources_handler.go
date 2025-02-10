@@ -1,12 +1,13 @@
 package resourcehandler
 
 import (
-	authApp "ddd/shared/auth/app"
-	baseCmd "ddd/shared/base/command"
-	ginhelp "ddd/shared/http/gin"
-	"ddd/shared/http/httputil"
-	"ddd/shared/logger"
-	"ddd/shared/pagination"
+	authApp "backend/shared/auth/app"
+	resourceCmd "backend/shared/auth/domain/resource/command"
+	baseCmd "backend/shared/base/command"
+	ginhelp "backend/shared/http/gin"
+	"backend/shared/http/httputil"
+	"backend/shared/logger"
+	"backend/shared/pagination"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -51,4 +52,34 @@ func (h *ResourceHandler) ListResources(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response)
+}
+func (h *ResourceHandler) UpdateResource(c *gin.Context) {
+	resourceID := c.Param("id")
+	ctx := c.Request.Context()
+	tenant, branch, err := httputil.GetBase(ctx)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get base: " + err.Error()})
+		return
+	}
+	var req UpdateResourceRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	inputBase := baseCmd.NewInput(tenant.Domain(), branch)
+	input := resourceCmd.UpdateResourceInput{
+		BaseInput:   inputBase,
+		ID:          resourceID,
+		Name:        req.Name,
+		DisplayName: req.DisplayName,
+		Roles:       req.Roles,
+	}
+	result, err := h.authService.UpdateResource(ctx, &input)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to list roles"})
+		return
+	}
+
+	c.JSON(http.StatusOK, ToResourcesResponse(*result))
 }

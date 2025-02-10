@@ -1,21 +1,21 @@
 package app
 
 import (
+	"backend/shared/auth/domain/command"
+	"backend/shared/auth/domain/permission"
+	"backend/shared/auth/domain/policy"
+	"backend/shared/auth/domain/resource"
+	"backend/shared/auth/domain/role"
+	"backend/shared/auth/domain/scope"
+	baseCmd "backend/shared/base/command"
+	"backend/shared/util"
 	"context"
-	auth "ddd/shared/auth/domain"
-	"ddd/shared/auth/domain/command"
-	"ddd/shared/auth/domain/permission"
-	"ddd/shared/auth/domain/policy"
-	"ddd/shared/auth/domain/resource"
-	"ddd/shared/auth/domain/scope"
-	baseCmd "ddd/shared/base/command"
-	"ddd/shared/util"
 	"fmt"
 	"slices"
 )
 
 // GetTenantRoles retrieves all roles for a tenant
-func (s *Service) GetRoles(ctx context.Context, input *baseCmd.BaseInput) ([]auth.Role, error) {
+func (s *Service) GetRoles(ctx context.Context, input *baseCmd.BaseInput) ([]role.Role, error) {
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: *input,
 		Resource:  resource.Role,
@@ -24,11 +24,11 @@ func (s *Service) GetRoles(ctx context.Context, input *baseCmd.BaseInput) ([]aut
 	if err != nil {
 		return nil, err
 	}
-	return s.tenantProvider.GetRoles(ctx, input)
+	return s.roleProvider.GetRoles(ctx, input)
 }
 
 // GetTenantRole retrieves a specific role from a tenant
-func (s *Service) GetRole(ctx context.Context, input *command.RoleIDInput) (*auth.Role, error) {
+func (s *Service) GetRole(ctx context.Context, input *command.RoleIDInput) (*role.Role, error) {
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
 		Resource:  resource.Role,
@@ -37,7 +37,7 @@ func (s *Service) GetRole(ctx context.Context, input *command.RoleIDInput) (*aut
 	if err != nil {
 		return nil, err
 	}
-	return s.tenantProvider.GetRole(ctx, input)
+	return s.roleProvider.GetRole(ctx, input)
 }
 
 // CreateRole creates a new role for a tenant
@@ -53,7 +53,7 @@ func (s *Service) CreateRole(ctx context.Context, input *command.CreateRoleInput
 	if s.isDefaultRole(input.Name) {
 		return "", fmt.Errorf("cannot create role with reserved name: %s", input.Name)
 	}
-	id, err = s.tenantProvider.CreateRole(ctx, input)
+	id, err = s.roleProvider.CreateRole(ctx, input)
 	if err != nil {
 		return
 	}
@@ -90,14 +90,14 @@ func (s *Service) DeleteRole(ctx context.Context, input *command.RoleIDInput) (e
 		return fmt.Errorf("cannot delete default role: %s", input.RoleID)
 	}
 	inputPolicy := command.PolicyNameInput{
-		BaseInput: input.BaseInput,
-		PolicyName:  command.PolicyName(input.RoleID),
+		BaseInput:  input.BaseInput,
+		PolicyName: command.PolicyName(input.RoleID),
 	}
 	err = s.policyProvider.DeletePolicy(ctx, &inputPolicy)
 	if err != nil {
 		return fmt.Errorf("failed to delete policy %w", err)
 	}
-	err = s.tenantProvider.DeleteRole(ctx, input)
+	err = s.roleProvider.DeleteRole(ctx, input)
 	if err != nil {
 		return err
 	}
@@ -114,7 +114,7 @@ func (s *Service) AssignRoles(ctx context.Context, input *command.AssignRolesInp
 	// if err != nil {
 	// 	return err
 	// }
-	return s.tenantProvider.AssignRoles(ctx, input)
+	return s.roleProvider.AssignRoles(ctx, input)
 }
 
 // RemoveRoles removes roles from a user
@@ -127,11 +127,11 @@ func (s *Service) RemoveRoles(ctx context.Context, input *command.RemoveRolesInp
 	if err != nil {
 		return err
 	}
-	return s.tenantProvider.RemoveRoles(ctx, input)
+	return s.roleProvider.RemoveRoles(ctx, input)
 }
 
 // GetUserRoles gets all roles assigned to a user
-func (s *Service) GetUserRoles(ctx context.Context, input *command.UserRolesInput) ([]auth.Role, error) {
+func (s *Service) GetUserRoles(ctx context.Context, input *command.UserRolesInput) ([]role.Role, error) {
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
 		Resource:  resource.Role,
@@ -140,12 +140,12 @@ func (s *Service) GetUserRoles(ctx context.Context, input *command.UserRolesInpu
 	if err != nil {
 		return nil, err
 	}
-	return s.tenantProvider.GetUserRoles(ctx, input)
+	return s.roleProvider.GetUserRoles(ctx, input)
 }
 
 // isDefaultRole checks if a role name or ID matches any default roles
 func (s *Service) isDefaultRole(identifier string) bool {
-	return slices.ContainsFunc(auth.AllRoles(s.tenantConfig.Authorization.Roles), func(role auth.Role) bool {
+	return slices.ContainsFunc(role.AllRoles(s.tenantConfig.Authorization.Roles), func(role role.Role) bool {
 		return role.Name == identifier
 	})
 }

@@ -1,8 +1,8 @@
 package auth
 
 import (
+	userCmd "backend/internal/features/user/domain/command"
 	"context"
-	userCmd "ddd/internal/features/user/domain/command"
 )
 
 type IdentityProvider interface {

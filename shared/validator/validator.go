@@ -1,8 +1,8 @@
 package validator
 
 import (
-	auth "ddd/shared/auth/domain"
-	"ddd/shared/errors"
+	"backend/shared/auth/domain/role"
+	"backend/shared/errors"
 	"reflect"
 	"slices"
 	"strings"
@@ -15,13 +15,14 @@ import (
 var (
 	validate   *validator.Validate
 	once       sync.Once
-	validRoles []string 
-
+	validRoles []string
 )
+
 func InitValidator(roles []string) {
-    validRoles = roles
-    GetValidator()
+	validRoles = roles
+	GetValidator()
 }
+
 // validateUUIDv7 validates if a string is a valid UUIDv7
 func validateUUIDv7(fl validator.FieldLevel) bool {
 	value := fl.Field().String()
@@ -46,9 +47,9 @@ func validateRoles(fl validator.FieldLevel) bool {
 		return false
 	}
 
-	for _, role := range roles {
-		if !slices.ContainsFunc(auth.AllRoles(validRoles), func(r auth.Role) bool {
-			return r.Name == role
+	for _, rol := range roles {
+		if !slices.ContainsFunc(role.AllRoles(validRoles), func(r role.Role) bool {
+			return r.Name == rol
 		}) {
 			return false
 		}

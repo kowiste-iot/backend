@@ -1,8 +1,8 @@
 package keycloak
 
 import (
+	auth "backend/shared/auth/domain"
 	"context"
-	auth "ddd/shared/auth/domain"
 	"fmt"
 
 	"github.com/Nerzal/gocloak/v13"
@@ -99,15 +99,13 @@ func mapRealmToTenant(realm *gocloak.RealmRepresentation) *auth.Tenant {
 		ID:     *realm.ID,
 		Domain: *realm.Realm,
 		Name:   *realm.DisplayName,
-		Theme:  &auth.TenantTheme{
+		Theme: &auth.TenantTheme{
 			Login: *realm.LoginTheme,
 		},
 	}
 
 	return tenant
 }
-
-
 
 func (ks *KeycloakService) updateRealmConfig(ctx context.Context, tenant *auth.Tenant) error {
 	token, err := ks.GetValidToken(ctx)

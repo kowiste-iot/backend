@@ -1,8 +1,8 @@
 package policy
 
 import (
+	"backend/shared/auth/domain/command"
 	"context"
-	"ddd/shared/auth/domain/command"
 )
 
 const (

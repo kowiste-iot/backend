@@ -1,11 +1,11 @@
 package websocket
 
 import (
-	"ddd/shared/http/httputil"
-	streamingToken "ddd/shared/streaming/domain"
-	"ddd/shared/streaming/domain/subjects"
-	domainToken "ddd/shared/token/domain"
-	appWS "ddd/shared/websocket/app"
+	"backend/shared/http/httputil"
+	streamingToken "backend/shared/streaming/domain"
+	"backend/shared/streaming/domain/subjects"
+	domainToken "backend/shared/token/domain"
+	appWS "backend/shared/websocket/app"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
