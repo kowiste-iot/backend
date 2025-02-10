@@ -21,7 +21,7 @@ func New(core *keycloak.Keycloak) *ScopeKeycloak {
 	}
 }
 
-func (ks *ScopeKeycloak) CreateScope(ctx context.Context, tenantID, clientID string, sc domain.Scope) (*domain.Scope, error) {
+func (ks *ScopeKeycloak) CreateScope(ctx context.Context, input *baseCmd.BaseInput, sc domain.Scope) (*domain.Scope, error) {
 	token, err := ks.GetValidToken(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get token: %w", err)
@@ -35,8 +35,8 @@ func (ks *ScopeKeycloak) CreateScope(ctx context.Context, tenantID, clientID str
 	createdScope, err := ks.Client.CreateScope(
 		ctx,
 		token.AccessToken,
-		tenantID,
-		clientID,
+		input.TenantDomain,
+		*input.ClientID,
 		kcScope,
 	)
 	if err != nil {

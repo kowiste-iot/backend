@@ -96,7 +96,11 @@ func (s *branchService) CreateBranch(ctx context.Context, input *command.CreateB
 		BranchName:   input.Name,
 	}
 	branch.SetAuthBranchID(branchID)
-
+	//Assign admins to created branch
+	err = s.branch.AssignAdminsToBranch(ctx, &baseInput)
+	if err != nil {
+		return nil, err
+	}
 	//add scopes to group
 	for _, scName := range scopeDomain.AllScopes() {
 		_, err := s.scope.CreateScope(ctx, &scopeCmd.CreateScopeInput{
@@ -109,7 +113,7 @@ func (s *branchService) CreateBranch(ctx context.Context, input *command.CreateB
 			return nil, err
 		}
 	}
-	
+
 	//Roles, create default roles
 	for _, role := range role.AllRoles(s.config.Authorization.Roles) {
 		input := roleCmd.CreateRoleInput{

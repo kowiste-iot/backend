@@ -27,6 +27,7 @@ type TenantProvider interface {
 	UpdateTenant(ctx context.Context, tenant *Tenant) error
 	DeleteTenant(ctx context.Context, tenantID string) error
 	GetTenant(ctx context.Context, tenantID string) (*Tenant, error)
+	CreateAdminGroup(ctx context.Context, tenantID string) error
 }
 type BranchProvider interface {
 	CreateBranch(ctx context.Context, input *command.CreateBranchInput) (string, error)
@@ -34,6 +35,7 @@ type BranchProvider interface {
 	DeleteBranch(ctx context.Context, input *baseCmd.BaseInput) error
 	GetBranch(ctx context.Context, input *baseCmd.BaseInput) (*Branch, error)
 	GetBranchUsers(ctx context.Context, input *baseCmd.BaseInput) ([]userDomain.User, error)
+	AssignAdminsToBranch(ctx context.Context, input *baseCmd.BaseInput) error
 	AssignUserToBranch(ctx context.Context, input *command.UserToBranch) error
 	RemoveUserFromBranch(ctx context.Context, input *command.UserToBranch) error
 }

@@ -29,65 +29,6 @@ func (ks *BranchKeycloak) convertFromGoCloak(client *gocloak.Client) auth.Client
 		FullScopeAllowed:        gocloak.PBool(client.FullScopeAllowed),
 	}
 }
-func (ks *BranchKeycloak) convertToGoCloak(client *auth.Client) gocloak.Client {
-	attributes := map[string]string{
-		"realm_client":                             "false",
-		"backchannel.logout.session.required":      "true",
-		"backchannel.logout.revoke.offline.tokens": "false",
-	}
-
-	defaultScopes := []string{
-		"web-origins",
-		"roles",
-		"profile",
-		"email",
-	}
-	optScopes := []string{
-		"address",
-		"phone",
-		"offline_access",
-		"microprofile-jwt",
-	}
-
-	if !client.Authorization {
-		attributes["oidc.ciba.grant.enabled"] = "false"
-		attributes["post.logout.redirect.uris"] = "http://localhost:5173"
-		attributes["display.on.consent.screen"] = "false"
-		attributes["oauth2.device.authorization.grant.enabled"] = "false"
-
-		defaultScopes = append(defaultScopes, []string{"acr", "basic"}...)
-		optScopes = append(optScopes, "organization")
-	}
-
-	data := gocloak.Client{
-		ClientID:                     &client.ClientID,
-		Enabled:                      gocloak.BoolP(true),
-		Description:                  &client.Description,
-		ClientAuthenticatorType:      &client.ClientAuthenticatorType,
-		RedirectURIs:                 &client.RedirectURIs,
-		StandardFlowEnabled:          &client.StandardFlowEnabled,
-		DirectAccessGrantsEnabled:    gocloak.BoolP(true),
-		PublicClient:                 &client.PublicClient,
-		FrontChannelLogout:           gocloak.BoolP(true),
-		Protocol:                     gocloak.StringP("openid-connect"),
-		Attributes:                   &attributes,
-		FullScopeAllowed:             &client.FullScopeAllowed,
-		NodeReRegistrationTimeout:    gocloak.Int32P(-1),
-		DefaultClientScopes:          &defaultScopes,
-		OptionalClientScopes:         &optScopes,
-		AuthorizationServicesEnabled: &client.AuthorizationEnabled,
-		ServiceAccountsEnabled:       &client.ServiceAccountEnabled,
-	}
-
-	if client.ID != nil {
-		data.ID = client.ID
-	}
-	if len(client.WebOrigins) == 0 {
-		data.WebOrigins = &[]string{"*"}
-	}
-
-	return data
-}
 
 func (ks *BranchKeycloak) convertToGoCloak2(isBack bool, branch string) gocloak.Client {
 	client := new(auth.Client)

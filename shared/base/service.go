@@ -18,6 +18,13 @@ type BaseService struct {
 	Perm authzDomain.PermissionProvider
 }
 
+func New(log logger.Logger, permission authzDomain.PermissionProvider) *BaseService {
+	return &BaseService{
+		Logger: log,
+		Perm:   permission,
+	}
+}
+
 func (b *BaseService) CheckPermission(ctx context.Context, input *command.CheckPermissionInput) (err error) {
 	token, ok := httputil.GetToken(ctx)
 	if !ok {

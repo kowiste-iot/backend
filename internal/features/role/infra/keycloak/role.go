@@ -159,7 +159,7 @@ func (rk RoleKeycloak) AssignRoleToResource(ctx context.Context, input *command.
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	fmt.Println(token)
-	p, err := rk.getPolicyByName(ctx, &input.BaseInput, policyName(input.RoleName))
+	_, err = rk.getPolicyByName(ctx, &input.BaseInput, policyName(input.RoleName))
 	if err != nil {
 		return
 	}

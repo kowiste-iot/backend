@@ -16,7 +16,7 @@ type TenantConfiguration struct {
 
 type Client struct {
 	Type           string   `yaml:"type" mapstructure:"type"`
-	ClientID       string   `yaml:"client_id" mapstructure:"client_id"` // Fixed the tag here
+	ClientID       string   `yaml:"client_id" mapstructure:"client_id"`
 	Name           string   `yaml:"name" mapstructure:"name"`
 	Description    string   `yaml:"description" mapstructure:"description"`
 	RedirectURIs   []string `yaml:"redirect_uris" mapstructure:"redirect_uris"`
@@ -29,7 +29,7 @@ type Client struct {
 type Authorization struct {
 	AdminGroup string              `yaml:"roles" mapstructure:"admin_group"`
 	Roles      []string            `yaml:"roles" mapstructure:"roles"`
-	Resources  map[string]Resource `yaml:"resources" mapstructure:"resources"` // Changed to map
+	Resources  map[string]Resource `yaml:"resources" mapstructure:"resources"` 
 }
 
 type Resource struct {

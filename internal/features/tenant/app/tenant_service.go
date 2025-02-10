@@ -62,14 +62,14 @@ func (s tenantService) CreateTenant(ctx context.Context, input *command.CreateTe
 		return nil, fmt.Errorf("failed to create tenant: %w", err)
 	}
 
-	//create auth teanat
+	//create auth tenant
 	id, err := s.tenant.CreateTenant(ctx, tenant)
 	if err != nil {
 		return nil, err
 	}
 	tenant.SetAuthID(id)
 
-	//Create default branch + admin group
+	//Create default branch
 	defaultB := command.CreateBranchInput{
 		TenantDomain: tenant.Domain(),
 		Name:         input.Branch,

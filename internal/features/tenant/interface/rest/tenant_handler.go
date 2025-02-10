@@ -45,7 +45,7 @@ func New(deps Dependencies) *TenantHandler {
 // @Failure 401 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
 // @Router /api/v1/{tenantid}/tenants [post]
-func (h *TenantHandler) CreateTenant(c *gin.Context) {
+func (h *TenantHandler) 	CreateTenant(c *gin.Context) {
 	var req CreateTenantRequest
 	ctx := c.Request.Context()
 	h.logger.Debug(ctx, "Starting tenant creation request", nil)

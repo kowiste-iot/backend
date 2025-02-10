@@ -33,7 +33,7 @@ func (rk BranchKeycloak) CreateBranch(ctx context.Context, input *command.Create
 		return "", fmt.Errorf("failed to get token: %w", err)
 	}
 
-	group := mapBranchToGroup(input)
+	group := mapBranchToGroup(input.Name, input.Description)
 	groupID, err := rk.Client.CreateGroup(
 		ctx,
 		token.AccessToken,
@@ -104,11 +104,7 @@ func (rk BranchKeycloak) UpdateBranch(ctx context.Context, input *command.Update
 		return fmt.Errorf("failed to get token: %w", err)
 	}
 
-	group := mapBranchToGroup(&command.CreateBranchInput{
-		TenantDomain: input.TenantDomain,
-		Name:         input.Name,
-		Description:  input.Description,
-	})
+	group := mapBranchToGroup(input.Name, input.Description)
 	group.ID = &input.ID
 
 	err = rk.Client.UpdateGroup(
@@ -146,6 +142,22 @@ func (rk BranchKeycloak) GetBranchUsers(ctx context.Context, input *baseCmd.Base
 	}
 
 	return authUsers, nil
+}
+func (rk BranchKeycloak) AssignAdminsToBranch(ctx context.Context, input *baseCmd.BaseInput) (err error) {
+	admins, err := rk.GetBranchUsers(ctx, input)
+	if err != nil {
+		return err
+	}
+
+	for i := range admins {
+		rk.AssignUserToBranch(ctx, &command.UserToBranch{
+			TenantDomain: input.TenantDomain,
+			UserID:       admins[i].AuthID(),
+			Branchs:      []string{input.BranchName},
+		})
+	}
+
+	return nil
 }
 func (rk BranchKeycloak) AssignUserToBranch(ctx context.Context, input *command.UserToBranch) error {
 	token, err := rk.GetValidToken(ctx)
@@ -189,11 +201,11 @@ func (rk BranchKeycloak) RemoveUserFromBranch(ctx context.Context, input *comman
 }
 
 // Helper functions for mapping between domain and Keycloak types
-func mapBranchToGroup(branch *command.CreateBranchInput) *gocloak.Group {
+func mapBranchToGroup(groupName, description string) *gocloak.Group {
 	return &gocloak.Group{
-		Name: &branch.Name,
+		Name: &groupName,
 		Attributes: &map[string][]string{
-			"description": {branch.Description},
+			"description": {description},
 		},
 	}
 }

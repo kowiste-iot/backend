@@ -42,6 +42,9 @@ import (
 	roleKeycloak "backend/internal/features/role/infra/keycloak"
 	rolehandler "backend/internal/features/role/interface/rest"
 
+	appScope "backend/internal/features/scope/app"
+	scopeKeycloak "backend/internal/features/scope/infra/keycloak"
+
 	appResource "backend/internal/features/resource/app"
 	resourceKeycloak "backend/internal/features/resource/infra/keycloak"
 
@@ -192,6 +195,11 @@ func (c *Core) initServer(ctx context.Context) error {
 	roleService := appRole.NewService(base, roleKC, appRole.Config{
 		DefaultRoles: tenantConfig.Authorization.Roles,
 	})
+	//Roles
+	scopeKC := scopeKeycloak.New(kCore)
+	scopeService := appScope.NewService(base, &appScope.ServiceDependencies{
+		Repo: scopeKC,
+	})
 	//Resource
 	resourceKC := resourceKeycloak.New(kCore)
 	resourceService := appResource.NewService(base, &appResource.ServiceDependencies{
@@ -209,6 +217,7 @@ func (c *Core) initServer(ctx context.Context) error {
 		Branch:   branchKC,
 		Repo:     branchRepo,
 		Role:     roleService,
+		Scope:    scopeService,
 		Resource: resourceService,
 		Config:   tenantConfig,
 	})

@@ -157,7 +157,7 @@ func (s *resourceService) UpdateResource(ctx context.Context, input *command.Upd
 		return
 	}
 
-	//create permissions shoudl be Assign Role to Resource
+	//create permissions should be Assign Role to Resource ? maybe assign roles should be on permission
 	for name, scopes := range input.Roles {
 		role, ok := mRoles[name]
 		if !ok {
