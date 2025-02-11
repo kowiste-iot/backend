@@ -81,6 +81,12 @@ func (s tenantService) CreateTenant(ctx context.Context, input *command.CreateTe
 		return nil, fmt.Errorf("failed to create default branch: %w", err)
 	}
 
+	//create admin group
+	adminGroup, err := s.tenant.CreateAdminGroup(ctx, tenant.Domain())
+	if err != nil {
+		return nil, err
+	}
+
 	// Create Admin user
 	u := userCmd.CreateUserInput{
 		BaseInput: baseCmd.NewInput(tenant.Domain(), input.Branch),
@@ -98,7 +104,7 @@ func (s tenantService) CreateTenant(ctx context.Context, input *command.CreateTe
 	ub := command.UserToBranch{
 		TenantDomain: tenant.Domain(),
 		UserID:       user.AuthID,
-		Branchs:      []string{createdBranch.AuthBranchID(), createdBranch.AdminBranchID()},
+		Branchs:      []string{createdBranch.AuthBranchID(), adminGroup},
 	}
 	err = s.branch.AssignUserToBranch(ctx, &ub)
 	if err != nil {

@@ -2,7 +2,7 @@ package domain
 
 import (
 	roleDomain "backend/internal/features/role/domain"
-
+	scopeDomain "backend/internal/features/scope/domain"
 	baseCmd "backend/shared/base/command"
 
 	"context"
@@ -29,7 +29,7 @@ const (
 )
 
 type PermissionProvider interface {
-	CreatePermission(ctx context.Context, input *baseCmd.BaseInput, permission Permission) (*Permission, error)
+	CreatePermission(ctx context.Context,scopes []scopeDomain.Scope, input *baseCmd.BaseInput, permission *Permission) (*Permission, error)
 	ListPermissions(ctx context.Context, input *baseCmd.BaseInput) ([]Permission, error)
 }
 

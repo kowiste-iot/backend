@@ -95,15 +95,18 @@ func (rk TenantKeycloak) UpdateTenant(ctx context.Context, tenant *domain.Tenant
 
 	return rk.updateRealmConfig(ctx, tenant)
 }
-func (rk TenantKeycloak) CreateAdminGroup(ctx context.Context, tenantDomain string) (err error) {
+
+// CreateAdminGroup create a group call admin in the pass tenant
+func (rk TenantKeycloak) CreateAdminGroup(ctx context.Context, tenantDomain string) (id string, err error) {
 	token, err := rk.GetValidToken(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to get token: %w", err)
+		return "", fmt.Errorf("failed to get token: %w", err)
 	}
 	group := mapBranchToGroup(domain.AdminBranch, "group for "+domain.AdminBranch)
-	_, err = rk.Client.CreateGroup(ctx, token.AccessToken, tenantDomain, *group)
+	id, err = rk.Client.CreateGroup(ctx, token.AccessToken, tenantDomain, *group)
 	return
 }
+
 func mapTenantToRealm(tenant *domain.Tenant) *gocloak.RealmRepresentation {
 	enabled := true
 
