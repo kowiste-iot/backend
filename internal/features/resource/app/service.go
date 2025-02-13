@@ -70,7 +70,7 @@ func (s *resourceService) CreateResource(ctx context.Context, input *command.Cre
 	if err != nil {
 		return nil, fmt.Errorf("validation error %s", err.Error())
 	}
-	r, err := domain.New(command.ResourceName(input.Name), input.Type, input.Scopes, input.DisplayName)
+	r, err := domain.New(input.Name, input.Type, input.Scopes, input.DisplayName)
 	if err != nil {
 		return
 	}
