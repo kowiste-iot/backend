@@ -1,9 +1,9 @@
 package repository
 
 import (
+	"backend/internal/features/tenant/domain"
+	"backend/shared/pagination"
 	"context"
-	"ddd/internal/features/tenant/domain"
-	"ddd/shared/pagination"
 	"errors"
 	"time"
 
@@ -15,13 +15,14 @@ type branchRepository struct {
 }
 
 type Branch struct {
-	ID           string `gorm:"primaryKey"`
-	TenantID     string `gorm:"index"`
-	AuthBranchID string `gorm:"index"`
-	Name         string
-	Description  string
-	UpdatedAt    time.Time
-	DeletedAt    gorm.DeletedAt `gorm:"index"`
+	ID            string `gorm:"primaryKey"`
+	TenantID      string `gorm:"index"`
+	AuthBranchID  string `gorm:"index"`
+	AdminBranchID string
+	Name          string
+	Description   string
+	UpdatedAt     time.Time
+	DeletedAt     gorm.DeletedAt `gorm:"index"`
 }
 
 func NewBranchRepository(db *gorm.DB) domain.BranchRepository {
@@ -69,6 +70,7 @@ func (r *branchRepository) FindByID(ctx context.Context, tenantID, branchID stri
 		dbBranch.ID,
 		dbBranch.TenantID,
 		dbBranch.AuthBranchID,
+		dbBranch.AdminBranchID,
 		dbBranch.Name,
 		dbBranch.Description,
 		dbBranch.UpdatedAt,
@@ -110,6 +112,7 @@ func (r *branchRepository) FindAll(ctx context.Context, tenantID string) ([]*dom
 			dbBranch.ID,
 			dbBranch.TenantID,
 			dbBranch.AuthBranchID,
+			dbBranch.AdminBranchID,
 			dbBranch.Name,
 			dbBranch.Description,
 			dbBranch.UpdatedAt,

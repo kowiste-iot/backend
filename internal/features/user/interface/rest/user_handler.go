@@ -1,15 +1,15 @@
 package userhandler
 
 import (
-	"ddd/internal/features/user/app"
-	"ddd/internal/features/user/domain"
-	"ddd/internal/features/user/domain/command"
-	baseCmd "ddd/shared/base/command"
+	"backend/internal/features/user/app"
+	"backend/internal/features/user/domain"
+	"backend/internal/features/user/domain/command"
+	baseCmd "backend/shared/base/command"
 
-	ginhelp "ddd/shared/http/gin"
-	"ddd/shared/http/httputil"
-	"ddd/shared/logger"
-	"ddd/shared/pagination"
+	ginhelp "backend/shared/http/gin"
+	"backend/shared/http/httputil"
+	"backend/shared/logger"
+	"backend/shared/pagination"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -58,7 +58,7 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, ToUserResponse(result))
+	c.JSON(http.StatusCreated, result)
 }
 
 func (h *UserHandler) GetUser(c *gin.Context) {
@@ -84,7 +84,7 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, ToUserResponse(result))
+	c.JSON(http.StatusOK, result)
 }
 
 func (h *UserHandler) ListUsers(c *gin.Context) {
@@ -98,7 +98,7 @@ func (h *UserHandler) ListUsers(c *gin.Context) {
 	}
 	input := baseCmd.BaseInput{
 		TenantDomain: tenant.Domain(),
-		BranchName: branch,
+		BranchName:   branch,
 	}
 	results, err := h.userService.ListUsers(ctx, &input)
 	if err != nil {
@@ -108,7 +108,7 @@ func (h *UserHandler) ListUsers(c *gin.Context) {
 
 	pg, _ := pagination.GetPagination(ctx)
 	response := pagination.PaginatedResponse{
-		Data:       ToUserResponses(results),
+		Data:       results,
 		Pagination: *pg,
 	}
 
@@ -148,7 +148,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, ToUserResponse(result))
+	c.JSON(http.StatusOK, result)
 }
 
 func (h *UserHandler) DeleteUser(c *gin.Context) {

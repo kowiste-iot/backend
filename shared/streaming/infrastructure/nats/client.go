@@ -1,8 +1,8 @@
 package nats
 
 import (
+	"backend/shared/streaming/domain"
 	"context"
-	"ddd/shared/streaming/domain"
 	"encoding/json"
 	"fmt"
 	"math"

@@ -1,8 +1,8 @@
 package httputil
 
 import (
+	"backend/internal/features/tenant/domain"
 	"context"
-	"ddd/internal/features/tenant/domain"
 	"errors"
 )
 

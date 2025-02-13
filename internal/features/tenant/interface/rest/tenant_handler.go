@@ -3,15 +3,14 @@ package tenanthandler
 import (
 	"net/http"
 
-	"ddd/internal/features/tenant/app"
-	"ddd/internal/features/tenant/domain"
-	"ddd/internal/features/tenant/domain/command"
-	appAuth "ddd/shared/auth/app"
-	"ddd/shared/errors"
-	ginhelp "ddd/shared/http/gin"
-	"ddd/shared/http/httputil"
-	"ddd/shared/logger"
-	"ddd/shared/pagination"
+	"backend/internal/features/tenant/app"
+	"backend/internal/features/tenant/domain"
+	"backend/internal/features/tenant/domain/command"
+	"backend/shared/errors"
+	ginhelp "backend/shared/http/gin"
+	"backend/shared/http/httputil"
+	"backend/shared/logger"
+	"backend/shared/pagination"
 
 	"github.com/gin-gonic/gin"
 )
@@ -24,7 +23,6 @@ type TenantHandler struct {
 type Dependencies struct {
 	Logger        logger.Logger
 	TenantService app.TenantService
-	AuthService   *appAuth.Service
 }
 
 func New(deps Dependencies) *TenantHandler {
@@ -47,7 +45,7 @@ func New(deps Dependencies) *TenantHandler {
 // @Failure 401 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
 // @Router /api/v1/{tenantid}/tenants [post]
-func (h *TenantHandler) CreateTenant(c *gin.Context) {
+func (h *TenantHandler) 	CreateTenant(c *gin.Context) {
 	var req CreateTenantRequest
 	ctx := c.Request.Context()
 	h.logger.Debug(ctx, "Starting tenant creation request", nil)
@@ -75,8 +73,8 @@ func (h *TenantHandler) CreateTenant(c *gin.Context) {
 			"err":    err.Error(),
 		})
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to create tenant", 
-			"data": err.Error(),
+			"error": "Failed to create tenant",
+			"data":  err.Error(),
 		})
 		return
 	}

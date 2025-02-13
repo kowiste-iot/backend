@@ -3,40 +3,44 @@ package app
 
 import (
 	"context"
-	"ddd/internal/features/user/domain"
-	"ddd/internal/features/user/domain/command"
-	auth "ddd/shared/auth/domain"
-	"ddd/shared/auth/domain/resource"
-	"ddd/shared/auth/domain/scope"
-	"ddd/shared/base"
-	baseCmd "ddd/shared/base/command"
+
+	"backend/internal/features/user/domain"
+	"backend/internal/features/user/domain/command"
+	"backend/internal/features/user/dto"
+	resourceDomain "backend/internal/features/resource/domain"
+	scopeDomain "backend/internal/features/scope/domain"
+	"backend/shared/base"
+	baseCmd "backend/shared/base/command"
 
 	"fmt"
 )
 
 type UserService interface {
-	CreateUser(ctx context.Context, input *command.CreateUserInput) (*domain.User, error)
-	GetUser(ctx context.Context, input *command.UserIDInput) (*domain.User, error)
-	ListUsers(ctx context.Context, input *baseCmd.BaseInput) ([]*domain.User, error)
-	UpdateUser(ctx context.Context, input *command.UpdateUserInput) (*domain.User, error)
+	CreateUser(ctx context.Context, input *command.CreateUserInput) (*dto.UserDTO, error)
+	GetUser(ctx context.Context, input *command.UserIDInput) (*dto.UserDTO, error)
+	ListUsers(ctx context.Context, input *baseCmd.BaseInput) ([]*dto.UserDTO, error)
+	UpdateUser(ctx context.Context, input *command.UpdateUserInput) (*dto.UserDTO, error)
 	DeleteUser(ctx context.Context, input *command.UserIDInput) error
 }
-
+type ServiceDependencies struct {
+	Repo domain.UserRepository
+	Auth domain.IdentityProvider
+}
 type userService struct {
 	repo domain.UserRepository
-	auth auth.IdentityProvider
+	auth domain.IdentityProvider
 	*base.BaseService
 }
 
-func NewService(base *base.BaseService, auth auth.IdentityProvider, repo domain.UserRepository) UserService {
+func NewService(base *base.BaseService, dep *ServiceDependencies) UserService {
 	return &userService{
-		repo:        repo,
-		auth:        auth,
+		repo:        dep.Repo,
+		auth:        dep.Auth,
 		BaseService: base,
 	}
 }
 
-func (s *userService) CreateUser(ctx context.Context, input *command.CreateUserInput) (user *domain.User, err error) {
+func (s *userService) CreateUser(ctx context.Context, input *command.CreateUserInput) (user *dto.UserDTO, err error) {
 	// err = s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 	// 	BaseInput: input.BaseInput,
 	// 	Resource:  resource.User,
@@ -45,28 +49,37 @@ func (s *userService) CreateUser(ctx context.Context, input *command.CreateUserI
 	// if err != nil {
 	// 	return
 	// }
-	user, err = domain.New(input.TenantDomain, input.BranchName, input.Email, input.FirstName, input.LastName)
+	u, err := domain.New(input.TenantDomain, input.BranchName, input.Email, input.FirstName, input.LastName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
 
-	//user keycloak
+	//user in authentication
 	id, err := s.auth.CreateUser(ctx, input)
 	if err != nil {
 		return nil, fmt.Errorf("failed to save user auth: %w", err)
 	}
-	user.SetAuthID(id)
-	if err := s.repo.Create(ctx, user); err != nil {
+	u.SetAuthID(id)
+	//assign roles
+	err = s.auth.AssignRolesToUser(ctx, &command.AssignRolesInput{
+		BaseInput: input.BaseInput,
+		UserID:    id,
+		Roles:     input.Roles,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to assign user role auth: %w", err)
+	}
+	if err := s.repo.Create(ctx, u); err != nil {
 		return nil, fmt.Errorf("failed to save user: %w", err)
 	}
-	return user, nil
+	return dto.ToDTO(u, input.Roles), nil
 }
 
-func (s *userService) GetUser(ctx context.Context, input *command.UserIDInput) (*domain.User, error) {
+func (s *userService) GetUser(ctx context.Context, input *command.UserIDInput) (*dto.UserDTO, error) {
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
-		Resource:  resource.User,
-		Scope:     scope.View,
+		Resource:  resourceDomain.User,
+		Scope:     scopeDomain.View,
 	})
 	if err != nil {
 		return nil, err
@@ -75,27 +88,44 @@ func (s *userService) GetUser(ctx context.Context, input *command.UserIDInput) (
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
-	return user, nil
+	outRoles, err := s.getRolesString(ctx, &command.UserIDInput{
+		BaseInput: input.BaseInput,
+		UserID:    user.AuthID(),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return dto.ToDTO(user, outRoles), nil
 }
 
-func (s *userService) ListUsers(ctx context.Context, input *baseCmd.BaseInput) ([]*domain.User, error) {
+func (s *userService) ListUsers(ctx context.Context, input *baseCmd.BaseInput) (usersDTO []*dto.UserDTO, err error) {
 	users, err := s.repo.FindAll(ctx, input)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list users: %w", err)
 	}
-	return users, nil
+	for i := range users {
+		outRoles, err := s.getRolesString(ctx, &command.UserIDInput{
+			BaseInput: *input,
+			UserID:    users[i].AuthID(),
+		})
+		if err != nil {
+			return nil, err
+		}
+		usersDTO = append(usersDTO, dto.ToDTO(users[i], outRoles))
+	}
+	return
 }
 
-func (s *userService) UpdateUser(ctx context.Context, input *command.UpdateUserInput) (user *domain.User, err error) {
+func (s *userService) UpdateUser(ctx context.Context, input *command.UpdateUserInput) (user *dto.UserDTO, err error) {
 	err = s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
-		Resource:  resource.User,
-		Scope:     scope.Update,
+		Resource:  resourceDomain.User,
+		Scope:     scopeDomain.Update,
 	})
 	if err != nil {
 		return
 	}
-	user, err = s.repo.FindByID(ctx, &command.UserIDInput{
+	u, err := s.repo.FindByID(ctx, &command.UserIDInput{
 		BaseInput: baseCmd.BaseInput{
 			TenantDomain: input.TenantDomain,
 			BranchName:   input.BranchName,
@@ -106,33 +136,34 @@ func (s *userService) UpdateUser(ctx context.Context, input *command.UpdateUserI
 		return nil, fmt.Errorf("user not found: %w", err)
 	}
 
-	err = user.Update(input.Email, input.FirstName, input.LastName)
+	err = u.Update(input.Email, input.FirstName, input.LastName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update user: %w", err)
 	}
-	err = s.auth.UpdateUser(ctx, &command.UpdateUserInput{
-		BaseInput: input.BaseInput,
-		ID:        user.AuthID(),
-		Email:     user.Email(),
-		FirstName: user.FirstName(),
-		LastName:  user.LastName(),
-		Roles:     input.Roles,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to update auth user: %w", err)
-	}
+	//TODO: keycloak return 405 method not allowed...
+	// err = s.auth.UpdateUser(ctx, &command.UpdateUserInput{
+	// 	BaseInput: input.BaseInput,
+	// 	ID:        u.AuthID(),
+	// 	Email:     u.Email(),
+	// 	FirstName: u.FirstName(),
+	// 	LastName:  u.LastName(),
+	// 	Roles:     input.Roles,
+	// })
+	// if err != nil {
+	// 	return nil, fmt.Errorf("failed to update auth user: %w", err)
+	// }
 	if err := s.repo.Update(ctx, input); err != nil {
 		return nil, fmt.Errorf("failed to save updated user: %w", err)
 	}
 
-	return user, nil
+	return dto.ToDTO(u,input.Roles), nil
 }
 
 func (s *userService) DeleteUser(ctx context.Context, input *command.UserIDInput) (err error) {
 	err = s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
-		Resource:  resource.User,
-		Scope:     scope.Update,
+		Resource:  resourceDomain.User,
+		Scope:     scopeDomain.Update,
 	})
 	if err != nil {
 		return
@@ -153,4 +184,19 @@ func (s *userService) DeleteUser(ctx context.Context, input *command.UserIDInput
 		return fmt.Errorf("failed to delete user: %w", err)
 	}
 	return nil
+}
+
+func (s userService) getRolesString(ctx context.Context, input *command.UserIDInput) (roles []string, err error) {
+	r, err := s.auth.GetUserRoles(ctx, &command.UserRolesInput{
+		BaseInput: *&input.BaseInput,
+		UserID:    input.UserID,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user role: %w", err)
+	}
+
+	for j := range roles {
+		roles = append(roles, r[j].Name)
+	}
+	return
 }

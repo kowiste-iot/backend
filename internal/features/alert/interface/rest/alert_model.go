@@ -1,7 +1,7 @@
 package alerthandler
 
 import (
-	"ddd/internal/features/alert/domain"
+	"backend/internal/features/alert/domain"
 )
 
 type CreateAlertRequest struct {

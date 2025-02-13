@@ -1,18 +1,17 @@
 package app
 
 import (
+	"backend/internal/features/tenant/domain"
+	"backend/internal/features/tenant/domain/command"
+
+	roleDomain "backend/internal/features/role/domain"
+	appUser "backend/internal/features/user/app"
+	userCmd "backend/internal/features/user/domain/command"
+
+	"backend/shared/base"
+	baseCmd "backend/shared/base/command"
+	"backend/shared/validator"
 	"context"
-	"ddd/internal/features/tenant/domain"
-	"ddd/internal/features/tenant/domain/command"
-	appUser "ddd/internal/features/user/app"
-	userCmd "ddd/internal/features/user/domain/command"
-	appAuth "ddd/shared/auth/app"
-	auth "ddd/shared/auth/domain"
-	authCmd "ddd/shared/auth/domain/command"
-	"ddd/shared/auth/domain/role"
-	"ddd/shared/base"
-	baseCmd "ddd/shared/base/command"
-	"ddd/shared/validator"
 
 	"errors"
 	"fmt"
@@ -28,13 +27,13 @@ type TenantService interface {
 type ServiceDependencies struct {
 	Branch BranchService
 	User   appUser.UserService
-	Auth   *appAuth.Service
+	Tenant domain.TenantProvider
 	Repo   domain.TenantRepository
 }
 
 type tenantService struct {
 	repo   domain.TenantRepository
-	auth   *appAuth.Service
+	tenant domain.TenantProvider
 	user   appUser.UserService
 	branch BranchService
 	*base.BaseService
@@ -43,7 +42,7 @@ type tenantService struct {
 func NewTenantService(base *base.BaseService, dep *ServiceDependencies) TenantService {
 	return &tenantService{
 		repo:        dep.Repo,
-		auth:        dep.Auth,
+		tenant:      dep.Tenant,
 		user:        dep.User,
 		branch:      dep.Branch,
 		BaseService: base,
@@ -62,40 +61,30 @@ func (s tenantService) CreateTenant(ctx context.Context, input *command.CreateTe
 	if err != nil {
 		return nil, fmt.Errorf("failed to create tenant: %w", err)
 	}
-	i := authCmd.CreateTenantInput{
-		Domain:        input.Domain,
-		Name:          input.Name,
-		Description:   input.Description,
-		AdminEmail:    input.AdminEmail,
-		DefaultBranch: input.Branch,
-	}
-	//create keycloak realm
-	createdTenant, err := s.auth.CreateTenant(ctx, &i)
+
+	//create auth tenant
+	id, err := s.tenant.CreateTenant(ctx, tenant)
 	if err != nil {
 		return nil, err
 	}
-	tenant.SetAuthID(createdTenant.ID)
+	tenant.SetAuthID(id)
 
 	//Create default branch
 	defaultB := command.CreateBranchInput{
 		TenantDomain: tenant.Domain(),
 		Name:         input.Branch,
 		Description:  "Default Branch",
+		Default:      true,
 	}
 	createdBranch, err := s.branch.CreateBranch(ctx, &defaultB)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create default branch: %w", err)
 	}
 
-	//Create admins branch
-	adminB := command.CreateBranchInput{
-		TenantDomain: tenant.Domain(),
-		Name:         auth.AdminBranch,
-		Description:  "Admin Group",
-	}
-	adminBranch, err := s.branch.CreateBranch(ctx, &adminB)
+	//create admin group
+	adminGroup, err := s.tenant.CreateAdminGroup(ctx, tenant.Domain())
 	if err != nil {
-		return nil, fmt.Errorf("failed to create default branch: %w", err)
+		return nil, err
 	}
 
 	// Create Admin user
@@ -104,31 +93,20 @@ func (s tenantService) CreateTenant(ctx context.Context, input *command.CreateTe
 		Email:     input.AdminEmail,
 		FirstName: "admin",
 		LastName:  "user",
-		Roles:     []string{role.RoleAdmin},
+		Roles:     []string{roleDomain.RoleAdmin},
 	}
 	user, err := s.user.CreateUser(ctx, &u)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create default branch: %w", err)
 	}
 
-	//Assign role
-	r := authCmd.AssignRolesInput{
-		BaseInput: baseCmd.NewInput(tenant.Domain(), defaultB.Name),
-		UserID:    user.AuthID(),
-		Roles:     []string{role.RoleAdmin},
-	}
-	err = s.auth.AssignRoles(ctx, &r)
-	if err != nil {
-		return nil, fmt.Errorf("failed to assign default roles: %w", err)
-	}
-
 	//Assign to branch
-	ub := authCmd.UserToBranch{
+	ub := command.UserToBranch{
 		TenantDomain: tenant.Domain(),
-		UserID:   user.AuthID(),
-		Branchs:  []string{createdBranch.AuthBranchID(), adminBranch.AuthBranchID()},
+		UserID:       user.AuthID,
+		Branchs:      []string{createdBranch.AuthBranchID(), adminGroup},
 	}
-	err = s.auth.AssignUserToBranch(ctx, &ub)
+	err = s.branch.AssignUserToBranch(ctx, &ub)
 	if err != nil {
 		return nil, fmt.Errorf("failed to assign admin to branch: %w", err)
 	}

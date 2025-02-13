@@ -3,14 +3,14 @@ package dashboardhandler
 import (
 	"net/http"
 
-	"ddd/internal/features/dashboard/app"
-	"ddd/internal/features/dashboard/domain"
-	"ddd/internal/features/dashboard/domain/command"
-	baseCmd "ddd/shared/base/command"
-	ginhelp "ddd/shared/http/gin"
-	"ddd/shared/http/httputil"
-	"ddd/shared/logger"
-	"ddd/shared/pagination"
+	"backend/internal/features/dashboard/app"
+	"backend/internal/features/dashboard/domain"
+	"backend/internal/features/dashboard/domain/command"
+	baseCmd "backend/shared/base/command"
+	ginhelp "backend/shared/http/gin"
+	"backend/shared/http/httputil"
+	"backend/shared/logger"
+	"backend/shared/pagination"
 
 	"github.com/gin-gonic/gin"
 )
@@ -112,9 +112,9 @@ func (h *DashboardHandler) GetDashboard(c *gin.Context) {
 		}
 
 		h.logger.Error(c.Request.Context(), err, "Failed to get dashboard", map[string]interface{}{
-			"error":    err.Error(),
-			"tenantID": tenant.Domain(),
-			"dashboardID":  dashboardID,
+			"error":       err.Error(),
+			"tenantID":    tenant.Domain(),
+			"dashboardID": dashboardID,
 		})
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get dashboard"})
 		return
@@ -209,9 +209,9 @@ func (h *DashboardHandler) UpdateDashboard(c *gin.Context) {
 		}
 		tenantID, _ := httputil.GetTenant(ctx)
 		h.logger.Error(c.Request.Context(), err, "Failed to update dashboard", map[string]interface{}{
-			"error":    err.Error(),
-			"tenantID": tenantID,
-			"dashboardID":  dashboardID,
+			"error":       err.Error(),
+			"tenantID":    tenantID,
+			"dashboardID": dashboardID,
 		})
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update dashboard"})
 		return
@@ -255,9 +255,9 @@ func (h *DashboardHandler) DeleteDashboard(c *gin.Context) {
 		}
 		tenantID, _ := httputil.GetTenant(ctx)
 		h.logger.Error(c.Request.Context(), err, "Failed to delete dashboard", map[string]interface{}{
-			"error":    err.Error(),
-			"tenantID": tenantID,
-			"dashboardID":  dashboardID,
+			"error":       err.Error(),
+			"tenantID":    tenantID,
+			"dashboardID": dashboardID,
 		})
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

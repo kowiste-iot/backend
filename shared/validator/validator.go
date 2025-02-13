@@ -1,12 +1,13 @@
 package validator
 
 import (
-	"ddd/shared/auth/domain/role"
-	"ddd/shared/errors"
+
+	"backend/shared/errors"
 	"reflect"
 	"slices"
 	"strings"
 	"sync"
+	roleDomain"backend/internal/features/role/domain"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
@@ -15,13 +16,14 @@ import (
 var (
 	validate   *validator.Validate
 	once       sync.Once
-	validRoles []string 
-
+	validRoles []string
 )
+
 func InitValidator(roles []string) {
-    validRoles = roles
-    GetValidator()
+	validRoles = roles
+	GetValidator()
 }
+
 // validateUUIDv7 validates if a string is a valid UUIDv7
 func validateUUIDv7(fl validator.FieldLevel) bool {
 	value := fl.Field().String()
@@ -47,7 +49,7 @@ func validateRoles(fl validator.FieldLevel) bool {
 	}
 
 	for _, rol := range roles {
-		if !slices.ContainsFunc(role.AllRoles(validRoles), func(r role.Role) bool {
+		if !slices.ContainsFunc(roleDomain.AllRoles(validRoles), func(r roleDomain.Role) bool {
 			return r.Name == rol
 		}) {
 			return false

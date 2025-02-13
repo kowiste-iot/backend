@@ -3,31 +3,31 @@ package alerthandler
 import (
 	"net/http"
 
-	"ddd/internal/features/alert/app"
-	"ddd/internal/features/alert/domain"
-	"ddd/internal/features/alert/domain/command"
-	baseCmd "ddd/shared/base/command"
-	ginhelp "ddd/shared/http/gin"
-	"ddd/shared/http/httputil"
-	"ddd/shared/logger"
-	"ddd/shared/pagination"
+	"backend/internal/features/alert/app"
+	"backend/internal/features/alert/domain"
+	"backend/internal/features/alert/domain/command"
+	baseCmd "backend/shared/base/command"
+	ginhelp "backend/shared/http/gin"
+	"backend/shared/http/httputil"
+	"backend/shared/logger"
+	"backend/shared/pagination"
 
 	"github.com/gin-gonic/gin"
 )
 
 type AlertHandler struct {
-	logger         logger.Logger
+	logger       logger.Logger
 	AlertService app.AlertService
 }
 
 type Dependencies struct {
-	Logger         logger.Logger
+	Logger       logger.Logger
 	AlertService app.AlertService
 }
 
 func New(deps Dependencies) *AlertHandler {
 	return &AlertHandler{
-		logger:         deps.Logger,
+		logger:       deps.Logger,
 		AlertService: deps.AlertService,
 	}
 }
@@ -101,8 +101,8 @@ func (h *AlertHandler) GetAlert(c *gin.Context) {
 		return
 	}
 	input := command.AlertIDInput{
-		BaseInput:   baseCmd.NewInput(tenant.Domain(), branch),
-		AlertID: alertID,
+		BaseInput: baseCmd.NewInput(tenant.Domain(), branch),
+		AlertID:   alertID,
 	}
 	result, err := h.AlertService.GetAlert(ctx, &input)
 	if err != nil {
@@ -112,9 +112,9 @@ func (h *AlertHandler) GetAlert(c *gin.Context) {
 		}
 
 		h.logger.Error(c.Request.Context(), err, "Failed to get measure", map[string]interface{}{
-			"error":       err.Error(),
-			"tenantID":    tenant.Domain(),
-			"alertID": alertID,
+			"error":    err.Error(),
+			"tenantID": tenant.Domain(),
+			"alertID":  alertID,
 		})
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get measure"})
 		return
@@ -209,9 +209,9 @@ func (h *AlertHandler) UpdateAlert(c *gin.Context) {
 		}
 		tenantID, _ := httputil.GetTenant(ctx)
 		h.logger.Error(c.Request.Context(), err, "Failed to update measure", map[string]interface{}{
-			"error":       err.Error(),
-			"tenantID":    tenantID,
-			"alertID": alertID,
+			"error":    err.Error(),
+			"tenantID": tenantID,
+			"alertID":  alertID,
 		})
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update measure"})
 		return
@@ -244,8 +244,8 @@ func (h *AlertHandler) DeleteAlert(c *gin.Context) {
 		return
 	}
 	input := command.AlertIDInput{
-		BaseInput:   baseCmd.NewInput(tenant.Domain(), branch),
-		AlertID: alertID,
+		BaseInput: baseCmd.NewInput(tenant.Domain(), branch),
+		AlertID:   alertID,
 	}
 	err = h.AlertService.DeleteAlert(ctx, &input)
 	if err != nil {
@@ -255,9 +255,9 @@ func (h *AlertHandler) DeleteAlert(c *gin.Context) {
 		}
 		tenantID, _ := httputil.GetTenant(ctx)
 		h.logger.Error(c.Request.Context(), err, "Failed to delete measure", map[string]interface{}{
-			"error":       err.Error(),
-			"tenantID":    tenantID,
-			"alertID": alertID,
+			"error":    err.Error(),
+			"tenantID": tenantID,
+			"alertID":  alertID,
 		})
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

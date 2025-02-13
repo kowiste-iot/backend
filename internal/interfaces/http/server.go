@@ -1,31 +1,29 @@
 package http
 
 import (
+	actionhandler "backend/internal/features/action/interface/rest"
+	alerthandler "backend/internal/features/alert/interface/rest"
+	assethandler "backend/internal/features/asset/interface/rest"
+	dashboardhandler "backend/internal/features/dashboard/interface/rest"
+	devicehandler "backend/internal/features/device/interface/rest"
+	measurehandler "backend/internal/features/measure/interface/rest"
+	rolehandler "backend/internal/features/role/interface/rest"
+	tenanthandler "backend/internal/features/tenant/interface/rest"
+	userhandler "backend/internal/features/user/interface/rest"
+	resourcehandler "backend/internal/features/resource/interface/rest"
+	scopehandler "backend/internal/features/scope/interface/rest"
+	"backend/pkg/config"
+	"backend/shared/authentication/domain"
+	"backend/shared/logger"
 	"context"
 	"fmt"
 	"net/http"
 	"time"
 
-	actionhandler "ddd/internal/features/action/interface/rest"
-	alerthandler "ddd/internal/features/alert/interface/rest"
-	assethandler "ddd/internal/features/asset/interface/rest"
-	dashboardhandler "ddd/internal/features/dashboard/interface/rest"
-	devicehandler "ddd/internal/features/device/interface/rest"
-	measurehandler "ddd/internal/features/measure/interface/rest"
-	tenanthandler "ddd/internal/features/tenant/interface/rest"
-	userhandler "ddd/internal/features/user/interface/rest"
-	branchhandler "ddd/internal/interfaces/http/handlers/branch"
-	resourcehandler "ddd/internal/interfaces/http/handlers/resource"
-	rolehandler "ddd/internal/interfaces/http/handlers/roles"
-	scopehandler "ddd/internal/interfaces/http/handlers/scopes"
-	"ddd/pkg/config"
-	"ddd/shared/auth/domain/validation"
-	"ddd/shared/logger"
-
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 
-	wshandler "ddd/internal/interfaces/http/handlers/websocket"
+	wshandler "backend/internal/interfaces/http/handlers/websocket"
 )
 
 type Server struct {
@@ -33,11 +31,12 @@ type Server struct {
 	logger           logger.Logger
 	router           *gin.Engine
 	httpServer       *http.Server
-	auth             validation.AuthProvider
+	auth             domain.TokenValidator
 	tenantHandler    *tenanthandler.TenantHandler
 	assetHandler     *assethandler.AssetHandler
 	measureHandler   *measurehandler.MeasureHandler
 	dashboardHandler *dashboardhandler.DashboardHandler
+	widgetHandler    *dashboardhandler.WidgetHandler
 	deviceHandler    *devicehandler.DeviceHandler
 	actionHandler    *actionhandler.ActionHandler
 	alertHandler     *alerthandler.AlertHandler
@@ -50,14 +49,15 @@ type Server struct {
 }
 
 type ServerDependencies struct {
-	Authentication   validation.AuthProvider
+	Authentication   domain.TokenValidator
 	RolesHandler     *rolehandler.RoleHandler
 	ResourceHandler  *resourcehandler.ResourceHandler
-	BranchHandler    *branchhandler.BranchHandler
+	BranchHandler    *tenanthandler.BranchHandler
 	TenantHandler    *tenanthandler.TenantHandler
 	AssetHandler     *assethandler.AssetHandler
 	MeasureHandler   *measurehandler.MeasureHandler
 	DashboardHandler *dashboardhandler.DashboardHandler
+	WidgetHandler    *dashboardhandler.WidgetHandler
 	DeviceHandler    *devicehandler.DeviceHandler
 	ActionHandler    *actionhandler.ActionHandler
 	AlertHandler     *alerthandler.AlertHandler
@@ -92,6 +92,7 @@ func NewServer(cfg *config.Config, logger logger.Logger, deps ServerDependencies
 		tenantHandler:    deps.TenantHandler,
 		assetHandler:     deps.AssetHandler,
 		dashboardHandler: deps.DashboardHandler,
+		widgetHandler:    deps.WidgetHandler,
 		deviceHandler:    deps.DeviceHandler,
 		actionHandler:    deps.ActionHandler,
 		alertHandler:     deps.AlertHandler,
@@ -100,7 +101,6 @@ func NewServer(cfg *config.Config, logger logger.Logger, deps ServerDependencies
 		wsNotifyHandler:  deps.WSNotifyHandler,
 		tokenHandler:     deps.TokenHandler,
 		measureHandler:   deps.MeasureHandler,
-		// widgetHandler:    deps.WidgetHandler,
 	}
 }
 

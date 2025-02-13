@@ -1,11 +1,11 @@
 package repository
 
 import (
+	"backend/internal/features/tenant/domain"
+	gormhelper "backend/shared/gorm"
+	"backend/shared/http/httputil"
+	"backend/shared/pagination"
 	"context"
-	"ddd/internal/features/tenant/domain"
-	gormhelper "ddd/shared/gorm"
-	"ddd/shared/http/httputil"
-	"ddd/shared/pagination"
 	"errors"
 	"time"
 

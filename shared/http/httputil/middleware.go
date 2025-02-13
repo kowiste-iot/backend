@@ -1,13 +1,11 @@
 package httputil
 
 import (
-	"ddd/shared/errors"
-	"ddd/shared/logger"
+	"backend/shared/errors"
+	"backend/shared/logger"
 
 	"github.com/gin-gonic/gin"
 )
-
-
 
 // func LoggerMiddleware(logger *logger.Logger) gin.HandlerFunc {
 // 	return func(c *gin.Context) {

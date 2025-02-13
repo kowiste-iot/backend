@@ -1,8 +1,8 @@
 package http
 
 import (
-	ginhelp "ddd/shared/http/gin"
-	"ddd/shared/http/httputil"
+	ginhelp "backend/shared/http/gin"
+	"backend/shared/http/httputil"
 	"net/http"
 	"strings"
 
@@ -60,6 +60,14 @@ func (s *Server) setupRoutes() {
 					dashboards.GET(":id", s.dashboardHandler.GetDashboard)
 					dashboards.PUT(":id", s.dashboardHandler.UpdateDashboard)
 					dashboards.DELETE(":id", s.dashboardHandler.DeleteDashboard)
+					widgets := dashboards.Group(":id/widgets")
+					{
+						widgets.POST("", s.widgetHandler.CreateWidget)
+						widgets.GET("", s.widgetHandler.ListWidgets)
+						widgets.GET(":wid", s.widgetHandler.GetWidget)
+						widgets.PUT(":wid", s.widgetHandler.UpdateWidget)
+						widgets.DELETE(":wid", s.widgetHandler.DeleteWidget)
+					}
 				}
 				// Device routes
 				devices := apiBranch.Group("devices")
@@ -115,34 +123,6 @@ func (s *Server) setupRoutes() {
 				{
 					scopes.GET("", s.scopesHandler.ListRoles)
 				}
-
-				// 	// Measure routes
-				// 	measures := v1.Group("/measures")
-				// 	{
-				// 		measures.POST("", s.measureHandler.Create)
-				// 		measures.GET("", s.measureHandler.List)
-				// 		measures.GET("/:id", s.measureHandler.Get)
-				// 	}
-
-				// 	// Dashboard routes
-				// 	dashboards := v1.Group("/dashboards")
-				// 	{
-				// 		dashboards.POST("", s.dashboardHandler.Create)
-				// 		dashboards.GET("", s.dashboardHandler.List)
-				// 		dashboards.GET("/:id", s.dashboardHandler.Get)
-				// 		dashboards.PUT("/:id", s.dashboardHandler.Update)
-				// 		dashboards.DELETE("/:id", s.dashboardHandler.Delete)
-				// 	}
-
-				// 	// Widget routes
-				// 	widgets := v1.Group("/widgets")
-				// 	{
-				// 		widgets.POST("", s.widgetHandler.Create)
-				// 		widgets.GET("", s.widgetHandler.List)
-				// 		widgets.GET("/:id", s.widgetHandler.Get)
-				// 		widgets.PUT("/:id", s.widgetHandler.Update)
-				// 		widgets.DELETE("/:id", s.widgetHandler.Delete)
-				// 	}
 			}
 
 		}

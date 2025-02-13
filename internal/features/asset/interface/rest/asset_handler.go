@@ -3,14 +3,14 @@ package assethandler
 import (
 	"net/http"
 
-	"ddd/internal/features/asset/app"
-	"ddd/internal/features/asset/domain"
-	"ddd/internal/features/asset/domain/command"
-	baseCmd "ddd/shared/base/command"
-	ginhelp "ddd/shared/http/gin"
-	"ddd/shared/http/httputil"
-	"ddd/shared/logger"
-	"ddd/shared/pagination"
+	"backend/internal/features/asset/app"
+	"backend/internal/features/asset/domain"
+	"backend/internal/features/asset/domain/command"
+	baseCmd "backend/shared/base/command"
+	ginhelp "backend/shared/http/gin"
+	"backend/shared/http/httputil"
+	"backend/shared/logger"
+	"backend/shared/pagination"
 
 	"github.com/gin-gonic/gin"
 )

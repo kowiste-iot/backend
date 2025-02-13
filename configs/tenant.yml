@@ -43,6 +43,12 @@ authorization:
       permissions:
         worker:
           - view
+    widget-resource:
+      name: widget
+      type: base
+      permissions:
+        worker:
+          - view
     device-resource:
       name: device
       type: base
