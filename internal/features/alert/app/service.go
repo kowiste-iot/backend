@@ -3,8 +3,8 @@ package app
 import (
 	"backend/internal/features/alert/domain"
 	"backend/internal/features/alert/domain/command"
-	"backend/shared/auth/domain/resource"
-	"backend/shared/auth/domain/scope"
+	resourceDomain "backend/internal/features/resource/domain"
+	scopeDomain "backend/internal/features/scope/domain"
 	"backend/shared/base"
 	baseCmd "backend/shared/base/command"
 	"backend/shared/validator"
@@ -33,8 +33,8 @@ func NewService(base *base.BaseService, repo domain.AlertRepository) *alertServi
 func (s *alertService) CreateAlert(ctx context.Context, input *command.CreateAlertInput) (*domain.Alert, error) {
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
-		Resource:  resource.Alert,
-		Scope:     scope.Create,
+		Resource:  resourceDomain.Alert,
+		Scope:     scopeDomain.Create,
 	})
 	if err != nil {
 		return nil, err
@@ -59,8 +59,8 @@ func (s *alertService) CreateAlert(ctx context.Context, input *command.CreateAle
 func (s *alertService) GetAlert(ctx context.Context, input *command.AlertIDInput) (*domain.Alert, error) {
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
-		Resource:  resource.Alert,
-		Scope:     scope.View,
+		Resource:  resourceDomain.Alert,
+		Scope:     scopeDomain.View,
 	})
 	if err != nil {
 		return nil, err
@@ -75,8 +75,8 @@ func (s *alertService) GetAlert(ctx context.Context, input *command.AlertIDInput
 func (s *alertService) ListAlerts(ctx context.Context, input *baseCmd.BaseInput) ([]*domain.Alert, error) {
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: *input,
-		Resource:  resource.Alert,
-		Scope:     scope.View,
+		Resource:  resourceDomain.Alert,
+		Scope:     scopeDomain.View,
 	})
 	if err != nil {
 		return nil, err
@@ -91,8 +91,8 @@ func (s *alertService) ListAlerts(ctx context.Context, input *baseCmd.BaseInput)
 func (s *alertService) UpdateAlert(ctx context.Context, input *command.UpdateAlertInput) (*domain.Alert, error) {
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
-		Resource:  resource.Alert,
-		Scope:     scope.Update,
+		Resource:  resourceDomain.Alert,
+		Scope:     scopeDomain.Update,
 	})
 	if err != nil {
 		return nil, err
@@ -115,8 +115,8 @@ func (s *alertService) DeleteAlert(ctx context.Context, input *command.AlertIDIn
 
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
-		Resource:  resource.Alert,
-		Scope:     scope.Delete,
+		Resource:  resourceDomain.Alert,
+		Scope:     scopeDomain.Delete,
 	})
 	if err != nil {
 		return err

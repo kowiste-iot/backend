@@ -6,6 +6,7 @@ import (
 
 	appRole "backend/internal/features/role/app"
 	rolesDomain "backend/internal/features/role/domain"
+	scopeDomain "backend/internal/features/scope/domain"
 	roleCmd "backend/internal/features/role/domain/command"
 
 	appScope "backend/internal/features/scope/app"
@@ -13,7 +14,7 @@ import (
 	appPermission "backend/internal/features/permission/app"
 	permissionDomain "backend/internal/features/permission/domain"
 
-	"backend/shared/auth/domain/scope"
+
 	"backend/shared/base"
 	baseCmd "backend/shared/base/command"
 	"backend/shared/validator"
@@ -69,7 +70,7 @@ func (s *resourceService) CreateResource(ctx context.Context, input *command.Cre
 	if err != nil {
 		return nil, fmt.Errorf("validation error %s", err.Error())
 	}
-	r, err := domain.New(command.ResourceName(input.Name), input.Type, input.Scopes, input.DisplayName)
+	r, err := domain.New(input.Name, input.Type, input.Scopes, input.DisplayName)
 	if err != nil {
 		return
 	}
@@ -85,7 +86,7 @@ func (s *resourceService) ListResources(ctx context.Context, input *baseCmd.Base
 	err = s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: *input,
 		Resource:  domain.ResourceR,
-		Scope:     scope.View,
+		Scope:     scopeDomain.View,
 	})
 	if err != nil {
 		return nil, err
@@ -124,7 +125,7 @@ func (s *resourceService) UpdateResource(ctx context.Context, input *command.Upd
 	err = s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
 		Resource:  domain.ResourceR,
-		Scope:     scope.Update,
+		Scope:     scopeDomain.Update,
 	})
 	if err != nil {
 		return nil, err

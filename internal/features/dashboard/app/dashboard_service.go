@@ -3,8 +3,8 @@ package app
 import (
 	"backend/internal/features/dashboard/domain"
 	"backend/internal/features/dashboard/domain/command"
-	"backend/shared/auth/domain/resource"
-	"backend/shared/auth/domain/scope"
+	resourceDomain "backend/internal/features/resource/domain"
+	scopeDomain "backend/internal/features/scope/domain"
 	"backend/shared/base"
 	baseCmd "backend/shared/base/command"
 	"backend/shared/validator"
@@ -33,8 +33,8 @@ func NewService(base *base.BaseService, repo domain.DashboardRepository) Dashboa
 func (s *dashboardService) CreateDashboard(ctx context.Context, input *command.CreateDashboardInput) (*domain.Dashboard, error) {
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
-		Resource:  resource.Dashboard,
-		Scope:     scope.Create,
+		Resource:  resourceDomain.Dashboard,
+		Scope:     scopeDomain.Create,
 	})
 	if err != nil {
 		return nil, err
@@ -59,8 +59,8 @@ func (s *dashboardService) CreateDashboard(ctx context.Context, input *command.C
 func (s *dashboardService) GetDashboard(ctx context.Context, input *command.DashboardIDInput) (*domain.Dashboard, error) {
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
-		Resource:  resource.Dashboard,
-		Scope:     scope.View,
+		Resource:  resourceDomain.Dashboard,
+		Scope:     scopeDomain.View,
 	})
 	if err != nil {
 		return nil, err
@@ -75,8 +75,8 @@ func (s *dashboardService) GetDashboard(ctx context.Context, input *command.Dash
 func (s *dashboardService) ListDashboards(ctx context.Context, input *baseCmd.BaseInput) ([]*domain.Dashboard, error) {
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: *input,
-		Resource:  resource.Dashboard,
-		Scope:     scope.View,
+		Resource:  resourceDomain.Dashboard,
+		Scope:     scopeDomain.View,
 	})
 	if err != nil {
 		return nil, err
@@ -91,8 +91,8 @@ func (s *dashboardService) ListDashboards(ctx context.Context, input *baseCmd.Ba
 func (s *dashboardService) UpdateDashboard(ctx context.Context, input *command.UpdateDashboardInput) (*domain.Dashboard, error) {
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
-		Resource:  resource.Dashboard,
-		Scope:     scope.Update,
+		Resource:  resourceDomain.Dashboard,
+		Scope:     scopeDomain.Update,
 	})
 	if err != nil {
 		return nil, err
@@ -115,8 +115,8 @@ func (s *dashboardService) DeleteDashboard(ctx context.Context, input *command.D
 
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
-		Resource:  resource.Dashboard,
-		Scope:     scope.Delete,
+		Resource:  resourceDomain.Dashboard,
+		Scope:     scopeDomain.Delete,
 	})
 	if err != nil {
 		return err

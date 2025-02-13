@@ -31,6 +31,10 @@ func (ks *ScopeKeycloak) CreateScope(ctx context.Context, input *baseCmd.BaseInp
 		Name:        &sc.Name,
 		DisplayName: &sc.DisplayName,
 	}
+	err = ks.FetchClient(ctx, input)
+	if err != nil {
+		return nil, fmt.Errorf("error getting client: %w", err)
+	}
 
 	createdScope, err := ks.Client.CreateScope(
 		ctx,

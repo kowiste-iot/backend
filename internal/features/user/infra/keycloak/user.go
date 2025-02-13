@@ -4,7 +4,8 @@ import (
 	roleDomain "backend/internal/features/role/domain"
 	"backend/internal/features/user/domain"
 	"backend/internal/features/user/domain/command"
-	authCmd "backend/shared/authentication/domain/command"
+		tenantCmd"backend/internal/features/tenant/domain/command"
+
 	"context"
 	"fmt"
 
@@ -154,6 +155,6 @@ func (uk Userkeycloak) RemoveRolesFromUser(ctx context.Context, input *command.R
 		removeRoles = append(removeRoles, *role)
 	}
 	err = uk.Client.DeleteClientRolesFromUser(ctx, token.AccessToken,
-		input.TenantDomain, authCmd.ClientName(input.BranchName), input.UserID, removeRoles)
+		input.TenantDomain, tenantCmd.ClientName(input.BranchName), input.UserID, removeRoles)
 	return
 }

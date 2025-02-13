@@ -1,10 +1,10 @@
 package app
 
 import (
+	resourceDomain "backend/internal/features/resource/domain"
 	"backend/internal/features/role/domain"
+	scopeDomain "backend/internal/features/scope/domain"
 	"backend/internal/features/role/domain/command"
-	"backend/shared/auth/domain/scope"
-	resource "backend/shared/authorization/domain"
 	"backend/shared/base"
 	baseCmd "backend/shared/base/command"
 	"backend/shared/validator"
@@ -15,7 +15,7 @@ import (
 
 type RoleService interface {
 	CreateRole(ctx context.Context, input *command.CreateRoleInput) (*domain.Role, error)
-	CreateDefaultRoles(ctx context.Context, input *command.CreateRoleInput) error
+	CreateDefaultRoles(ctx context.Context, input *command.CreateRoleInput) (*domain.Role, error)
 	GetRole(ctx context.Context, input *command.RoleIDInput) (*domain.Role, error)
 	ListRoles(ctx context.Context, input *baseCmd.BaseInput) ([]domain.Role, error)
 	DeleteRole(ctx context.Context, input *command.RoleIDInput) error
@@ -55,7 +55,7 @@ func (s *roleService) CreateRole(ctx context.Context, input *command.CreateRoleI
 	if isDefault {
 		return nil, fmt.Errorf("default role")
 	}
-	id, err := s.roleProvider.CreateRole(ctx, &command.CreateRoleInput{
+	role, err := s.roleProvider.CreateRole(ctx, &command.CreateRoleInput{
 		BaseInput:   input.BaseInput,
 		Name:        input.Name,
 		Description: input.Description,
@@ -64,11 +64,11 @@ func (s *roleService) CreateRole(ctx context.Context, input *command.CreateRoleI
 		return nil, fmt.Errorf("failed to create asset: %w", err)
 	}
 
-	return domain.New(id, input.Name), nil
+	return domain.New(role.ID, input.Name), nil
 }
 
-// CreateDefaultRoles use for
-func (s *roleService) CreateDefaultRoles(ctx context.Context, input *command.CreateRoleInput) error {
+// CreateDefaultRoles use for bypass validation
+func (s *roleService) CreateDefaultRoles(ctx context.Context, input *command.CreateRoleInput) (role *domain.Role, err error) {
 	// err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 	// 	BaseInput: input.BaseInput,
 	// 	Resource:  resource.ResourceAsset,
@@ -78,23 +78,23 @@ func (s *roleService) CreateDefaultRoles(ctx context.Context, input *command.Cre
 	// 	return nil, err
 	// }
 
-	_, err := s.roleProvider.CreateRole(ctx, &command.CreateRoleInput{
+	role, err = s.roleProvider.CreateRole(ctx, &command.CreateRoleInput{
 		BaseInput:   input.BaseInput,
 		Name:        input.Name,
 		Description: input.Description,
 	})
 	if err != nil {
-		return fmt.Errorf("failed to create initial role %s: %w", input.Name, err)
+		return nil, fmt.Errorf("failed to create initial role %s: %w", input.Name, err)
 	}
 
-	return nil
+	return role, nil
 }
 
 func (s *roleService) GetRole(ctx context.Context, input *command.RoleIDInput) (*domain.Role, error) {
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
-		Resource:  resource.ResourceAsset,
-		Scope:     scope.View,
+		Resource:  resourceDomain.Role,
+		Scope:     scopeDomain.View,
 	})
 	if err != nil {
 		return nil, err
@@ -109,8 +109,8 @@ func (s *roleService) GetRole(ctx context.Context, input *command.RoleIDInput) (
 func (s *roleService) ListRoles(ctx context.Context, input *baseCmd.BaseInput) ([]domain.Role, error) {
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: *input,
-		Resource:  resource.ResourceAsset,
-		Scope:     scope.View,
+		Resource:  resourceDomain.Role,
+		Scope:     scopeDomain.View,
 	})
 	if err != nil {
 		return nil, err
@@ -126,8 +126,8 @@ func (s *roleService) DeleteRole(ctx context.Context, input *command.RoleIDInput
 
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
-		Resource:  resource.ResourceAsset,
-		Scope:     scope.Delete,
+		Resource:  resourceDomain.Role,
+		Scope:     scopeDomain.Delete,
 	})
 	if err != nil {
 		return err

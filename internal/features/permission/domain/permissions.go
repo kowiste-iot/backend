@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"backend/shared/auth/domain/command"
 	"backend/internal/features/role/domain"
 
 	"errors"
@@ -16,7 +15,7 @@ func (rs Permissions) MapRoles(roles domain.Roles, filterAdmin bool) (permission
 			continue
 		}
 		for j := range rs[i].Policies {
-			role := roles.GetByName(command.PolicyToRole(rs[i].Policies[j]))
+			role := roles.GetByName(domain.PolicyToRole(rs[i].Policies[j]))
 			if role == nil {
 				return nil, errors.New("role not found")
 			}

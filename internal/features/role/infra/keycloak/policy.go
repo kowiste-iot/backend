@@ -4,27 +4,13 @@ import (
 	baseCmd "backend/shared/base/command"
 	"context"
 	"fmt"
+	"backend/internal/features/role/domain"
 
 	"github.com/Nerzal/gocloak/v13"
 	"github.com/go-resty/resty/v2"
 )
 
-const (
-	TypeRole  string = "role"
-	Enforcing string = "ENFORCING"
-)
 
-const (
-	TypeScope    string = "scope"
-	TypeResource string = "resource"
-)
-const (
-	DecisionUnanimous   string = "UNANIMOUS"
-	DecisionAffirmative string = "AFFIRMATIVE"
-)
-const (
-	LogicPositive string = "POSITIVE"
-)
 
 type policy struct {
 	ID               string   `json:"id,omitempty"`
@@ -55,7 +41,7 @@ func (ks *RoleKeycloak) createPolicy(ctx context.Context, tenantID, clientID str
 		Name:       p.Name,
 		Roles:      roleDefs,
 		FetchRoles: true,
-		Logic:      LogicPositive,
+		Logic:      domain.LogicPositive,
 	}
 	createdID, err := createRolePolicy(ctx, ks.Config.Host, token.AccessToken, tenantID, clientID, pol)
 

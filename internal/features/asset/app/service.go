@@ -3,8 +3,8 @@ package app
 import (
 	"backend/internal/features/asset/domain"
 	"backend/internal/features/asset/domain/command"
-	"backend/shared/auth/domain/resource"
-	"backend/shared/auth/domain/scope"
+	resourceDomain "backend/internal/features/resource/domain"
+	scopeDomain "backend/internal/features/scope/domain"
 	"backend/shared/base"
 	baseCmd "backend/shared/base/command"
 	"backend/shared/validator"
@@ -34,8 +34,8 @@ func NewService(base *base.BaseService, repo domain.AssetRepository) AssetServic
 func (s *assetService) CreateAsset(ctx context.Context, input *command.CreateAssetInput) (*domain.Asset, error) {
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
-		Resource:  resource.Asset,
-		Scope:     scope.Create,
+		Resource:  resourceDomain.Asset,
+		Scope:     scopeDomain.Create,
 	})
 	if err != nil {
 		return nil, err
@@ -63,8 +63,8 @@ func (s *assetService) CreateAsset(ctx context.Context, input *command.CreateAss
 func (s *assetService) GetAsset(ctx context.Context, input *command.AssetIDInput) (*domain.Asset, error) {
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
-		Resource:  resource.Asset,
-		Scope:     scope.View,
+		Resource:  resourceDomain.Asset,
+		Scope:     scopeDomain.View,
 	})
 	if err != nil {
 		return nil, err
@@ -79,8 +79,8 @@ func (s *assetService) GetAsset(ctx context.Context, input *command.AssetIDInput
 func (s *assetService) ListAssets(ctx context.Context, input *baseCmd.BaseInput) ([]*domain.Asset, error) {
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: *input,
-		Resource:  resource.Asset,
-		Scope:     scope.View,
+		Resource:  resourceDomain.Asset,
+		Scope:     scopeDomain.View,
 	})
 	if err != nil {
 		return nil, err
@@ -95,8 +95,8 @@ func (s *assetService) ListAssets(ctx context.Context, input *baseCmd.BaseInput)
 func (s *assetService) UpdateAsset(ctx context.Context, input *command.UpdateAssetInput) (*domain.Asset, error) {
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
-		Resource:  resource.Asset,
-		Scope:     scope.Update,
+		Resource:  resourceDomain.Asset,
+		Scope:     scopeDomain.Update,
 	})
 	if err != nil {
 		return nil, err
@@ -119,8 +119,8 @@ func (s *assetService) DeleteAsset(ctx context.Context, input *command.AssetIDIn
 
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
-		Resource:  resource.Asset,
-		Scope:     scope.Delete,
+		Resource:  resourceDomain.Asset,
+		Scope:     scopeDomain.Delete,
 	})
 	if err != nil {
 		return err

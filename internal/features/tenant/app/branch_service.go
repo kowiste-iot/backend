@@ -5,18 +5,23 @@ import (
 	"backend/internal/features/tenant/domain/command"
 	"backend/internal/features/user/dto"
 	"backend/pkg/config"
-	"backend/shared/auth/domain/role"
+
 	"backend/shared/util"
 
 	"backend/shared/base"
 	baseCmd "backend/shared/base/command"
 
 	appRole "backend/internal/features/role/app"
+	roleDomain "backend/internal/features/role/domain"
 	roleCmd "backend/internal/features/role/domain/command"
 
 	appResource "backend/internal/features/resource/app"
 	resourceDomain "backend/internal/features/resource/domain"
 	resourceCmd "backend/internal/features/resource/domain/command"
+
+	appPermission "backend/internal/features/permission/app"
+	permissionDomain "backend/internal/features/permission/domain"
+	permissionCmd "backend/internal/features/permission/domain/command"
 
 	appScope "backend/internal/features/scope/app"
 	scopeDomain "backend/internal/features/scope/domain"
@@ -38,20 +43,22 @@ type BranchService interface {
 	RemoveUserFromBranch(ctx context.Context, input *command.UserToBranch) error
 }
 type BranchDependencies struct {
-	Branch   domain.BranchProvider
-	Role     appRole.RoleService
-	Scope    appScope.ScopeService
-	Resource appResource.ResourceService
-	Repo     domain.BranchRepository
-	Config   *config.TenantConfiguration
+	Branch     domain.BranchProvider
+	Role       appRole.RoleService
+	Scope      appScope.ScopeService
+	Resource   appResource.ResourceService
+	Permission appPermission.PermissionService
+	Repo       domain.BranchRepository
+	Config     *config.TenantConfiguration
 }
 type branchService struct {
-	repo     domain.BranchRepository
-	branch   domain.BranchProvider
-	role     appRole.RoleService
-	scope    appScope.ScopeService
-	resource appResource.ResourceService
-	config   *config.TenantConfiguration
+	repo       domain.BranchRepository
+	branch     domain.BranchProvider
+	role       appRole.RoleService
+	scope      appScope.ScopeService
+	resource   appResource.ResourceService
+	permission appPermission.PermissionService
+	config     *config.TenantConfiguration
 	*base.BaseService
 }
 
@@ -62,6 +69,7 @@ func NewBranchService(base *base.BaseService, dep *BranchDependencies) BranchSer
 		role:        dep.Role,
 		scope:       dep.Scope,
 		resource:    dep.Resource,
+		permission:  dep.Permission,
 		config:      dep.Config,
 		BaseService: base,
 	}
@@ -96,11 +104,15 @@ func (s *branchService) CreateBranch(ctx context.Context, input *command.CreateB
 		BranchName:   input.Name,
 	}
 	branch.SetAuthBranchID(branchID)
-	//Assign admins to created branch
-	err = s.branch.AssignAdminsToBranch(ctx, &baseInput)
-	if err != nil {
-		return nil, err
+
+	if !input.Default {
+		//Assign admins to created branch when is not default branch
+		err = s.branch.AssignAdminsToBranch(ctx, &baseInput)
+		if err != nil {
+			return nil, err
+		}
 	}
+
 	//add scopes to group
 	for _, scName := range scopeDomain.AllScopes() {
 		_, err := s.scope.CreateScope(ctx, &scopeCmd.CreateScopeInput{
@@ -113,24 +125,26 @@ func (s *branchService) CreateBranch(ctx context.Context, input *command.CreateB
 			return nil, err
 		}
 	}
+	policies := make(map[string]string)
 
 	//Roles, create default roles
-	for _, role := range role.AllRoles(s.config.Authorization.Roles) {
+	for _, role := range roleDomain.AllRoles(s.config.Authorization.Roles) {
 		input := roleCmd.CreateRoleInput{
 			BaseInput:   baseInput,
 			Name:        role.Name,
 			Description: role.Description,
 		}
-		err = s.role.CreateDefaultRoles(ctx, &input)
+		r, err := s.role.CreateDefaultRoles(ctx, &input)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create auth role: %w", err)
 		}
+		policies[r.Name] = r.PolicyID
 	}
 
 	//create resources (and permissions) in branch
 	resources := resourceDomain.EndpointsResources(s.config.Authorization.Resources)
 	for _, res := range resources {
-		_, err = s.resource.CreateResource(ctx, &resourceCmd.CreateResourceInput{
+		createdResource, err := s.resource.CreateResource(ctx, &resourceCmd.CreateResourceInput{
 			BaseInput:   baseInput,
 			Name:        resourceCmd.ResourceName(res.Name),
 			DisplayName: res.Name,
@@ -140,8 +154,49 @@ func (s *branchService) CreateBranch(ctx context.Context, input *command.CreateB
 		if err != nil {
 			return nil, err
 		}
+		resourceConfig, exist := s.config.Authorization.Resources[resourceCmd.ResourceName(res.Name)]
+		if !exist {
+			return nil, fmt.Errorf("error fetching resource %s", res.Name)
+		}
+		for roleName, scopes := range resourceConfig.Permissions {
+			id, exist := policies[roleName]
+			if !exist {
+				return nil, fmt.Errorf("error fetching policy for  %s", roleName)
+			}
+			//create permissions
+			_, err = s.permission.CreatePermission(ctx, &permissionCmd.CreatePermissionInput{
+				BaseInput:        baseInput,
+				Name:             permissionDomain.NameNonAdmin(roleName, res.Name),
+				Description:      fmt.Sprintf("Permission for %s resource with %s role", res.Name, roleName),
+				Type:             permissionDomain.TypeScope,
+				Resources:        []string{createdResource.ID},
+				Scopes:           scopes,
+				Policies:         []string{id},
+				DecisionStrategy: permissionDomain.DecisionAffirmative,
+			})
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+	//resource permission for admin
+	sc := scopeDomain.AllScopes()
+
+	pID := policies[roleDomain.RoleAdmin]
+	perm := permissionCmd.CreatePermissionInput{
+		BaseInput:   baseInput,
+		Name:        permissionDomain.NameAdmin(),
+		Description: fmt.Sprintf("Permission for %s resource with %s role", roleDomain.RoleAdmin, roleDomain.RoleAdmin),
+		Type:        permissionDomain.TypeResource,
+		Scopes:           sc,
+		Policies:         []string{pID},
+		DecisionStrategy: permissionDomain.DecisionAffirmative,
 	}
 
+	_, err = s.permission.CreatePermission(ctx, &perm)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create permission for %s: %w", roleDomain.RoleAdmin, err)
+	}
 	if err := s.repo.Create(ctx, input.TenantDomain, branch); err != nil {
 		// Cleanup auth group if DB save fails
 		i := baseCmd.NewInput(input.TenantDomain, branchID)
@@ -224,8 +279,9 @@ func (s *branchService) GetBranchUsers(ctx context.Context, input *baseCmd.BaseI
 	return nil, nil
 }
 func (s *branchService) AssignUserToBranch(ctx context.Context, input *command.UserToBranch) error {
-	return nil
+
+	return s.branch.AssignUserToBranch(ctx, input)
 }
 func (s *branchService) RemoveUserFromBranch(ctx context.Context, input *command.UserToBranch) error {
-	return nil
+	return s.branch.RemoveUserFromBranch(ctx, input)
 }

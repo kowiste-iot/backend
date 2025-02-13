@@ -3,8 +3,8 @@ package app
 import (
 	"backend/internal/features/action/domain"
 	"backend/internal/features/action/domain/command"
-	"backend/shared/auth/domain/resource"
-	"backend/shared/auth/domain/scope"
+	resourceDomain "backend/internal/features/resource/domain"
+	scopeDomain "backend/internal/features/scope/domain"
 	"backend/shared/base"
 	baseCmd "backend/shared/base/command"
 	"backend/shared/validator"
@@ -33,8 +33,8 @@ func NewService(base *base.BaseService, repo domain.ActionRepository) *actionSer
 func (s *actionService) CreateAction(ctx context.Context, input *command.CreateActionInput) (*domain.Action, error) {
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
-		Resource:  resource.Action,
-		Scope:     scope.Create,
+		Resource:  resourceDomain.Action,
+		Scope:     scopeDomain.Create,
 	})
 	if err != nil {
 		return nil, err
@@ -59,8 +59,8 @@ func (s *actionService) CreateAction(ctx context.Context, input *command.CreateA
 func (s *actionService) GetAction(ctx context.Context, input *command.ActionIDInput) (*domain.Action, error) {
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
-		Resource:  resource.Action,
-		Scope:     scope.View,
+		Resource:  resourceDomain.Action,
+		Scope:     scopeDomain.View,
 	})
 	if err != nil {
 		return nil, err
@@ -75,8 +75,8 @@ func (s *actionService) GetAction(ctx context.Context, input *command.ActionIDIn
 func (s *actionService) ListActions(ctx context.Context, input *baseCmd.BaseInput) ([]*domain.Action, error) {
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: *input,
-		Resource:  resource.Action,
-		Scope:     scope.View,
+		Resource:  resourceDomain.Action,
+		Scope:     scopeDomain.View,
 	})
 	if err != nil {
 		return nil, err
@@ -91,8 +91,8 @@ func (s *actionService) ListActions(ctx context.Context, input *baseCmd.BaseInpu
 func (s *actionService) UpdateAction(ctx context.Context, input *command.UpdateActionInput) (*domain.Action, error) {
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
-		Resource:  resource.Action,
-		Scope:     scope.Update,
+		Resource:  resourceDomain.Action,
+		Scope:     scopeDomain.Update,
 	})
 	if err != nil {
 		return nil, err
@@ -115,8 +115,8 @@ func (s *actionService) DeleteAction(ctx context.Context, input *command.ActionI
 
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
-		Resource:  resource.Action,
-		Scope:     scope.Delete,
+		Resource:  resourceDomain.Action,
+		Scope:     scopeDomain.Delete,
 	})
 	if err != nil {
 		return err

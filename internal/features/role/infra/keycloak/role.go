@@ -23,11 +23,11 @@ func New(core *keycloak.Keycloak) *RoleKeycloak {
 	}
 }
 
-func (rk RoleKeycloak) CreateRole(ctx context.Context, input *command.CreateRoleInput) (string, error) {
+func (rk RoleKeycloak) CreateRole(ctx context.Context, input *command.CreateRoleInput) (role *domain.Role, err error) {
 
 	token, err := rk.GetValidToken(ctx)
 	if err != nil {
-		return "", fmt.Errorf("failed to get token: %w", err)
+		return nil, fmt.Errorf("failed to get token: %w", err)
 	}
 
 	keycloakRole := gocloak.Role{
@@ -36,7 +36,7 @@ func (rk RoleKeycloak) CreateRole(ctx context.Context, input *command.CreateRole
 	}
 	err = rk.FetchClient(ctx, &input.BaseInput)
 	if err != nil {
-		return "", fmt.Errorf("error getting client: %w", err)
+		return nil, fmt.Errorf("error getting client: %w", err)
 	}
 	roleID, err := rk.Client.CreateClientRole(
 		ctx,
@@ -46,25 +46,28 @@ func (rk RoleKeycloak) CreateRole(ctx context.Context, input *command.CreateRole
 		keycloakRole,
 	)
 	if err != nil {
-		return "", fmt.Errorf("failed to create tenant role: %w", err)
+		return nil, fmt.Errorf("failed to create tenant role: %w", err)
 	}
-	role, err := rk.GetRole(ctx, &command.RoleIDInput{
+	role, err = rk.GetRole(ctx, &command.RoleIDInput{
 		BaseInput: input.BaseInput,
 		RoleID:    roleID,
 	})
 	if err != nil {
-		return "", fmt.Errorf("failed to get  role: %w", err)
+		return nil, fmt.Errorf("failed to get  role: %w", err)
 	}
 
-	rk.createPolicy(ctx, input.TenantDomain, *input.ClientID, policy{
+	policy, err := rk.createPolicy(ctx, input.TenantDomain, *input.ClientID, policy{
 		Name:             fmt.Sprintf("%s-policy", input.Name),
 		Description:      fmt.Sprintf("Policy for %s ", util.CapitalizeFirst(input.Name)),
-		Type:             TypeRole,
+		Type:             domain.TypeRole,
 		Roles:            []string{role.ID},
-		Logic:            LogicPositive,
-		DecisionStrategy: DecisionAffirmative,
+		Logic:            domain.LogicPositive,
+		DecisionStrategy: domain.DecisionAffirmative,
 	})
-	return role.ID, nil
+	if err != nil {
+		return
+	}
+	return role.WithPolicy(policy.ID), nil
 }
 func (rk RoleKeycloak) DeleteRole(ctx context.Context, input *command.RoleIDInput) error {
 	//dont need delete policy, keycloak automatically delete it
@@ -159,7 +162,7 @@ func (rk RoleKeycloak) AssignRoleToResource(ctx context.Context, input *command.
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	fmt.Println(token)
-	_, err = rk.getPolicyByName(ctx, &input.BaseInput, policyName(input.RoleName))
+	_, err = rk.getPolicyByName(ctx, &input.BaseInput, domain.PolicyName(input.RoleName))
 	if err != nil {
 		return
 	}

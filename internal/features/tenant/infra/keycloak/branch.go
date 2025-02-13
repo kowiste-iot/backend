@@ -44,7 +44,7 @@ func (rk BranchKeycloak) CreateBranch(ctx context.Context, input *command.Create
 		return "", fmt.Errorf("failed to create branch: %w", err)
 	}
 	//front
-	_, err = rk.createClient2(ctx, false, &baseCmd.BaseInput{
+	_, err = rk.createClient(ctx, false, &baseCmd.BaseInput{
 		TenantDomain: input.TenantDomain,
 		BranchName:   input.Name,
 	})
@@ -52,7 +52,7 @@ func (rk BranchKeycloak) CreateBranch(ctx context.Context, input *command.Create
 		return "", fmt.Errorf("failed to create front client: %w", err)
 	}
 	//back
-	_, err = rk.createClient2(ctx, true, &baseCmd.BaseInput{
+	_, err = rk.createClient(ctx, true, &baseCmd.BaseInput{
 		TenantDomain: input.TenantDomain,
 		BranchName:   input.Name,
 	})

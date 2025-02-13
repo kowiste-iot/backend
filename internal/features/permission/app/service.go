@@ -3,7 +3,7 @@ package app
 import (
 	"backend/internal/features/permission/domain"
 	"backend/internal/features/permission/domain/command"
-
+	appScope "backend/internal/features/scope/app"
 	"backend/shared/base"
 	baseCmd "backend/shared/base/command"
 	"backend/shared/validator"
@@ -21,10 +21,12 @@ type Config struct {
 
 type ServiceDependencies struct {
 	Repo   domain.PermissionProvider
+	Scope  appScope.ScopeService
 	Config *Config
 }
 type permissionService struct {
 	permissionProvider domain.PermissionProvider
+	scopeProvider      appScope.ScopeService
 	config             *Config
 	*base.BaseService
 }
@@ -32,6 +34,7 @@ type permissionService struct {
 func NewService(base *base.BaseService, deps *ServiceDependencies) PermissionService {
 	return &permissionService{
 		permissionProvider: deps.Repo,
+		scopeProvider:      deps.Scope,
 		BaseService:        base,
 		config:             deps.Config,
 	}
@@ -53,7 +56,11 @@ func (s *permissionService) CreatePermission(ctx context.Context, input *command
 	if err != nil {
 		return
 	}
-	permission, err = s.permissionProvider.CreatePermission(ctx, &input.BaseInput, *p)
+	scopes, err := s.scopeProvider.ListScopes(ctx, &input.BaseInput)
+	if err != nil {
+		return
+	}
+	permission, err = s.permissionProvider.CreatePermission(ctx, scopes, &input.BaseInput, p)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create resource: %w", err)
 	}

@@ -13,7 +13,7 @@ const (
 )
 
 type RoleProvider interface {
-	CreateRole(ctx context.Context, input *command.CreateRoleInput) (string, error)
+	CreateRole(ctx context.Context, input *command.CreateRoleInput) (*Role, error)
 	DeleteRole(ctx context.Context, input *command.RoleIDInput) error
 	GetRole(ctx context.Context, input *command.RoleIDInput) (*Role, error)
 	GetRoles(ctx context.Context, input *baseCmd.BaseInput) ([]Role, error)
@@ -23,6 +23,7 @@ type RoleProvider interface {
 
 type Role struct {
 	ID          string
+	PolicyID    string
 	Name        string
 	Description string
 }
@@ -69,6 +70,10 @@ func (r *Role) WithDescription(input *string) *Role {
 	if input != nil {
 		r.Description = *input
 	}
+	return r
+}
+func (r *Role) WithPolicy(policyID string) *Role {
+	r.PolicyID = policyID
 	return r
 }
 

@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	authCmd "backend/shared/authentication/domain/command"
+	tenantCmd "backend/internal/features/tenant/domain/command"
 	"backend/shared/authorization/domain/command"
 
 	"github.com/Nerzal/gocloak/v13"
@@ -41,7 +41,7 @@ func (k *Keycloak) ValidateToken(ctx context.Context, accessToken string) (*jwt.
 func (k *Keycloak) HasPermission(ctx context.Context, input *command.PermissionInput) (bool, error) {
 	tenant := k.getTenantOrDefault(ctx)
 	permissions := []string{input.Resource}
-	aud := authCmd.ClientName(input.BranchID)
+	aud := tenantCmd.ClientName(input.BranchID)
 	result, err := k.Client.GetRequestingPartyPermissions(ctx,
 		input.Token,
 		tenant,

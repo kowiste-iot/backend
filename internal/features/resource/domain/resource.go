@@ -2,8 +2,8 @@ package domain
 
 import (
 	"backend/internal/features/resource/domain/command"
+	scopeDomain "backend/internal/features/scope/domain"
 	"backend/pkg/config"
-	"backend/shared/auth/domain/scope"
 
 	baseCmd "backend/shared/base/command"
 	"context"
@@ -32,7 +32,7 @@ const (
 )
 
 type ResourceProvider interface {
-	CreateResource(ctx context.Context,  input *baseCmd.BaseInput, resource Resource) (*Resource, error) 
+	CreateResource(ctx context.Context, input *baseCmd.BaseInput, resource Resource) (*Resource, error)
 	GetResource(ctx context.Context, input *command.ResourceIDInput) (*Resource, error)
 	ListResources(ctx context.Context, input *baseCmd.BaseInput) ([]Resource, error)
 }
@@ -44,6 +44,7 @@ type Resource struct {
 	Scopes      []string `json:"scopes,omitempty"`
 	DisplayName string   `json:"displayName,omitempty"`
 }
+
 func (a *Resource) SetID(id string) {
 	a.ID = id
 }
@@ -76,7 +77,7 @@ func NewFromRepository(id string, name string, resourceType string, scopes []str
 }
 func EndpointsResources(input map[string]config.Resource) (resources []Resource) {
 	for i := range input {
-		scopes := scope.AllScopes()
+		scopes := scopeDomain.AllScopes()
 		if input[i].Scopes != nil {
 			scopes = *input[i].Scopes //This allow resources to have limit scopes for ex only view and create
 		}

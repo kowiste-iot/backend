@@ -1,10 +1,20 @@
 package core
 
 import (
+	"backend/pkg/config"
+	"backend/shared/base"
+	"backend/shared/logger"
+	"backend/shared/logger/openob"
+	"backend/shared/streaming/domain"
+	"backend/shared/streaming/infrastructure/nats"
+	"backend/shared/validator"
+	"context"
+	"errors"
+	"time"
+
 	appAsset "backend/internal/features/asset/app"
 	repoAsset "backend/internal/features/asset/infra/gorm"
 	assethandler "backend/internal/features/asset/interface/rest"
-	"context"
 
 	appDashboard "backend/internal/features/dashboard/app"
 	repoDashboard "backend/internal/features/dashboard/infra/gorm"
@@ -25,12 +35,10 @@ import (
 	appMeasure "backend/internal/features/measure/app"
 	repoMeasure "backend/internal/features/measure/infra/gorm"
 	measurehandler "backend/internal/features/measure/interface/rest"
-	"errors"
 
 	appTenant "backend/internal/features/tenant/app"
 	repoTenant "backend/internal/features/tenant/infra/gorm"
 	tenantKeycloak "backend/internal/features/tenant/infra/keycloak"
-
 	tenanthandler "backend/internal/features/tenant/interface/rest"
 
 	appUser "backend/internal/features/user/app"
@@ -48,25 +56,18 @@ import (
 	appResource "backend/internal/features/resource/app"
 	resourceKeycloak "backend/internal/features/resource/infra/keycloak"
 
-	"backend/internal/interfaces/http"
-	// resourcehandler "backend/internal/interfaces/http/handlers/resource"
+	appPermission "backend/internal/features/permission/app"
+	permissionKeycloak "backend/internal/features/permission/infra/keycloak"
 
-	// scopehandler "backend/internal/interfaces/http/handlers/scopes"
+	"backend/internal/interfaces/http"
+
 	wshandler "backend/internal/interfaces/http/handlers/websocket"
-	"backend/pkg/config"
-	"backend/shared/base"
-	"backend/shared/logger"
-	"backend/shared/logger/openob"
-	"backend/shared/streaming/domain"
-	"backend/shared/streaming/infrastructure/nats"
-	"backend/shared/validator"
 
 	kcCore "backend/shared/keycloak"
 
 	//appNats "backend/shared/nats/app"
 	appToken "backend/shared/token/app"
 	appWS "backend/shared/websocket/app"
-	"time"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -209,17 +210,27 @@ func (c *Core) initServer(ctx context.Context) error {
 			DefaultRoles: tenantConfig.Authorization.Roles,
 		},
 	})
+	//Permission
+	permissionKC := permissionKeycloak.New(kCore)
+	permissionService := appPermission.NewService(base, &appPermission.ServiceDependencies{
+		Repo: permissionKC,
+		Scope: scopeService,
+		Config: &appPermission.Config{
+			DefaultRoles: tenantConfig.Authorization.Roles,
+		},
+	})
 	//Branch
 	branchRepo := repoTenant.NewBranchRepository(c.db)
 	branchKC := tenantKeycloak.NewBranch(tenantConfig, kCore)
 
 	branchService := appTenant.NewBranchService(base, &appTenant.BranchDependencies{
-		Branch:   branchKC,
-		Repo:     branchRepo,
-		Role:     roleService,
-		Scope:    scopeService,
-		Resource: resourceService,
-		Config:   tenantConfig,
+		Branch:     branchKC,
+		Repo:       branchRepo,
+		Role:       roleService,
+		Scope:      scopeService,
+		Resource:   resourceService,
+		Permission: permissionService,
+		Config:     tenantConfig,
 	})
 	//Tenant
 

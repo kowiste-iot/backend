@@ -3,8 +3,8 @@ package app
 import (
 	"backend/internal/features/device/domain"
 	"backend/internal/features/device/domain/command"
-	"backend/shared/auth/domain/resource"
-	"backend/shared/auth/domain/scope"
+	resourceDomain "backend/internal/features/resource/domain"
+	scopeDomain "backend/internal/features/scope/domain"
 	"backend/shared/base"
 	baseCmd "backend/shared/base/command"
 	"backend/shared/validator"
@@ -33,8 +33,8 @@ func NewService(base *base.BaseService, repo domain.DeviceRepository) DeviceServ
 func (s *deviceService) CreateDevice(ctx context.Context, input *command.CreateDeviceInput) (*domain.Device, error) {
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
-		Resource:  resource.Device,
-		Scope:     scope.Create,
+		Resource:  resourceDomain.Device,
+		Scope:     scopeDomain.Create,
 	})
 	if err != nil {
 		return nil, err
@@ -59,8 +59,8 @@ func (s *deviceService) CreateDevice(ctx context.Context, input *command.CreateD
 func (s *deviceService) GetDevice(ctx context.Context, input *command.DeviceIDInput) (*domain.Device, error) {
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
-		Resource:  resource.Device,
-		Scope:     scope.View,
+		Resource:  resourceDomain.Device,
+		Scope:     scopeDomain.View,
 	})
 	if err != nil {
 		return nil, err
@@ -75,8 +75,8 @@ func (s *deviceService) GetDevice(ctx context.Context, input *command.DeviceIDIn
 func (s *deviceService) ListDevices(ctx context.Context, input *baseCmd.BaseInput) ([]*domain.Device, error) {
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: *input,
-		Resource:  resource.Device,
-		Scope:     scope.View,
+		Resource:  resourceDomain.Device,
+		Scope:     scopeDomain.View,
 	})
 	if err != nil {
 		return nil, err
@@ -91,8 +91,8 @@ func (s *deviceService) ListDevices(ctx context.Context, input *baseCmd.BaseInpu
 func (s *deviceService) UpdateDevice(ctx context.Context, input *command.UpdateDeviceInput) (*domain.Device, error) {
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
-		Resource:  resource.Device,
-		Scope:     scope.Update,
+		Resource:  resourceDomain.Device,
+		Scope:     scopeDomain.Update,
 	})
 	if err != nil {
 		return nil, err
@@ -115,8 +115,8 @@ func (s *deviceService) DeleteDevice(ctx context.Context, input *command.DeviceI
 
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
-		Resource:  resource.Device,
-		Scope:     scope.Delete,
+		Resource:  resourceDomain.Device,
+		Scope:     scopeDomain.Delete,
 	})
 	if err != nil {
 		return err

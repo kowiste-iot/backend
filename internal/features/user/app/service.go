@@ -7,8 +7,8 @@ import (
 	"backend/internal/features/user/domain"
 	"backend/internal/features/user/domain/command"
 	"backend/internal/features/user/dto"
-	"backend/shared/auth/domain/resource"
-	"backend/shared/auth/domain/scope"
+	resourceDomain "backend/internal/features/resource/domain"
+	scopeDomain "backend/internal/features/scope/domain"
 	"backend/shared/base"
 	baseCmd "backend/shared/base/command"
 
@@ -78,8 +78,8 @@ func (s *userService) CreateUser(ctx context.Context, input *command.CreateUserI
 func (s *userService) GetUser(ctx context.Context, input *command.UserIDInput) (*dto.UserDTO, error) {
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
-		Resource:  resource.User,
-		Scope:     scope.View,
+		Resource:  resourceDomain.User,
+		Scope:     scopeDomain.View,
 	})
 	if err != nil {
 		return nil, err
@@ -119,8 +119,8 @@ func (s *userService) ListUsers(ctx context.Context, input *baseCmd.BaseInput) (
 func (s *userService) UpdateUser(ctx context.Context, input *command.UpdateUserInput) (user *dto.UserDTO, err error) {
 	err = s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
-		Resource:  resource.User,
-		Scope:     scope.Update,
+		Resource:  resourceDomain.User,
+		Scope:     scopeDomain.Update,
 	})
 	if err != nil {
 		return
@@ -162,8 +162,8 @@ func (s *userService) UpdateUser(ctx context.Context, input *command.UpdateUserI
 func (s *userService) DeleteUser(ctx context.Context, input *command.UserIDInput) (err error) {
 	err = s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
-		Resource:  resource.User,
-		Scope:     scope.Update,
+		Resource:  resourceDomain.User,
+		Scope:     scopeDomain.Update,
 	})
 	if err != nil {
 		return

@@ -1,12 +1,13 @@
 package validator
 
 import (
-	"backend/shared/auth/domain/role"
+
 	"backend/shared/errors"
 	"reflect"
 	"slices"
 	"strings"
 	"sync"
+	roleDomain"backend/internal/features/role/domain"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
@@ -48,7 +49,7 @@ func validateRoles(fl validator.FieldLevel) bool {
 	}
 
 	for _, rol := range roles {
-		if !slices.ContainsFunc(role.AllRoles(validRoles), func(r role.Role) bool {
+		if !slices.ContainsFunc(roleDomain.AllRoles(validRoles), func(r roleDomain.Role) bool {
 			return r.Name == rol
 		}) {
 			return false
