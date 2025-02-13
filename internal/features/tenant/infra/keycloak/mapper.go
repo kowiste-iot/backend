@@ -2,39 +2,41 @@ package keycloak
 
 import (
 	"backend/internal/features/tenant/domain/command"
-	auth "backend/shared/auth/domain"
 	"backend/shared/util"
+	"backend/shared/keycloak"
 
 	"github.com/Nerzal/gocloak/v13"
 )
 
-func (ks *BranchKeycloak) convertFromGoCloak(client *gocloak.Client) auth.Client {
-	if client == nil {
-		return auth.Client{}
+
+
+func (ks *BranchKeycloak) convertFromGoCloak(c *gocloak.Client) keycloak.Client {
+	if c == nil {
+		return keycloak.Client{}
 	}
-	return auth.Client{
-		ID:                      client.ID,
-		ClientID:                gocloak.PString(client.ClientID),
-		Name:                    gocloak.PString(client.Name),
-		Description:             gocloak.PString(client.Description),
-		RootURL:                 gocloak.PString(client.RootURL),
-		AdminURL:                gocloak.PString(client.AdminURL),
-		ClientAuthenticatorType: gocloak.PString(client.ClientAuthenticatorType),
-		RedirectURIs:            gocloak.PStringSlice(client.RedirectURIs),
-		WebOrigins:              gocloak.PStringSlice(client.WebOrigins),
-		PublicClient:            gocloak.PBool(client.PublicClient),
-		StandardFlowEnabled:     gocloak.PBool(client.StandardFlowEnabled),
-		ImplicitFlowEnabled:     gocloak.PBool(client.ImplicitFlowEnabled),
-		ServiceAccountEnabled:   gocloak.PBool(client.ServiceAccountsEnabled),
-		FullScopeAllowed:        gocloak.PBool(client.FullScopeAllowed),
+	return keycloak.Client{
+		ID:                      c.ID,
+		ClientID:                gocloak.PString(c.ClientID),
+		Name:                    gocloak.PString(c.Name),
+		Description:             gocloak.PString(c.Description),
+		RootURL:                 gocloak.PString(c.RootURL),
+		AdminURL:                gocloak.PString(c.AdminURL),
+		ClientAuthenticatorType: gocloak.PString(c.ClientAuthenticatorType),
+		RedirectURIs:            gocloak.PStringSlice(c.RedirectURIs),
+		WebOrigins:              gocloak.PStringSlice(c.WebOrigins),
+		PublicClient:            gocloak.PBool(c.PublicClient),
+		StandardFlowEnabled:     gocloak.PBool(c.StandardFlowEnabled),
+		ImplicitFlowEnabled:     gocloak.PBool(c.ImplicitFlowEnabled),
+		ServiceAccountEnabled:   gocloak.PBool(c.ServiceAccountsEnabled),
+		FullScopeAllowed:        gocloak.PBool(c.FullScopeAllowed),
 	}
 }
 
-func (ks *BranchKeycloak) convertToGoCloak2(isBack bool, branch string) gocloak.Client {
-	client := new(auth.Client)
+func (ks *BranchKeycloak) convertToGoCloak(isBack bool, branch string) gocloak.Client {
+	c := new(keycloak.Client)
 	if isBack {
 		upperBranch := util.CapitalizeFirst(branch)
-		client = &auth.Client{
+		c = &keycloak.Client{
 			ClientID:                command.ClientName(branch),
 			Name:                    upperBranch + ks.tenantConfig.BackendClient.Name,
 			Description:             upperBranch + ks.tenantConfig.BackendClient.Description,
@@ -47,7 +49,7 @@ func (ks *BranchKeycloak) convertToGoCloak2(isBack bool, branch string) gocloak.
 			AuthorizationEnabled:    true,
 		}
 	} else {
-		client = &auth.Client{
+		c = &keycloak.Client{
 			ClientID:            ks.tenantConfig.WebClient.ClientID,
 			Name:                ks.tenantConfig.WebClient.Name,
 			RedirectURIs:        ks.tenantConfig.WebClient.RedirectURIs,
@@ -75,7 +77,7 @@ func (ks *BranchKeycloak) convertToGoCloak2(isBack bool, branch string) gocloak.
 		"microprofile-jwt",
 	}
 
-	if !client.Authorization {
+	if !c.Authorization {
 		attributes["oidc.ciba.grant.enabled"] = "false"
 		attributes["post.logout.redirect.uris"] = "http://localhost:5173"
 		attributes["display.on.consent.screen"] = "false"
@@ -86,29 +88,29 @@ func (ks *BranchKeycloak) convertToGoCloak2(isBack bool, branch string) gocloak.
 	}
 
 	data := gocloak.Client{
-		ClientID:                     &client.ClientID,
+		ClientID:                     &c.ClientID,
 		Enabled:                      gocloak.BoolP(true),
-		Description:                  &client.Description,
-		ClientAuthenticatorType:      &client.ClientAuthenticatorType,
-		RedirectURIs:                 &client.RedirectURIs,
-		StandardFlowEnabled:          &client.StandardFlowEnabled,
+		Description:                  &c.Description,
+		ClientAuthenticatorType:      &c.ClientAuthenticatorType,
+		RedirectURIs:                 &c.RedirectURIs,
+		StandardFlowEnabled:          &c.StandardFlowEnabled,
 		DirectAccessGrantsEnabled:    gocloak.BoolP(true),
-		PublicClient:                 &client.PublicClient,
+		PublicClient:                 &c.PublicClient,
 		FrontChannelLogout:           gocloak.BoolP(true),
 		Protocol:                     gocloak.StringP("openid-connect"),
 		Attributes:                   &attributes,
-		FullScopeAllowed:             &client.FullScopeAllowed,
+		FullScopeAllowed:             &c.FullScopeAllowed,
 		NodeReRegistrationTimeout:    gocloak.Int32P(-1),
 		DefaultClientScopes:          &defaultScopes,
 		OptionalClientScopes:         &optScopes,
-		AuthorizationServicesEnabled: &client.AuthorizationEnabled,
-		ServiceAccountsEnabled:       &client.ServiceAccountEnabled,
+		AuthorizationServicesEnabled: &c.AuthorizationEnabled,
+		ServiceAccountsEnabled:       &c.ServiceAccountEnabled,
 	}
 
-	if client.ID != nil {
-		data.ID = client.ID
+	if c.ID != nil {
+		data.ID = c.ID
 	}
-	if len(client.WebOrigins) == 0 {
+	if len(c.WebOrigins) == 0 {
 		data.WebOrigins = &[]string{"*"}
 	}
 

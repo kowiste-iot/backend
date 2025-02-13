@@ -3,8 +3,8 @@ package app
 import (
 	"backend/internal/features/measure/domain"
 	"backend/internal/features/measure/domain/command"
-	"backend/shared/auth/domain/resource"
-	"backend/shared/auth/domain/scope"
+		resourceDomain "backend/internal/features/resource/domain"
+	scopeDomain "backend/internal/features/scope/domain"
 	"backend/shared/base"
 	baseCmd "backend/shared/base/command"
 	"backend/shared/validator"
@@ -33,8 +33,8 @@ func NewService(base *base.BaseService, repo domain.MeasureRepository) MeasureSe
 func (s *measureService) CreateMeasure(ctx context.Context, input *command.CreateMeasureInput) (*domain.Measure, error) {
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
-		Resource:  resource.Measure,
-		Scope:     scope.Create,
+		Resource:  resourceDomain.Measure,
+		Scope:     scopeDomain.Create,
 	})
 	if err != nil {
 		return nil, err
@@ -59,8 +59,8 @@ func (s *measureService) CreateMeasure(ctx context.Context, input *command.Creat
 func (s *measureService) GetMeasure(ctx context.Context, input *command.MeasureIDInput) (*domain.Measure, error) {
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
-		Resource:  resource.Measure,
-		Scope:     scope.View,
+		Resource:  resourceDomain.Measure,
+		Scope:     scopeDomain.View,
 	})
 	if err != nil {
 		return nil, err
@@ -75,8 +75,8 @@ func (s *measureService) GetMeasure(ctx context.Context, input *command.MeasureI
 func (s *measureService) ListMeasures(ctx context.Context, input *baseCmd.BaseInput) ([]*domain.Measure, error) {
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: *input,
-		Resource:  resource.Measure,
-		Scope:     scope.View,
+		Resource:  resourceDomain.Measure,
+		Scope:     scopeDomain.View,
 	})
 	if err != nil {
 		return nil, err
@@ -91,8 +91,8 @@ func (s *measureService) ListMeasures(ctx context.Context, input *baseCmd.BaseIn
 func (s *measureService) UpdateMeasure(ctx context.Context, input *command.UpdateMeasureInput) (*domain.Measure, error) {
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
-		Resource:  resource.Measure,
-		Scope:     scope.Update,
+		Resource:  resourceDomain.Measure,
+		Scope:     scopeDomain.Update,
 	})
 	if err != nil {
 		return nil, err
@@ -115,8 +115,8 @@ func (s *measureService) DeleteMeasure(ctx context.Context, input *command.Measu
 
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
-		Resource:  resource.Measure,
-		Scope:     scope.Delete,
+		Resource:  resourceDomain.Measure,
+		Scope:     scopeDomain.Delete,
 	})
 	if err != nil {
 		return err

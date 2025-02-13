@@ -1,16 +1,35 @@
 package keycloak
 
 import (
-	auth "backend/shared/auth/domain"
-	"backend/shared/auth/domain/command"
+
 	baseCmd "backend/shared/base/command"
 	"context"
 	"fmt"
+	tenantCmd "backend/internal/features/tenant/domain/command"
 
 	"github.com/Nerzal/gocloak/v13"
 )
 
-func (ks *Keycloak) GetClientByClientID(ctx context.Context, tenantID, clientID string) (*auth.Client, error) {
+type Client struct {
+	ID                        *string           `json:"id"`
+	ClientID                  string            `json:"clientId"`
+	Name                      string            `json:"name"`
+	Description               string            `json:"description"`
+	RootURL                   string            `json:"rootUrl"`
+	AdminURL                  string            `json:"adminUrl"`
+	ClientAuthenticatorType   string            `json:"clientAuthenticatorType"`
+	RedirectURIs              []string          `json:"redirectUris"`
+	WebOrigins                []string          `json:"webOrigins"`
+	StandardFlowEnabled       bool              `json:"standardFlowEnabled"`
+	ImplicitFlowEnabled       bool              `json:"implicitFlowEnabled"`
+	PublicClient              bool              `json:"publicClient"`
+	FullScopeAllowed          bool              `json:"fullScopeAllowed"`
+	AuthorizationEnabled      bool              `json:"authorizationEnabled"`
+	ServiceAccountEnabled     bool              `json:"serviceAccountEnabled"`
+	Authorization             bool              `json:"authorization"`
+}
+
+func (ks *Keycloak) GetClientByClientID(ctx context.Context, tenantID, clientID string) (*Client, error) {
 	token, err := ks.GetValidToken(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get token: %w", err)
@@ -29,7 +48,7 @@ func (ks *Keycloak) GetClientByClientID(ctx context.Context, tenantID, clientID 
 	result := ks.convertFromGoCloak(clients[0])
 	return &result, nil
 }
-func (ks *Keycloak) convertToGoCloak(client auth.Client) gocloak.Client {
+func (ks *Keycloak) convertToGoCloak(client Client) gocloak.Client {
 	attributes := map[string]string{
 		"realm_client":                             "false",
 		"backchannel.logout.session.required":      "true",
@@ -89,11 +108,11 @@ func (ks *Keycloak) convertToGoCloak(client auth.Client) gocloak.Client {
 	return data
 }
 
-func (ks *Keycloak) convertFromGoCloak(client *gocloak.Client) auth.Client {
+func (ks *Keycloak) convertFromGoCloak(client *gocloak.Client) Client {
 	if client == nil {
-		return auth.Client{}
+		return Client{}
 	}
-	return auth.Client{
+	return Client{
 		ID:                      client.ID,
 		ClientID:                gocloak.PString(client.ClientID),
 		Name:                    gocloak.PString(client.Name),
@@ -112,7 +131,7 @@ func (ks *Keycloak) convertFromGoCloak(client *gocloak.Client) auth.Client {
 }
 func (k *Keycloak) FetchClient(ctx context.Context, input *baseCmd.BaseInput) (err error) {
 	if input.ClientID == nil {
-		client, err := k.GetClientByClientID(ctx, input.TenantDomain, command.ClientName(input.BranchName))
+		client, err := k.GetClientByClientID(ctx, input.TenantDomain, tenantCmd.ClientName(input.BranchName))
 		if err != nil {
 			return fmt.Errorf("error getting client: %w", err)
 		}

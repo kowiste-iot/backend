@@ -59,10 +59,10 @@ func (rk RoleKeycloak) CreateRole(ctx context.Context, input *command.CreateRole
 	policy, err := rk.createPolicy(ctx, input.TenantDomain, *input.ClientID, policy{
 		Name:             fmt.Sprintf("%s-policy", input.Name),
 		Description:      fmt.Sprintf("Policy for %s ", util.CapitalizeFirst(input.Name)),
-		Type:             TypeRole,
+		Type:             domain.TypeRole,
 		Roles:            []string{role.ID},
-		Logic:            LogicPositive,
-		DecisionStrategy: DecisionAffirmative,
+		Logic:            domain.LogicPositive,
+		DecisionStrategy: domain.DecisionAffirmative,
 	})
 	if err != nil {
 		return
@@ -162,7 +162,7 @@ func (rk RoleKeycloak) AssignRoleToResource(ctx context.Context, input *command.
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	fmt.Println(token)
-	_, err = rk.getPolicyByName(ctx, &input.BaseInput, policyName(input.RoleName))
+	_, err = rk.getPolicyByName(ctx, &input.BaseInput, domain.PolicyName(input.RoleName))
 	if err != nil {
 		return
 	}

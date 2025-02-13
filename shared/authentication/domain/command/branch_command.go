@@ -1,9 +1,5 @@
 package command
 
-import (
-	"fmt"
-)
-
 type CreateBranchInput struct {
 	TenantID    string
 	Name        string
@@ -19,10 +15,6 @@ type UpdateBranchInput struct {
 
 type UserToBranch struct {
 	TenantDomain string
-	UserID   string
-	Branchs   []string
-}
-
-func ClientName(branchName string) string {
-	return fmt.Sprintf("%s-service", branchName)
+	UserID       string
+	Branchs      []string
 }

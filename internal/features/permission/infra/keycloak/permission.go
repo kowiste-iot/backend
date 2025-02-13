@@ -3,7 +3,7 @@ package keycloak
 import (
 	"backend/internal/features/permission/domain"
 	scopeDomain "backend/internal/features/scope/domain"
-	"backend/shared/auth/domain/permission"
+	permissionDomain "backend/internal/features/permission/domain"
 
 	baseCmd "backend/shared/base/command"
 	"context"
@@ -138,21 +138,21 @@ func (rk PermissionKeycloak) ListPermissions(ctx context.Context, input *baseCmd
 	return permissions, nil
 }
 
-func createPermission(ctx context.Context, url, token, tenantID, IDofClient string, p *domain.Permission) (*permission.Permission, error) {
+func createPermission(ctx context.Context, url, token, tenantID, IDofClient string, p *domain.Permission) (*permissionDomain.Permission, error) {
 	baseURL := url + "/admin/realms/%s/clients/%s/authz/resource-server/permission/%s"
 	endpoint := fmt.Sprintf(baseURL, tenantID, IDofClient, p.Type)
 
 	// Set default values if not provided
 	if p.DecisionStrategy == "" {
-		p.DecisionStrategy = permission.DecisionAffirmative
+		p.DecisionStrategy = permissionDomain.DecisionAffirmative
 	}
 	if p.Logic == "" {
-		p.Logic = permission.LogicPositive
+		p.Logic = permissionDomain.LogicPositive
 	}
 
 	client := resty.New()
 
-	var result permission.Permission
+	var result permissionDomain.Permission
 
 	resp, err := client.R().
 		SetContext(ctx).

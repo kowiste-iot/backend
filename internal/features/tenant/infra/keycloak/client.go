@@ -1,22 +1,24 @@
 package keycloak
 
 import (
-	auth "backend/shared/auth/domain"
-	"backend/shared/auth/domain/permission"
-	"backend/shared/auth/domain/policy"
-	"backend/shared/auth/infra/restkc"
+	permissionDomain "backend/internal/features/permission/domain"
+	"backend/shared/keycloak"
+	roleDomain"backend/internal/features/role/domain"
+
 	baseCmd "backend/shared/base/command"
 	"context"
 	"fmt"
 )
 
-func (ks *BranchKeycloak) createClient2(ctx context.Context, isBack bool, input *baseCmd.BaseInput) (*auth.Client, error) {
+
+
+func (ks *BranchKeycloak) createClient(ctx context.Context, isBack bool, input *baseCmd.BaseInput) (*keycloak.Client, error) {
 	token, err := ks.GetValidToken(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get token: %w", err)
 	}
 
-	goClient := ks.convertToGoCloak2(isBack, input.BranchName)
+	goClient := ks.convertToGoCloak(isBack, input.BranchName)
 	id, err := ks.Client.CreateClient(ctx, token.AccessToken, input.TenantDomain, goClient)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create client: %w", err)
@@ -27,11 +29,11 @@ func (ks *BranchKeycloak) createClient2(ctx context.Context, isBack bool, input 
 			ClientID:                      id,
 			Name:                          *goClient.ClientID,
 			AllowRemoteResourceManagement: true,
-			PolicyEnforcementMode:         policy.Enforcing,
+			PolicyEnforcementMode:         roleDomain.Enforcing,
 			Resources:                     []string{},
 			Policies:                      []string{},
 			Scopes:                        []string{},
-			DecisionStrategy:              permission.DecisionAffirmative,
+			DecisionStrategy:              permissionDomain.DecisionAffirmative,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("failed to set authorization client: %w", err)
@@ -53,11 +55,11 @@ func (ks *BranchKeycloak) createProtocolMapper(ctx context.Context, tenantDomain
 		return fmt.Errorf("failed to get token: %w", err)
 	}
 	//add info group and roles to the tokens
-	mapper := restkc.ProtocolMapper{
+	mapper := ProtocolMapper{
 		Protocol:       "openid-connect",
 		ProtocolMapper: "oidc-group-membership-mapper",
 		Name:           "user groups",
-		Config: restkc.ProtocolMapperConfig{
+		Config: ProtocolMapperConfig{
 			ClaimName:               "branch",
 			FullPath:                "false",
 			IDTokenClaim:            "true",
@@ -67,13 +69,13 @@ func (ks *BranchKeycloak) createProtocolMapper(ctx context.Context, tenantDomain
 			IntrospectionTokenClaim: "true",
 		},
 	}
-	err = restkc.CreateProtocolMapper(ctx, ks.Config.Host, token.AccessToken, tenantDomain, clientID, mapper)
+	err = CreateProtocolMapper(ctx, ks.Config.Host, token.AccessToken, tenantDomain, clientID, mapper)
 	if err != nil {
 		return fmt.Errorf("failed to set client mapper: %w", err)
 	}
 	return
 }
-func (ks *BranchKeycloak) GetClient(ctx context.Context, tenantID, clientID string) (*auth.Client, error) {
+func (ks *BranchKeycloak) GetClient(ctx context.Context, tenantID, clientID string) (*keycloak.Client, error) {
 	token, err := ks.GetValidToken(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get token: %w", err)

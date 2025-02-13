@@ -3,8 +3,8 @@ package app
 import (
 	resourceDomain "backend/internal/features/resource/domain"
 	"backend/internal/features/role/domain"
+	scopeDomain "backend/internal/features/scope/domain"
 	"backend/internal/features/role/domain/command"
-	"backend/shared/auth/domain/scope"
 	"backend/shared/base"
 	baseCmd "backend/shared/base/command"
 	"backend/shared/validator"
@@ -94,7 +94,7 @@ func (s *roleService) GetRole(ctx context.Context, input *command.RoleIDInput) (
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
 		Resource:  resourceDomain.Role,
-		Scope:     scope.View,
+		Scope:     scopeDomain.View,
 	})
 	if err != nil {
 		return nil, err
@@ -110,7 +110,7 @@ func (s *roleService) ListRoles(ctx context.Context, input *baseCmd.BaseInput) (
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: *input,
 		Resource:  resourceDomain.Role,
-		Scope:     scope.View,
+		Scope:     scopeDomain.View,
 	})
 	if err != nil {
 		return nil, err
@@ -127,7 +127,7 @@ func (s *roleService) DeleteRole(ctx context.Context, input *command.RoleIDInput
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
 		Resource:  resourceDomain.Role,
-		Scope:     scope.Delete,
+		Scope:     scopeDomain.Delete,
 	})
 	if err != nil {
 		return err
