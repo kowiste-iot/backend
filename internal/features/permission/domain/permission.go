@@ -29,7 +29,7 @@ const (
 )
 
 type PermissionProvider interface {
-	CreatePermission(ctx context.Context,scopes []scopeDomain.Scope, input *baseCmd.BaseInput, permission *Permission) (*Permission, error)
+	CreatePermission(ctx context.Context, scopes []scopeDomain.Scope, input *baseCmd.BaseInput, permission *Permission) (*Permission, error)
 	ListPermissions(ctx context.Context, input *baseCmd.BaseInput) ([]Permission, error)
 }
 
@@ -64,6 +64,9 @@ func New(name, description, typePermission, decisionStrategy string, resources, 
 		DecisionStrategy: decisionStrategy,
 	}
 	return
+}
+func (p *Permission) SetResourceType(rType string) {
+	p.ResourceType = rType
 }
 
 func NameNonAdmin(roleName, resourceName string) string {

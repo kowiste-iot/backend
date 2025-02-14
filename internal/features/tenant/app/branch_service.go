@@ -184,10 +184,11 @@ func (s *branchService) CreateBranch(ctx context.Context, input *command.CreateB
 
 	pID := policies[roleDomain.RoleAdmin]
 	perm := permissionCmd.CreatePermissionInput{
-		BaseInput:   baseInput,
-		Name:        permissionDomain.NameAdmin(),
-		Description: fmt.Sprintf("Permission for %s resource with %s role", roleDomain.RoleAdmin, roleDomain.RoleAdmin),
-		Type:        permissionDomain.TypeResource,
+		BaseInput:    baseInput,
+		Name:         permissionDomain.NameAdmin(),
+		Description:  fmt.Sprintf("Permission for %s resource with %s role", roleDomain.RoleAdmin, roleDomain.RoleAdmin),
+		ResourceType: s.config.Authorization.AdminGroup,
+		Type:             permissionDomain.TypeResource,
 		Scopes:           sc,
 		Policies:         []string{pID},
 		DecisionStrategy: permissionDomain.DecisionAffirmative,

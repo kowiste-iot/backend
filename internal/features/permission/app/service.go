@@ -56,6 +56,9 @@ func (s *permissionService) CreatePermission(ctx context.Context, input *command
 	if err != nil {
 		return
 	}
+	if input.ResourceType != "" {
+		p.SetResourceType(input.ResourceType)
+	}
 	scopes, err := s.scopeProvider.ListScopes(ctx, &input.BaseInput)
 	if err != nil {
 		return

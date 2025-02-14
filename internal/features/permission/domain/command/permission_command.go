@@ -11,6 +11,7 @@ type CreatePermissionInput struct {
 	Name             string
 	Description      string
 	Type             string
+	ResourceType     string
 	Resources        []string
 	Scopes           []string
 	Policies         []string
