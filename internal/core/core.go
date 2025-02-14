@@ -52,9 +52,11 @@ import (
 
 	appScope "backend/internal/features/scope/app"
 	scopeKeycloak "backend/internal/features/scope/infra/keycloak"
+	scopehandler "backend/internal/features/scope/interface/rest"
 
 	appResource "backend/internal/features/resource/app"
 	resourceKeycloak "backend/internal/features/resource/infra/keycloak"
+	resourcehandler "backend/internal/features/resource/interface/rest"
 
 	appPermission "backend/internal/features/permission/app"
 	permissionKeycloak "backend/internal/features/permission/infra/keycloak"
@@ -201,21 +203,24 @@ func (c *Core) initServer(ctx context.Context) error {
 	scopeService := appScope.NewService(base, &appScope.ServiceDependencies{
 		Repo: scopeKC,
 	})
-	//Resource
-	resourceKC := resourceKeycloak.New(kCore)
-	resourceService := appResource.NewService(base, &appResource.ServiceDependencies{
-		Repo:  resourceKC,
-		Roles: roleService,
-		Config: &appResource.Config{
-			DefaultRoles: tenantConfig.Authorization.Roles,
-		},
-	})
+
 	//Permission
 	permissionKC := permissionKeycloak.New(kCore)
 	permissionService := appPermission.NewService(base, &appPermission.ServiceDependencies{
-		Repo: permissionKC,
+		Repo:  permissionKC,
 		Scope: scopeService,
 		Config: &appPermission.Config{
+			DefaultRoles: tenantConfig.Authorization.Roles,
+		},
+	})
+	//Resource
+	resourceKC := resourceKeycloak.New(kCore)
+	resourceService := appResource.NewService(base, &appResource.ServiceDependencies{
+		Repo:       resourceKC,
+		Roles:      roleService,
+		Permission: permissionService,
+		Scopes:     scopeService,
+		Config: &appResource.Config{
 			DefaultRoles: tenantConfig.Authorization.Roles,
 		},
 	})
@@ -299,15 +304,14 @@ func (c *Core) initServer(ctx context.Context) error {
 			Logger:      c.logger,
 			RoleService: roleService,
 		}),
-		// ResourceHandler: resourcehandler.New(resourcehandler.Dependencies{
-		// 	Logger:      c.logger,
-		// 	AuthService: authService,
-		// }),
-		// ScopeHandler: scopehandler.New(scopehandler.Dependencies{
-		// 	Logger:      c.logger,
-		// 	AuthService: authService,
-		// }),
-
+		ResourceHandler: resourcehandler.New(resourcehandler.Dependencies{
+			Logger:   c.logger,
+			Resource: resourceService,
+		}),
+		ScopeHandler: scopehandler.New(scopehandler.Dependencies{
+			Logger:       c.logger,
+			ScopeService: scopeService,
+		}),
 		TokenHandler:    wshandler.NewTokenHandler(appT),
 		WSNotifyHandler: wshandler.NewNotificationHandler(appH, natsClient, appT),
 	}
