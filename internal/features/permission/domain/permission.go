@@ -39,7 +39,7 @@ type Permission struct {
 	Description      string            `json:"description,omitempty"`
 	Type             string            `json:"type"` // resource-based, scope-based
 	ResourceType     string            `json:"resourceType"`
-	Resources        []string          `json:"resources,omitempty"`
+	Resource         string            `json:"resources,omitempty"`
 	Scopes           []string          `json:"scopes,omitempty"`
 	Policies         []string          `json:"policies"`
 	Roles            []roleDomain.Role `json:"roles,omitempty"`
@@ -47,7 +47,7 @@ type Permission struct {
 	Logic            string            `json:"logic"`
 }
 
-func New(name, description, typePermission, decisionStrategy string, resources, scopes, policies []string) (resource *Permission, err error) {
+func New(name, description, typePermission, decisionStrategy, resources string, scopes, policies []string) (resource *Permission, err error) {
 	id, err := uuid.NewV7()
 	if err != nil {
 		return
@@ -58,7 +58,7 @@ func New(name, description, typePermission, decisionStrategy string, resources, 
 		Name:             name,
 		Description:      description,
 		Type:             typePermission,
-		Resources:        resources,
+		Resource:        resources,
 		Scopes:           scopes,
 		Policies:         policies,
 		DecisionStrategy: decisionStrategy,

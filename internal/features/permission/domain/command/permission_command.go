@@ -1,7 +1,9 @@
 package command
 
 import (
+	scopeDomain "backend/internal/features/scope/domain"
 	"backend/shared/base/command"
+
 	"fmt"
 )
 
@@ -12,10 +14,16 @@ type CreatePermissionInput struct {
 	Description      string
 	Type             string
 	ResourceType     string
-	Resources        []string
+	Resources        string
 	Scopes           []string
 	Policies         []string
 	DecisionStrategy string
+}
+type UpdatePermissionInput struct {
+	command.BaseInput
+	ID        string
+	Resources string
+	Roles     map[string][]scopeDomain.Scope
 }
 
 func ResourceName(roleName string) string {

@@ -13,6 +13,7 @@ import (
 
 type PermissionService interface {
 	CreatePermission(ctx context.Context, input *command.CreatePermissionInput) (*domain.Permission, error)
+	UpdatePermission(ctx context.Context, input * command.UpdatePermissionInput)(*domain.Permission,error)
 	ListPermissions(ctx context.Context, input *baseCmd.BaseInput) ([]domain.Permission, error)
 }
 type Config struct {
@@ -85,6 +86,23 @@ func (s *permissionService) ListPermissions(ctx context.Context, input *baseCmd.
 	if err != nil {
 		return nil, err
 	}
+
+	return
+}
+func (s *permissionService) UpdatePermission(ctx context.Context, input *command.UpdatePermissionInput) (permission *domain.Permission, err error) {
+	// err = s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
+	// 	BaseInput: input.BaseInput,
+	// 	Resource:  domain.ResourceR,
+	// 	Scope:     scope.Create,
+	// })
+	// if err != nil {
+	// 	return nil, err
+	// }
+	err = validator.Validate(input)
+	if err != nil {
+		return nil, fmt.Errorf("validation error %s", err.Error())
+	}
+
 
 	return
 }

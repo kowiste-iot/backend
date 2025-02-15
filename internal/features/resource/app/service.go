@@ -5,15 +5,13 @@ import (
 	"backend/internal/features/resource/domain/command"
 
 	appRole "backend/internal/features/role/app"
-	rolesDomain "backend/internal/features/role/domain"
 	scopeDomain "backend/internal/features/scope/domain"
-	roleCmd "backend/internal/features/role/domain/command"
 
 	appScope "backend/internal/features/scope/app"
 
 	appPermission "backend/internal/features/permission/app"
 	permissionDomain "backend/internal/features/permission/domain"
-
+	permissionCmd "backend/internal/features/permission/domain/command"
 
 	"backend/shared/base"
 	baseCmd "backend/shared/base/command"
@@ -138,39 +136,19 @@ func (s *resourceService) UpdateResource(ctx context.Context, input *command.Upd
 	if err != nil {
 		return
 	}
-	mRoles := make(map[string]rolesDomain.Role)
-	//get policty of role
-	roles, err := s.roles.ListRoles(ctx, &input.BaseInput)
+	perms, err := s.permission.ListPermissions(ctx, &input.BaseInput)
 	if err != nil {
 		return
 	}
-	for i := range roles {
-		mRoles[roles[i].Name] = roles[i]
-	}
-
-	inputAssign := roleCmd.ResourceAssignRoleInput{
-		BaseInput:    input.BaseInput,
-		ResourceID:   r.ID,
-		ResourceName: r.DisplayName,
-	}
-	err = s.roles.RemoveRolesFromResource(ctx, &inputAssign)
-	if err != nil {
-		return
-	}
-
-	//create permissions should be Assign Role to Resource ? maybe assign roles should be on permission
-	for name, scopes := range input.Roles {
-		role, ok := mRoles[name]
-		if !ok {
-			return nil, fmt.Errorf("error ")
-		}
-		inputAssign.RoleID = role.ID
-		inputAssign.RoleName = name
-		inputAssign.Scopes = scopes
-		err = s.roles.AssignRoleToResource(ctx, &inputAssign)
-		if err != nil {
-			return
-		}
+	// filterPerms = slices.DeleteFunc(perms, func(p permissionDomain.Permission) bool {
+	// 	return p.Resources
+	// })
+	for i := range perms {
+		_, err = s.permission.UpdatePermission(ctx, &permissionCmd.UpdatePermissionInput{
+			BaseInput: input.BaseInput,
+			ID:        perms[i].ID,
+			Resources: r.ID,
+		})
 	}
 
 	return
