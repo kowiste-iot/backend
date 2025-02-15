@@ -3,8 +3,11 @@ package app
 import (
 	"backend/internal/features/resource/domain"
 	"backend/internal/features/resource/domain/command"
+	"slices"
 
 	appRole "backend/internal/features/role/app"
+	roleDomain "backend/internal/features/role/domain"
+
 	scopeDomain "backend/internal/features/scope/domain"
 
 	appScope "backend/internal/features/scope/app"
@@ -140,15 +143,54 @@ func (s *resourceService) UpdateResource(ctx context.Context, input *command.Upd
 	if err != nil {
 		return
 	}
-	// filterPerms = slices.DeleteFunc(perms, func(p permissionDomain.Permission) bool {
-	// 	return p.Resources
-	// })
-	for i := range perms {
+	filterPerms := slices.DeleteFunc(perms, func(p permissionDomain.Permission) bool {
+		return p.Resource != r.ID
+	})
+	roles, err := s.roles.ListRoles(ctx, &input.BaseInput)
+	if err != nil {
+		return
+	}
+	rolesMap := make(map[string]roleDomain.Role)
+	for i := range roles {
+		rolesMap[roles[i].Name] = roles[i]
+	}
+	if len(filterPerms) == 0 {
+		for roleName, scopes := range input.Roles {
+			scopesIDs := make([]string, 0)
+			for j := range scopes {
+				scopesIDs = append(scopesIDs, scopes[j].ID)
+			}
+			role, found := rolesMap[roleName]
+			if !found {
+				return nil, fmt.Errorf("role not found")
+			}
+			_, err = s.permission.CreatePermission(ctx, &permissionCmd.CreatePermissionInput{
+				BaseInput:        input.BaseInput,
+				Name:             permissionDomain.NameNonAdmin(roleName, r.Name),
+				Description:      fmt.Sprintf("Permission for %s resource with %s role", r.Name, roleName),
+				Type:             permissionDomain.TypeScope,
+				Resources:        r.ID,
+				Scopes:           scopesIDs,
+				Policies:         []string{role.PolicyID},
+				DecisionStrategy: permissionDomain.DecisionAffirmative,
+			})
+			if err != nil {
+				return nil, err
+			}
+		}
+		return
+	}
+	for i := range filterPerms {
 		_, err = s.permission.UpdatePermission(ctx, &permissionCmd.UpdatePermissionInput{
-			BaseInput: input.BaseInput,
-			ID:        perms[i].ID,
-			Resources: r.ID,
+			BaseInput:    input.BaseInput,
+			ID:           filterPerms[i].ID,
+			ResourceID:   r.ID,
+			ResourceName: r.Name,
+			Roles:        input.Roles,
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return

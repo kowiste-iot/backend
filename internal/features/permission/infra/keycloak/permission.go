@@ -36,19 +36,7 @@ func (rk PermissionKeycloak) CreatePermission(ctx context.Context, scopes []scop
 	if err != nil {
 		return nil, fmt.Errorf("error getting client: %w", err)
 	}
-	internalScopes := []string{}
 	kcPer := newPermissionKc(per)
-	// Use the scopes list for all iterations
-	for _, scopeName := range kcPer.Scopes {
-		for _, scope := range scopes {
-			if scope.Name == scopeName {
-				internalScopes = append(internalScopes, scope.ID)
-				break
-			}
-		}
-	}
-	kcPer.Scopes = internalScopes
-
 	created, err := createPermission(ctx, rk.Config.Host, token.AccessToken, input.TenantDomain, *input.ClientID, kcPer)
 
 	if err != nil {
@@ -141,6 +129,35 @@ func (rk PermissionKeycloak) ListPermissions(ctx context.Context, input *baseCmd
 		}
 	}
 	return permissions, nil
+}
+func (rk PermissionKeycloak) DeletePermission(ctx context.Context, input *baseCmd.BaseInput, resourceID string) (err error) {
+	token, err := rk.GetValidToken(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get token: %w", err)
+	}
+	err = rk.FetchClient(ctx, input)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+
+	kcPermissions, err := rk.Client.GetPermissions(
+		ctx,
+		token.AccessToken,
+		input.TenantDomain,
+		*input.ClientID,
+		gocloak.GetPermissionParams{Resource: &resourceID},
+	)
+	if err != nil {
+		return fmt.Errorf("failed to list permissions: %w", err)
+	}
+
+	for i := range kcPermissions {
+		err = rk.Client.DeletePermission(ctx, token.AccessToken, input.TenantDomain, *input.ClientID, *kcPermissions[i].ID)
+		if err != nil {
+			return
+		}
+	}
+	return
 }
 
 func createPermission(ctx context.Context, url, token, tenantID, IDofClient string, p *permissionKc) (*permissionDomain.Permission, error) {

@@ -209,6 +209,7 @@ func (c *Core) initServer(ctx context.Context) error {
 	permissionService := appPermission.NewService(base, &appPermission.ServiceDependencies{
 		Repo:  permissionKC,
 		Scope: scopeService,
+		Role:  roleService,
 		Config: &appPermission.Config{
 			DefaultRoles: tenantConfig.Authorization.Roles,
 		},

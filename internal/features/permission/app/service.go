@@ -3,7 +3,10 @@ package app
 import (
 	"backend/internal/features/permission/domain"
 	"backend/internal/features/permission/domain/command"
+	appRole "backend/internal/features/role/app"
+	roleDomain "backend/internal/features/role/domain"
 	appScope "backend/internal/features/scope/app"
+
 	"backend/shared/base"
 	baseCmd "backend/shared/base/command"
 	"backend/shared/validator"
@@ -13,7 +16,7 @@ import (
 
 type PermissionService interface {
 	CreatePermission(ctx context.Context, input *command.CreatePermissionInput) (*domain.Permission, error)
-	UpdatePermission(ctx context.Context, input * command.UpdatePermissionInput)(*domain.Permission,error)
+	UpdatePermission(ctx context.Context, input *command.UpdatePermissionInput) (*domain.Permission, error)
 	ListPermissions(ctx context.Context, input *baseCmd.BaseInput) ([]domain.Permission, error)
 }
 type Config struct {
@@ -22,12 +25,14 @@ type Config struct {
 
 type ServiceDependencies struct {
 	Repo   domain.PermissionProvider
+	Role   appRole.RoleService
 	Scope  appScope.ScopeService
 	Config *Config
 }
 type permissionService struct {
 	permissionProvider domain.PermissionProvider
 	scopeProvider      appScope.ScopeService
+	roles              appRole.RoleService
 	config             *Config
 	*base.BaseService
 }
@@ -36,6 +41,7 @@ func NewService(base *base.BaseService, deps *ServiceDependencies) PermissionSer
 	return &permissionService{
 		permissionProvider: deps.Repo,
 		scopeProvider:      deps.Scope,
+		roles:              deps.Role,
 		BaseService:        base,
 		config:             deps.Config,
 	}
@@ -102,7 +108,43 @@ func (s *permissionService) UpdatePermission(ctx context.Context, input *command
 	if err != nil {
 		return nil, fmt.Errorf("validation error %s", err.Error())
 	}
+	//Delete previous permissions
+	err = s.permissionProvider.DeletePermission(ctx, &input.BaseInput, input.ResourceID)
+	if err != nil {
+		return nil, err
+	}
 
+	roles, err := s.roles.ListRoles(ctx, &input.BaseInput)
+	if err != nil {
+		return
+	}
+	rolesMap := make(map[string]roleDomain.Role)
+	for i := range roles {
+		rolesMap[roles[i].Name] = roles[i]
+	}
+	for roleName, scopes := range input.Roles {
+		scopesIDs := make([]string, 0)
+		for j := range scopes {
+			scopesIDs = append(scopesIDs, scopes[j].ID)
+		}
+		role, found := rolesMap[roleName]
+		if !found {
+			return nil, fmt.Errorf("role not found")
+		}
+		_, err = s.CreatePermission(ctx, &command.CreatePermissionInput{
+			BaseInput:        input.BaseInput,
+			Name:             domain.NameNonAdmin(roleName, input.ResourceName),
+			Description:      fmt.Sprintf("Permission for %s resource with %s role", input.ResourceName, roleName),
+			Type:             domain.TypeScope,
+			Resources:        input.ResourceID,
+			Scopes:           scopesIDs,
+			Policies:         []string{role.PolicyID},
+			DecisionStrategy: domain.DecisionAffirmative,
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	return
 }

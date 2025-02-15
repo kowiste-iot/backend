@@ -31,6 +31,7 @@ const (
 type PermissionProvider interface {
 	CreatePermission(ctx context.Context, scopes []scopeDomain.Scope, input *baseCmd.BaseInput, permission *Permission) (*Permission, error)
 	ListPermissions(ctx context.Context, input *baseCmd.BaseInput) ([]Permission, error)
+	DeletePermission(ctx context.Context, input *baseCmd.BaseInput, reourceID string) error
 }
 
 type Permission struct {
@@ -58,7 +59,7 @@ func New(name, description, typePermission, decisionStrategy, resources string, 
 		Name:             name,
 		Description:      description,
 		Type:             typePermission,
-		Resource:        resources,
+		Resource:         resources,
 		Scopes:           scopes,
 		Policies:         policies,
 		DecisionStrategy: decisionStrategy,

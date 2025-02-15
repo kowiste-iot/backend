@@ -9,7 +9,6 @@ import (
 
 type CreatePermissionInput struct {
 	command.BaseInput
-	ID               string
 	Name             string
 	Description      string
 	Type             string
@@ -21,9 +20,10 @@ type CreatePermissionInput struct {
 }
 type UpdatePermissionInput struct {
 	command.BaseInput
-	ID        string
-	Resources string
-	Roles     map[string][]scopeDomain.Scope
+	ID           string
+	ResourceID   string
+	ResourceName string
+	Roles        map[string][]scopeDomain.Scope
 }
 
 func ResourceName(roleName string) string {
