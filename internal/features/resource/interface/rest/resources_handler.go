@@ -76,11 +76,11 @@ func (h *ResourceHandler) UpdateResource(c *gin.Context) {
 		DisplayName: req.DisplayName,
 		Roles:       req.Roles,
 	}
-	result, err := h.resource.UpdateResource(ctx, &input)
+	_, err = h.resource.UpdateResource(ctx, &input)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to list roles"})
 		return
 	}
 
-	c.JSON(http.StatusOK, ToResourcesResponse(*result))
+	c.Status(http.StatusOK)
 }

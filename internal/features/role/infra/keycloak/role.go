@@ -145,66 +145,14 @@ func (rk RoleKeycloak) GetRoles(ctx context.Context, input *baseCmd.BaseInput) (
 		if *rol.Name == domain.RoleUma {
 			continue //dont show uma role
 		}
+		pol, err := rk.getPolicyByName(ctx, input, domain.PolicyName(*rol.Name))
+		if err != nil {
+			return nil, err
+		}
 		r := domain.New(*rol.ID, *rol.Name)
 		r.WithDescription(rol.Description)
-		authRoles = append(authRoles, *r)
-	}
+		authRoles = append(authRoles, *r.WithPolicy(pol.ID))
 
+	}
 	return authRoles, nil
-}
-func (rk RoleKeycloak) AssignRoleToResource(ctx context.Context, input *command.ResourceAssignRoleInput) (err error) {
-	token, err := rk.GetValidToken(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to get token: %w", err)
-	}
-	err = rk.FetchClient(ctx, &input.BaseInput)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	fmt.Println(token)
-	_, err = rk.getPolicyByName(ctx, &input.BaseInput, domain.PolicyName(input.RoleName))
-	if err != nil {
-		return
-	}
-	scopes := make([]string, 0)
-	for i := range input.Scopes {
-		scopes = append(scopes, input.Scopes[i].Name)
-	}
-	// perm := permission.Permission{
-	// 	Name:             permission.NameNonAdmin(input.RoleName, input.ResourceName),
-	// 	Description:      fmt.Sprintf("Permission for %s resource with %s role", input.ResourceName, input.RoleName),
-	// 	Type:             permission.TypeScope,
-	// 	Resources:        []string{input.ResourceID},
-	// 	Scopes:           scopes,
-	// 	Policies:         []string{p.ID},
-	// 	DecisionStrategy: permission.DecisionAffirmative,
-	// }
-
-	// _, err = rk.CreatePermission(ctx, input.TenantDomain, *input.ClientID, perm)
-	// if err != nil {
-	// 	return fmt.Errorf("failed to create permission for %s %s: %w", input.ResourceName, input.RoleName, err)
-	// }
-
-	return
-}
-func (rk RoleKeycloak) RemoveRolesFromResource(ctx context.Context, input *command.ResourceAssignRoleInput) (err error) {
-	token, err := rk.GetValidToken(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to get token: %w", err)
-	}
-	err = rk.FetchClient(ctx, &input.BaseInput)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	permissions, err := rk.Client.GetPermissions(ctx, token.AccessToken, input.TenantDomain, *input.ClientID, gocloak.GetPermissionParams{
-		Resource: &input.ResourceID,
-	})
-	for i := range permissions {
-		err = rk.Client.DeletePermission(ctx, token.AccessToken, input.TenantDomain, *input.ClientID, *permissions[i].ID)
-		if err != nil {
-			return
-		}
-	}
-	return
-
 }

@@ -70,14 +70,14 @@ func (r *widgetRepository) FindByID(ctx context.Context, input *baseCmd.BaseInpu
 }
 
 func (r *widgetRepository) FindAll(ctx context.Context, input *baseCmd.BaseInput) ([]*domain.Widget, error) {
-	var dbWidgets []Dashboard
+	var dbWidgets []Widget
 
 	pg, ok := pagination.GetPagination(ctx)
 	if !ok {
 		return nil, errors.New("pagination not found in context")
 	}
 	var total int64
-	err := r.db.Model(&Dashboard{}).Where(gormhelper.TenantBranchFilter(input.TenantDomain, input.BranchName)).Count(&total).Error
+	err := r.db.Model(&Widget{}).Where(gormhelper.TenantBranchFilter(input.TenantDomain, input.BranchName)).Count(&total).Error
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +98,7 @@ func (r *widgetRepository) FindAll(ctx context.Context, input *baseCmd.BaseInput
 		widgets[i] = domain.NewWidgetFromRepository(
 			dbWidget.ID,
 			dbWidget.TenantID,
-			dbWidget.BranchID,
+			dbWidget.BranchName,
 			dbWidget.Name,
 			"",
 			0,

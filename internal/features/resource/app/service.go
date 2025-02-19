@@ -3,17 +3,18 @@ package app
 import (
 	"backend/internal/features/resource/domain"
 	"backend/internal/features/resource/domain/command"
+	"slices"
 
 	appRole "backend/internal/features/role/app"
-	rolesDomain "backend/internal/features/role/domain"
+	roleDomain "backend/internal/features/role/domain"
+
 	scopeDomain "backend/internal/features/scope/domain"
-	roleCmd "backend/internal/features/role/domain/command"
 
 	appScope "backend/internal/features/scope/app"
 
 	appPermission "backend/internal/features/permission/app"
 	permissionDomain "backend/internal/features/permission/domain"
-
+	permissionCmd "backend/internal/features/permission/domain/command"
 
 	"backend/shared/base"
 	baseCmd "backend/shared/base/command"
@@ -138,38 +139,57 @@ func (s *resourceService) UpdateResource(ctx context.Context, input *command.Upd
 	if err != nil {
 		return
 	}
-	mRoles := make(map[string]rolesDomain.Role)
-	//get policty of role
+	perms, err := s.permission.ListPermissions(ctx, &input.BaseInput)
+	if err != nil {
+		return
+	}
+	filterPerms := slices.DeleteFunc(perms, func(p permissionDomain.Permission) bool {
+		return p.Resource != r.ID
+	})
 	roles, err := s.roles.ListRoles(ctx, &input.BaseInput)
 	if err != nil {
 		return
 	}
+	rolesMap := make(map[string]roleDomain.Role)
 	for i := range roles {
-		mRoles[roles[i].Name] = roles[i]
+		rolesMap[roles[i].Name] = roles[i]
 	}
-
-	inputAssign := roleCmd.ResourceAssignRoleInput{
-		BaseInput:    input.BaseInput,
-		ResourceID:   r.ID,
-		ResourceName: r.DisplayName,
-	}
-	err = s.roles.RemoveRolesFromResource(ctx, &inputAssign)
-	if err != nil {
+	if len(filterPerms) == 0 {
+		for roleName, scopes := range input.Roles {
+			scopesIDs := make([]string, 0)
+			for j := range scopes {
+				scopesIDs = append(scopesIDs, scopes[j].ID)
+			}
+			role, found := rolesMap[roleName]
+			if !found {
+				return nil, fmt.Errorf("role not found")
+			}
+			_, err = s.permission.CreatePermission(ctx, &permissionCmd.CreatePermissionInput{
+				BaseInput:        input.BaseInput,
+				Name:             permissionDomain.NameNonAdmin(roleName, r.Name),
+				Description:      fmt.Sprintf("Permission for %s resource with %s role", r.Name, roleName),
+				Type:             permissionDomain.TypeScope,
+				Resources:        r.ID,
+				Scopes:           scopesIDs,
+				Policies:         []string{role.PolicyID},
+				DecisionStrategy: permissionDomain.DecisionAffirmative,
+			})
+			if err != nil {
+				return nil, err
+			}
+		}
 		return
 	}
-
-	//create permissions should be Assign Role to Resource ? maybe assign roles should be on permission
-	for name, scopes := range input.Roles {
-		role, ok := mRoles[name]
-		if !ok {
-			return nil, fmt.Errorf("error ")
-		}
-		inputAssign.RoleID = role.ID
-		inputAssign.RoleName = name
-		inputAssign.Scopes = scopes
-		err = s.roles.AssignRoleToResource(ctx, &inputAssign)
+	for i := range filterPerms {
+		_, err = s.permission.UpdatePermission(ctx, &permissionCmd.UpdatePermissionInput{
+			BaseInput:    input.BaseInput,
+			ID:           filterPerms[i].ID,
+			ResourceID:   r.ID,
+			ResourceName: r.Name,
+			Roles:        input.Roles,
+		})
 		if err != nil {
-			return
+			return nil, err
 		}
 	}
 

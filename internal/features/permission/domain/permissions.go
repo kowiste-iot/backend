@@ -29,10 +29,8 @@ func (rs Permissions) MapRoles(roles domain.Roles, filterAdmin bool) (permission
 func (rs Permissions) GetByResource(resourceID string) (p []Permission) {
 
 	for i := range rs {
-		for j := range rs[i].Resources {
-			if rs[i].Resources[j] == resourceID {
-				p = append(p, rs[i])
-			}
+		if rs[i].Resource == resourceID {
+			p = append(p, rs[i])
 		}
 	}
 	return
