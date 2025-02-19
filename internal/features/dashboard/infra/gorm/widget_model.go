@@ -10,7 +10,7 @@ import (
 type Widget struct {
 	ID          string           `gorm:"primaryKey;column:id"`
 	TenantID    string           `gorm:"column:tenant_id;not null"`
-	BranchName  string           `gorm:"column:branch_name;not null"`
+	BranchName  string           `gorm:"column:branch_id;not null"`
 	DashboardID string           `gorm:"column:dashboard_id;not null"`
 	Name        string           `gorm:"column:name;not null"`
 	TypeWidget  byte             `gorm:"column:type_widget;not null"`

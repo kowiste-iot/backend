@@ -3,6 +3,8 @@ package app
 import (
 	"backend/internal/features/dashboard/domain"
 	"backend/internal/features/dashboard/domain/command"
+	resourceDomain "backend/internal/features/resource/domain"
+	scopeDomain "backend/internal/features/scope/domain"
 	"backend/shared/base"
 	baseCmd "backend/shared/base/command"
 	"backend/shared/validator"
@@ -29,14 +31,14 @@ func NewWidgetService(base *base.BaseService, repo domain.WidgetRepository) Widg
 	}
 }
 func (s *widgetService) CreateWidget(ctx context.Context, input *command.CreateWidgetInput) (widget *domain.Widget, err error) {
-	// err = s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
-	// 	BaseInput: input.BaseInput,
-	// 	Resource:  resourceDomain.Widget,
-	// 	Scope:     scope.Create,
-	// })
-	// if err != nil {
-	// 	return nil, err
-	// }
+	err = s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
+		BaseInput: input.BaseInput,
+		Resource:  resourceDomain.Widget,
+		Scope:     scopeDomain.Create,
+	})
+	if err != nil {
+		return nil, err
+	}
 	err = validator.Validate(input)
 	if err != nil {
 		return nil, fmt.Errorf("validation error %s", err.Error())
@@ -55,14 +57,14 @@ func (s *widgetService) CreateWidget(ctx context.Context, input *command.CreateW
 }
 
 func (s *widgetService) GetWidget(ctx context.Context, input *command.WidgetIDInput) (widget *domain.Widget, err error) {
-	// err = s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
-	// 	BaseInput: input.BaseInput,
-	// 	Resource:  resourceDomain.Widget,
-	// 	Scope:     scope.View,
-	// })
-	// if err != nil {
-	// 	return nil, err
-	// }
+	err = s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
+		BaseInput: input.BaseInput,
+		Resource:  resourceDomain.Widget,
+		Scope:     scopeDomain.View,
+	})
+	if err != nil {
+		return nil, err
+	}
 	widget, err = s.repo.FindByID(ctx, &input.BaseInput, input.DashboardID, "")
 	if err != nil {
 		return nil, fmt.Errorf("failed to get widget: %w", err)
@@ -71,14 +73,14 @@ func (s *widgetService) GetWidget(ctx context.Context, input *command.WidgetIDIn
 }
 
 func (s *widgetService) ListWidgets(ctx context.Context, input *baseCmd.BaseInput) (widgets []*domain.Widget, err error) {
-	// err = s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
-	// 	BaseInput: *input,
-	// 	Resource:  resourceDomain.Widget,
-	// 	Scope:     scope.View,
-	// })
-	// if err != nil {
-	// 	return nil, err
-	// }
+	err = s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
+		BaseInput: *input,
+		Resource:  resourceDomain.Widget,
+		Scope:     scopeDomain.View,
+	})
+	if err != nil {
+		return nil, err
+	}
 	widgets, err = s.repo.FindAll(ctx, input)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list widgets: %w", err)
@@ -87,14 +89,14 @@ func (s *widgetService) ListWidgets(ctx context.Context, input *baseCmd.BaseInpu
 }
 
 func (s *widgetService) UpdateWidget(ctx context.Context, input *command.UpdateWidgetInput) (widget *domain.Widget, err error) {
-	// err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
-	// 	BaseInput: input.BaseInput,
-	// 	Resource:  resourceDomain.Widget,
-	// 	Scope:     scope.Update,
-	// })
-	// if err != nil {
-	// 	return nil, err
-	// }
+	err = s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
+		BaseInput: input.BaseInput,
+		Resource:  resourceDomain.Widget,
+		Scope:     scopeDomain.Update,
+	})
+	if err != nil {
+		return nil, err
+	}
 	widget, err = s.repo.FindByID(ctx, &input.BaseInput, input.DashboardID, input.ID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get widget: %w", err)
@@ -111,14 +113,14 @@ func (s *widgetService) UpdateWidget(ctx context.Context, input *command.UpdateW
 }
 func (s *widgetService) DeleteWidget(ctx context.Context, input *command.WidgetIDInput) (err error) {
 
-	// err = s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
-	// 	BaseInput: input.BaseInput,
-	// 	Resource:  resourceDomain.Widget,
-	// 	Scope:     scope.Delete,
-	// })
-	// if err != nil {
-	// 	return err
-	// }
+	err = s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
+		BaseInput: input.BaseInput,
+		Resource:  resourceDomain.Widget,
+		Scope:     scopeDomain.Delete,
+	})
+	if err != nil {
+		return err
+	}
 	err = s.repo.Remove(ctx, &input.BaseInput, input.DashboardID, input.WidgetID)
 	if err != nil {
 		return err
