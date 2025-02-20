@@ -5,12 +5,16 @@ import (
 	"backend/shared/base"
 	"backend/shared/logger"
 	"backend/shared/logger/openob"
-	"backend/shared/streaming/domain"
-	"backend/shared/streaming/infrastructure/nats"
+
 	"backend/shared/validator"
 	"context"
 	"errors"
+	"fmt"
 	"time"
+
+	streamDomain "backend/shared/stream/domain"
+	"backend/shared/stream/infra/nats"
+	repoStream "backend/shared/stream/repo"
 
 	appAsset "backend/internal/features/asset/app"
 	repoAsset "backend/internal/features/asset/infra/gorm"
@@ -63,13 +67,10 @@ import (
 
 	"backend/internal/interfaces/http"
 
-	wshandler "backend/internal/interfaces/http/handlers/websocket"
-
+	// wshandler "backend/internal/interfaces/http/handlers/websocket"
+	// appToken "backend/shared/token/app"
+	// appWS "backend/shared/websocket/app"
 	kcCore "backend/shared/keycloak"
-
-	//appNats "backend/shared/nats/app"
-	appToken "backend/shared/token/app"
-	appWS "backend/shared/websocket/app"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -80,6 +81,7 @@ type Core struct {
 	logger logger.Logger
 	db     *gorm.DB
 	server *http.Server
+	stream streamDomain.StreamClient
 }
 
 func NewCore(ctx context.Context) (*Core, error) {
@@ -140,6 +142,28 @@ func (c *Core) initDB(ctx context.Context) error {
 	return nil
 }
 
+// In initServer or create a new init function
+func (c *Core) initStreaming() error {
+	msgRepo := repoStream.NewMessageRepository(c.db)
+	streamConfig := &streamDomain.StreamConfig{
+		URL:            "http://localhost:4222", // Add this to your config
+		MaxReconnects:  5,
+		ReconnectWait:  time.Second * 5,
+		ConnectTimeout: time.Second * 2,
+		WriteTimeout:   time.Second * 2,
+		PersistMessage: true,
+	}
+
+	factory := nats.NewNatsClientFactory(msgRepo)
+	streamClient, err := factory.CreateClient(streamConfig)
+	if err != nil {
+		return fmt.Errorf("failed to create stream client: %w", err)
+	}
+
+	c.stream = streamClient
+	return nil
+}
+
 func (c *Core) initServer(ctx context.Context) error {
 
 	//load authentication config
@@ -168,9 +192,12 @@ func (c *Core) initServer(ctx context.Context) error {
 	//Asset
 	assetRepo := repoAsset.NewRepository(c.db)
 	assetService := appAsset.NewService(base, assetRepo)
+
+	assetDepRepo := repoAsset.NewDependencyRepository(c.db)
+	assetDep := appAsset.NewAssetDependencyService(base, assetDepRepo)
 	//Measure
 	measureRepo := repoMeasure.NewRepository(c.db)
-	measureService := appMeasure.NewService(base, measureRepo)
+	measureService := appMeasure.NewService(base, measureRepo, assetDep)
 	//Dashboard
 	dashboardRepo := repoDashboard.NewRepository(c.db)
 	dashboardService := appDashboard.NewService(base, dashboardRepo)
@@ -250,15 +277,9 @@ func (c *Core) initServer(ctx context.Context) error {
 	}
 	tenantService := appTenant.NewTenantService(base, &tenantDep)
 
-	//Nats
-	conn := nats.NewConnection(domain.ConnectionConfig{
-		URL: "http://localhost:4222",
-	})
-	conn.Connect()
-	natsClient := nats.NewClient(conn)
 	//Websocket
-	appT := appToken.NewTokenService("wA7pH9#kL$mN4@vX2*qR8", 8*time.Hour)
-	appH := appWS.NewHub()
+	// appT := appToken.NewTokenService("wA7pH9#kL$mN4@vX2*qR8", 8*time.Hour)
+	// appH := appWS.NewHub()
 	deps := http.ServerDependencies{
 		Authentication: kCore,
 		BranchHandler: tenanthandler.NewBranch(tenanthandler.BranchDependencies{
@@ -313,8 +334,8 @@ func (c *Core) initServer(ctx context.Context) error {
 			Logger:       c.logger,
 			ScopeService: scopeService,
 		}),
-		TokenHandler:    wshandler.NewTokenHandler(appT),
-		WSNotifyHandler: wshandler.NewNotificationHandler(appH, natsClient, appT),
+		// TokenHandler:    wshandler.NewTokenHandler(appT),
+		// WSNotifyHandler: wshandler.NewNotificationHandler(appH, natsClient, appT),
 	}
 
 	c.server = http.NewServer(c.cfg, c.logger, deps)

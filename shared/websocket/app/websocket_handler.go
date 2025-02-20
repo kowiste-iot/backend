@@ -1,6 +1,6 @@
 package app
 
-import "backend/shared/streaming/domain"
+import "backend/shared/stream/domain"
 
 type WebSocketHandler struct {
 	hub *Hub
@@ -11,7 +11,7 @@ func NewWebSocketHandler(hub *Hub) *WebSocketHandler {
 }
 
 func (h *WebSocketHandler) Handle(msg domain.Message) (err error) {
-	b, err := msg.ToByte()
+	b, err := msg.Data.ToBytes()
 	if err != nil {
 		return
 	}

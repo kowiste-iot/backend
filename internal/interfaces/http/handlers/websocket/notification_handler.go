@@ -1,9 +1,6 @@
 package websocket
 
 import (
-	"backend/shared/http/httputil"
-	streamingToken "backend/shared/streaming/domain"
-	"backend/shared/streaming/domain/subjects"
 	domainToken "backend/shared/token/domain"
 	appWS "backend/shared/websocket/app"
 	"net/http"
@@ -13,16 +10,17 @@ import (
 )
 
 type NotificationHandler struct {
-	hub          *appWS.Hub
-	subscriber   streamingToken.Subscriber
+	hub *appWS.Hub
+	// subscriber   streamingToken.Subscriber
 	tokenService domainToken.TokenService
 	upgrader     websocket.Upgrader
 }
 
-func NewNotificationHandler(hub *appWS.Hub, subscriber streamingToken.Subscriber, tokenService domainToken.TokenService) *NotificationHandler {
+// func NewNotificationHandler(hub *appWS.Hub, subscriber streamingToken.Subscriber, tokenService domainToken.TokenService) *NotificationHandler {
+func NewNotificationHandler(hub *appWS.Hub, tokenService domainToken.TokenService) *NotificationHandler {
 	return &NotificationHandler{
-		hub:          hub,
-		subscriber:   subscriber,
+		hub: hub,
+		// subscriber:   subscriber,
 		tokenService: tokenService,
 		upgrader: websocket.Upgrader{
 			ReadBufferSize:  1024,
@@ -52,26 +50,26 @@ func (h *NotificationHandler) HandleWebSocket(c *gin.Context) {
 		c.JSON(http.StatusBadGateway, gin.H{"error": "cannot upgrade" + err.Error()})
 		return
 	}
-	ctx := c.Request.Context()
+	// ctx := c.Request.Context()
 	client := appWS.NewClient(h.hub, conn, claims.TenantID, claims.UserID)
-	subGen := subjects.NewNotificationSubject()
-	wsHandler := appWS.NewWebSocketHandler(h.hub)
-	tenant, ok := httputil.GetTenant(ctx)
-	if !ok {
-		c.JSON(http.StatusBadGateway, gin.H{"error": "not tenant id"})
-		return
-	}
-	userID, ok := httputil.GetUserID(ctx)
-	if !ok {
-		c.JSON(http.StatusBadGateway, gin.H{"error": "not user id"})
-		return
-	}
-	// Subscribe to user's notifications
-	err = h.subscriber.Subscribe(ctx, subGen, wsHandler, tenant.ID(), userID)
-	if err != nil {
-		conn.Close()
-		return
-	}
+	// subGen := subjects.NewNotificationSubject()
+	// wsHandler := appWS.NewWebSocketHandler(h.hub)
+	// tenant, ok := httputil.GetTenant(ctx)
+	// if !ok {
+	// 	c.JSON(http.StatusBadGateway, gin.H{"error": "not tenant id"})
+	// 	return
+	// }
+	// userID, ok := httputil.GetUserID(ctx)
+	// if !ok {
+	// 	c.JSON(http.StatusBadGateway, gin.H{"error": "not user id"})
+	// 	return
+	// }
+	// // Subscribe to user's notifications
+	// err = h.subscriber.Subscribe(ctx, subGen, wsHandler, tenant.ID(), userID)
+	// if err != nil {
+	// 	conn.Close()
+	// 	return
+	// }
 
 	h.hub.RegisterClient(client) // Using the exported method instead
 
