@@ -11,14 +11,15 @@ import (
 )
 
 type AssetDependency struct {
-	TenantID  string `gorm:"index;uniqueIndex:idx_dependency"`
-	BranchID  string `gorm:"index;uniqueIndex:idx_dependency"`
-	FeatureID string `gorm:"uniqueIndex:idx_dependency"`
-	Feature   string `gorm:"uniqueIndex:idx_dependency"`
-	AssetID   string `gorm:"type:string;references:ID"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt `gorm:"index"`
+    TenantID  string `gorm:"index;uniqueIndex:idx_dependency"`
+    BranchID  string `gorm:"index;uniqueIndex:idx_dependency"`
+    FeatureID string `gorm:"uniqueIndex:idx_dependency"`
+    Feature   string `gorm:"uniqueIndex:idx_dependency"`
+    AssetID   string `gorm:"type:string;references:ID;constraint:OnDelete:RESTRICT"`
+    Asset     Asset  `gorm:"foreignKey:AssetID;references:ID"` 
+    CreatedAt time.Time
+    UpdatedAt time.Time
+    DeletedAt gorm.DeletedAt `gorm:"index"`
 }
 
 type assetDependencyRepository struct {
@@ -83,7 +84,8 @@ func (r *assetDependencyRepository) Update(ctx context.Context, dependency *doma
 }
 
 func (r *assetDependencyRepository) Remove(ctx context.Context, tenantID, branchID, featureID string) error {
-	result := r.db.WithContext(ctx).
+	//Unscope delete matched records permanently
+	result := r.db.WithContext(ctx).Unscoped().
 		Where(gormhelper.TenantBranchFilter(tenantID, branchID)+" AND feature_id = ?", featureID).
 		Delete(&AssetDependency{})
 

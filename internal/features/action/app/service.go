@@ -3,8 +3,13 @@ package app
 import (
 	"backend/internal/features/action/domain"
 	"backend/internal/features/action/domain/command"
+
+	appAsset "backend/internal/features/asset/app"
+	assetCmd "backend/internal/features/asset/domain/command"
+
 	resourceDomain "backend/internal/features/resource/domain"
 	scopeDomain "backend/internal/features/scope/domain"
+
 	"backend/shared/base"
 	baseCmd "backend/shared/base/command"
 	"backend/shared/validator"
@@ -20,13 +25,19 @@ type ActionService interface {
 	DeleteAction(ctx context.Context, input *command.ActionIDInput) error
 }
 type actionService struct {
-	repo domain.ActionRepository
+	repo     domain.ActionRepository
+	assetDep appAsset.AssetDependencyService
 	*base.BaseService
 }
 
-func NewService(base *base.BaseService, repo domain.ActionRepository) *actionService {
+const (
+	featureName string = "action"
+)
+
+func NewService(base *base.BaseService, repo domain.ActionRepository, assetDep appAsset.AssetDependencyService) *actionService {
 	return &actionService{
 		repo:        repo,
+		assetDep:    assetDep,
 		BaseService: base,
 	}
 }
@@ -53,6 +64,17 @@ func (s *actionService) CreateAction(ctx context.Context, input *command.CreateA
 		return nil, fmt.Errorf("failed to create action: %w", err)
 	}
 
+	//Update asset parent dependecy
+	err = s.assetDep.UpdateDependency(ctx, &assetCmd.DependencyChangeInput{
+		BaseInput:  input.BaseInput,
+		Feature:    featureName,
+		Action:     assetCmd.DependencyActionCreate,
+		FeatureID:  action.ID(),
+		NewAssetID: action.Parent(),
+	})
+	if err != nil {
+		return nil, err
+	}
 	return action, nil
 }
 
@@ -101,6 +123,9 @@ func (s *actionService) UpdateAction(ctx context.Context, input *command.UpdateA
 	if err != nil {
 		return nil, fmt.Errorf("failed to get action: %w", err)
 	}
+
+	oldParent := action.Parent()
+
 	err = action.Update(input.Name, input.Parent, input.Description, input.Enabled)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get action: %w", err)
@@ -109,8 +134,24 @@ func (s *actionService) UpdateAction(ctx context.Context, input *command.UpdateA
 		return nil, fmt.Errorf("failed to update action: %w", err)
 	}
 
+	if oldParent != action.Parent() {
+		//Update asset parent dependecy
+		err = s.assetDep.UpdateDependency(ctx, &assetCmd.DependencyChangeInput{
+			BaseInput:       input.BaseInput,
+			PreviousAssetID: oldParent,
+			Feature:         featureName,
+			Action:          assetCmd.DependencyActionUpdate,
+			FeatureID:       action.ID(),
+			NewAssetID:      action.Parent(),
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return action, nil
 }
+
 func (s *actionService) DeleteAction(ctx context.Context, input *command.ActionIDInput) error {
 
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
@@ -125,5 +166,16 @@ func (s *actionService) DeleteAction(ctx context.Context, input *command.ActionI
 	if err != nil {
 		return err
 	}
+
+	err = s.assetDep.UpdateDependency(ctx, &assetCmd.DependencyChangeInput{
+		BaseInput: input.BaseInput,
+		Feature:   featureName,
+		Action:    assetCmd.DependencyActionDelete,
+		FeatureID: input.ActionID,
+	})
+	if err != nil {
+		return err
+	}
+	
 	return nil
 }

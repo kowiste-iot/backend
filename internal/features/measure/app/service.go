@@ -9,6 +9,7 @@ import (
 
 	resourceDomain "backend/internal/features/resource/domain"
 	scopeDomain "backend/internal/features/scope/domain"
+
 	"backend/shared/base"
 	baseCmd "backend/shared/base/command"
 	"backend/shared/validator"
@@ -40,6 +41,7 @@ func NewService(base *base.BaseService, repo domain.MeasureRepository, assetDep 
 		BaseService: base,
 	}
 }
+
 func (s *measureService) CreateMeasure(ctx context.Context, input *command.CreateMeasureInput) (*domain.Measure, error) {
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
@@ -62,6 +64,7 @@ func (s *measureService) CreateMeasure(ctx context.Context, input *command.Creat
 	if err != nil {
 		return nil, fmt.Errorf("failed to create measure: %w", err)
 	}
+
 	//Update asset parent dependecy
 	err = s.assetDep.UpdateDependency(ctx, &assetCmd.DependencyChangeInput{
 		BaseInput:  input.BaseInput,
@@ -73,6 +76,7 @@ func (s *measureService) CreateMeasure(ctx context.Context, input *command.Creat
 	if err != nil {
 		return nil, err
 	}
+	
 	return measure, nil
 }
 
@@ -122,7 +126,9 @@ func (s *measureService) UpdateMeasure(ctx context.Context, input *command.Updat
 	if err != nil {
 		return nil, fmt.Errorf("failed to get measure: %w", err)
 	}
+
 	oldParent := measure.Parent()
+
 	err = measure.Update(input.Name, input.Parent, input.Description)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get measure: %w", err)
@@ -130,6 +136,7 @@ func (s *measureService) UpdateMeasure(ctx context.Context, input *command.Updat
 	if err := s.repo.Update(ctx, measure); err != nil {
 		return nil, fmt.Errorf("failed to update measure: %w", err)
 	}
+
 	if oldParent != measure.Parent() {
 		//Update asset parent dependecy
 		err = s.assetDep.UpdateDependency(ctx, &assetCmd.DependencyChangeInput{
@@ -147,6 +154,7 @@ func (s *measureService) UpdateMeasure(ctx context.Context, input *command.Updat
 
 	return measure, nil
 }
+
 func (s *measureService) DeleteMeasure(ctx context.Context, input *command.MeasureIDInput) error {
 
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
@@ -171,5 +179,6 @@ func (s *measureService) DeleteMeasure(ctx context.Context, input *command.Measu
 	if err != nil {
 		return err
 	}
+
 	return nil
 }

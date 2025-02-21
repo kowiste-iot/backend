@@ -200,19 +200,19 @@ func (c *Core) initServer(ctx context.Context) error {
 	measureService := appMeasure.NewService(base, measureRepo, assetDep)
 	//Dashboard
 	dashboardRepo := repoDashboard.NewRepository(c.db)
-	dashboardService := appDashboard.NewService(base, dashboardRepo)
+	dashboardService := appDashboard.NewService(base, dashboardRepo, assetDep)
 	//Widget
 	widgetRepo := repoDashboard.NewWidgetRepository(c.db)
 	widgetService := appDashboard.NewWidgetService(base, widgetRepo)
 	//Device
 	deviceRepo := repoDevice.NewRepository(c.db)
-	deviceService := appDevice.NewService(base, deviceRepo)
+	deviceService := appDevice.NewService(base, deviceRepo, assetDep)
 	//Action
 	actionRepo := repoAction.NewRepository(c.db)
-	actionService := appAction.NewService(base, actionRepo)
+	actionService := appAction.NewService(base, actionRepo, assetDep)
 	//Alert
 	alertRepo := repoAlert.NewRepository(c.db)
-	alertService := appAlert.NewService(base, alertRepo)
+	alertService := appAlert.NewService(base, alertRepo, assetDep)
 	//User
 	userRepo := repoUser.NewRepository(c.db)
 	userKC := userKeycloak.New(kCore)
