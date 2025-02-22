@@ -23,12 +23,12 @@ func NewBranch(base *base.BaseService, branchService app.BranchService, middlewa
 }
 
 func (bh *BranchHandler) Init(rg *gin.RouterGroup) *gin.RouterGroup {
-	apiBranch := rg.Group(":branchid")
+	apiBranch := rg.Group("branchid")
 	{
 		apiBranch.Use(bh.middleware.Recovery())
 		apiBranch.Use(bh.middleware.Auth())
 		// Branch routes here
 	}
-	branchID := apiBranch.Group("branchid")
+	branchID := apiBranch.Group(":branchid")
 	return branchID
 }
