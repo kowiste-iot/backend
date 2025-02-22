@@ -33,5 +33,8 @@ func (th *TenantHandler) Init(rg *gin.RouterGroup) *gin.RouterGroup {
 		tenant.DELETE(":id", th.DeleteTenant)
 	}
 	tenantID := rg.Group(":tenantid")
+	{
+		tenantID.Use(th.TenantIDMiddleware())
+	}
 	return tenantID
 }
