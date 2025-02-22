@@ -3,34 +3,15 @@ package dashboardhandler
 import (
 	"net/http"
 
-	"backend/internal/features/dashboard/app"
 	"backend/internal/features/dashboard/domain"
 	"backend/internal/features/dashboard/domain/command"
 	baseCmd "backend/shared/base/command"
 	ginhelp "backend/shared/http/gin"
 	"backend/shared/http/httputil"
-	"backend/shared/logger"
 	"backend/shared/pagination"
 
 	"github.com/gin-gonic/gin"
 )
-
-type WidgetHandler struct {
-	logger        logger.Logger
-	widgetService app.WidgetService
-}
-
-type DependenciesWidget struct {
-	Logger        logger.Logger
-	WidgetService app.WidgetService
-}
-
-func NewWidget(deps DependenciesWidget) *WidgetHandler {
-	return &WidgetHandler{
-		logger:        deps.Logger,
-		widgetService: deps.WidgetService,
-	}
-}
 
 // @Summary Create a new widget
 // @Description Create a new widget for the tenant
@@ -68,7 +49,7 @@ func (h *WidgetHandler) CreateWidget(c *gin.Context) {
 	result, err := h.widgetService.CreateWidget(ctx, &input)
 	if err != nil {
 		tenantID, _ := httputil.GetTenant(ctx)
-		h.logger.Error(c.Request.Context(), err, "Failed to create widget", map[string]interface{}{
+		h.base.Logger.Error(c.Request.Context(), err, "Failed to create widget", map[string]interface{}{
 			"error":       err.Error(),
 			"tenantID":    tenantID,
 			"dashboardID": dashboardID,
@@ -116,7 +97,7 @@ func (h *WidgetHandler) GetWidget(c *gin.Context) {
 			return
 		}
 
-		h.logger.Error(c.Request.Context(), err, "Failed to get widget", map[string]interface{}{
+		h.base.Logger.Error(c.Request.Context(), err, "Failed to get widget", map[string]interface{}{
 			"error":       err.Error(),
 			"tenantID":    tenant.Domain(),
 			"dashboardID": dashboardID,
@@ -154,7 +135,7 @@ func (h *WidgetHandler) ListWidgets(c *gin.Context) {
 	results, err := h.widgetService.ListWidgets(ctx, &input)
 	if err != nil {
 		tenantID, _ := httputil.GetTenant(ctx)
-		h.logger.Error(c.Request.Context(), err, "Failed to get widget", map[string]interface{}{
+		h.base.Logger.Error(c.Request.Context(), err, "Failed to get widget", map[string]interface{}{
 			"error":       err.Error(),
 			"tenantID":    tenantID,
 			"dashboardID": dashboardID,
@@ -205,9 +186,9 @@ func (h *WidgetHandler) UpdateWidget(c *gin.Context) {
 	}
 	inputBase := baseCmd.NewInput(tenant.Domain(), branch)
 	input := command.UpdateWidgetInput{
-		BaseInput:   inputBase,
-		ID:          dashboardID,
-		Name:        req.Name,
+		BaseInput: inputBase,
+		ID:        dashboardID,
+		Name:      req.Name,
 	}
 	result, err := h.widgetService.UpdateWidget(ctx, &input)
 	if err != nil {
@@ -216,11 +197,11 @@ func (h *WidgetHandler) UpdateWidget(c *gin.Context) {
 			return
 		}
 		tenantID, _ := httputil.GetTenant(ctx)
-		h.logger.Error(c.Request.Context(), err, "Failed to update widget", map[string]interface{}{
+		h.base.Logger.Error(c.Request.Context(), err, "Failed to update widget", map[string]interface{}{
 			"error":       err.Error(),
 			"tenantID":    tenantID,
 			"dashboardID": dashboardID,
-			"widgetID": widgetID,
+			"widgetID":    widgetID,
 		})
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update widget"})
 		return
@@ -266,7 +247,7 @@ func (h *WidgetHandler) DeleteWidget(c *gin.Context) {
 			return
 		}
 		tenantID, _ := httputil.GetTenant(ctx)
-		h.logger.Error(c.Request.Context(), err, "Failed to delete widget", map[string]interface{}{
+		h.base.Logger.Error(c.Request.Context(), err, "Failed to delete widget", map[string]interface{}{
 			"error":       err.Error(),
 			"tenantID":    tenantID,
 			"dashboardID": dashboardID,

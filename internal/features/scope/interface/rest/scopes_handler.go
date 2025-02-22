@@ -1,34 +1,15 @@
 package scopehandler
 
 import (
-	"backend/internal/features/scope/app"
 	baseCmd "backend/shared/base/command"
 
 	ginhelp "backend/shared/http/gin"
 	"backend/shared/http/httputil"
-	"backend/shared/logger"
 	"backend/shared/pagination"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
-
-type ScopeHandler struct {
-	logger       logger.Logger
-	scopeService app.ScopeService
-}
-
-type Dependencies struct {
-	Logger       logger.Logger
-	ScopeService app.ScopeService
-}
-
-func New(deps Dependencies) *ScopeHandler {
-	return &ScopeHandler{
-		logger:       deps.Logger,
-		scopeService: deps.ScopeService,
-	}
-}
 
 func (h *ScopeHandler) ListRoles(c *gin.Context) {
 	ctx := c.Request.Context()

@@ -1,34 +1,15 @@
 package rolehandler
 
 import (
-	"backend/internal/features/role/app"
 	"backend/internal/features/role/domain/command"
 	baseCmd "backend/shared/base/command"
 	ginhelp "backend/shared/http/gin"
 	"backend/shared/http/httputil"
-	"backend/shared/logger"
 	"backend/shared/pagination"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
-
-type RoleHandler struct {
-	logger      logger.Logger
-	roleService app.RoleService
-}
-
-type Dependencies struct {
-	Logger      logger.Logger
-	RoleService app.RoleService
-}
-
-func New(deps Dependencies) *RoleHandler {
-	return &RoleHandler{
-		logger:      deps.Logger,
-		roleService: deps.RoleService,
-	}
-}
 
 func (h *RoleHandler) CreateRole(c *gin.Context) {
 	var req CreateRoleRequest
@@ -52,7 +33,7 @@ func (h *RoleHandler) CreateRole(c *gin.Context) {
 
 	_, err = h.roleService.CreateRole(ctx, &input)
 	if err != nil {
-		h.logger.Error(ctx, err, "Failed to create role", nil)
+		h.base.Logger.Error(ctx, err, "Failed to create role", nil)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create role " + err.Error()})
 		return
 	}
@@ -75,7 +56,7 @@ func (h *RoleHandler) GetRole(c *gin.Context) {
 	}
 	role, err := h.roleService.GetRole(c.Request.Context(), &input)
 	if err != nil {
-		h.logger.Error(c.Request.Context(), err, "Failed to get role", nil)
+		h.base.Logger.Error(c.Request.Context(), err, "Failed to get role", nil)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get role"})
 		return
 	}
@@ -129,7 +110,7 @@ func (h *RoleHandler) DeleteRole(c *gin.Context) {
 	}
 	err = h.roleService.DeleteRole(c.Request.Context(), &input)
 	if err != nil {
-		h.logger.Error(c.Request.Context(), err, "Failed to delete role", nil)
+		h.base.Logger.Error(c.Request.Context(), err, "Failed to delete role", nil)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete role"})
 		return
 	}

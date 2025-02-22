@@ -14,6 +14,7 @@ import (
 	repoStream "backend/shared/stream/repo"
 
 	"backend/internal/interfaces/http"
+	kcCore "backend/shared/keycloak"
 
 	// wshandler "backend/internal/interfaces/http/handlers/websocket"
 	// appToken "backend/shared/token/app"
@@ -27,6 +28,7 @@ type Core struct {
 	cfg    *config.Config
 	logger logger.Logger
 	db     *gorm.DB
+	auth   *kcCore.Keycloak
 	server *http.Server
 	stream streamDomain.StreamClient
 }
@@ -43,6 +45,9 @@ func NewCore(ctx context.Context) (*Core, error) {
 	}
 
 	if err := core.initDB(ctx); err != nil {
+		return nil, err
+	}
+	if err := core.initAuth(); err != nil {
 		return nil, err
 	}
 
@@ -87,6 +92,17 @@ func (c *Core) initDB(ctx context.Context) error {
 	}
 	c.db = db
 	return nil
+}
+
+func (c *Core) initAuth() (err error) {
+	c.auth, err = kcCore.New(&kcCore.KeycloakConfig{
+		Host:         c.cfg.Authentication.Host,
+		Realm:        c.cfg.Authentication.Realm,
+		ClientID:     c.cfg.Authentication.ClientID,
+		ClientSecret: c.cfg.Authentication.ClientSecret,
+		WebClientID:  c.cfg.Authentication.WebClientID,
+	})
+	return
 }
 
 // In initServer or create a new init function
