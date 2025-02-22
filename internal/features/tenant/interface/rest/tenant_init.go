@@ -32,5 +32,6 @@ func (th *TenantHandler) Init(rg *gin.RouterGroup) *gin.RouterGroup {
 		tenant.PUT(":id", th.UpdateTenant)
 		tenant.DELETE(":id", th.DeleteTenant)
 	}
-	return tenant
+	tenantID := tenant.Group("tenantid")
+	return tenantID
 }

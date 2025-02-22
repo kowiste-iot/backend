@@ -29,5 +29,6 @@ func (bh *BranchHandler) Init(rg *gin.RouterGroup) *gin.RouterGroup {
 		apiBranch.Use(bh.middleware.Auth())
 		// Branch routes here
 	}
-	return apiBranch
+	branchID := apiBranch.Group("branchid")
+	return branchID
 }
