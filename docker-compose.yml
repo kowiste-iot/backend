@@ -46,21 +46,21 @@ services:
     networks:
       - keycloak-network
   emqx:
-    image: emqx/emqx:5.8.4
-    container_name: emqx
+    image: emqx/emqx:latest
     ports:
-      - "2883:1883" # MQTT
-      - "9083:8083" # MQTT/WebSocket
-      - "9084:8084" # MQTT/WSS
-      - "9883:8883" # MQTT/SSL
-      - "18083:18083" # Dashboard
+      - "1883:1883"      # MQTT port
+      - "8083:8083"      # MQTT/WebSocket port
+      - "8084:8084"      # MQTT/WSS port
+      - "8883:8883"      # MQTT/SSL port
+      - "18083:18083"    # Dashboard port
+    environment:
+      - EMQX_ALLOW_ANONYMOUS=true
+      - EMQX_ACL_NOMATCH=allow
     volumes:
-      - ./configs/emqx:/opt/emqx/etc
       - emqx_data:/opt/emqx/data
       - emqx_log:/opt/emqx/log
-    restart: unless-stopped
-    networks:
-      - keycloak-network
+    restart: always
+
   keycloak:
     build:
       context: .
@@ -128,9 +128,6 @@ volumes:
   emqx_data:
   emqx_log:
   minio_data:
-
-
-
 networks:
   keycloak-network:
     name: keycloak-network

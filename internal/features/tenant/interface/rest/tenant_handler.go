@@ -3,34 +3,15 @@ package tenanthandler
 import (
 	"net/http"
 
-	"backend/internal/features/tenant/app"
 	"backend/internal/features/tenant/domain"
 	"backend/internal/features/tenant/domain/command"
 	"backend/shared/errors"
 	ginhelp "backend/shared/http/gin"
 	"backend/shared/http/httputil"
-	"backend/shared/logger"
 	"backend/shared/pagination"
 
 	"github.com/gin-gonic/gin"
 )
-
-type TenantHandler struct {
-	logger        logger.Logger
-	tenantService app.TenantService
-}
-
-type Dependencies struct {
-	Logger        logger.Logger
-	TenantService app.TenantService
-}
-
-func New(deps Dependencies) *TenantHandler {
-	return &TenantHandler{
-		logger:        deps.Logger,
-		tenantService: deps.TenantService,
-	}
-}
 
 // @Summary Create a new tenant
 // @Description Create a new tenant for the tenant
@@ -45,12 +26,12 @@ func New(deps Dependencies) *TenantHandler {
 // @Failure 401 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
 // @Router /api/v1/{tenantid}/tenants [post]
-func (h *TenantHandler) 	CreateTenant(c *gin.Context) {
+func (h *TenantHandler) CreateTenant(c *gin.Context) {
 	var req CreateTenantRequest
 	ctx := c.Request.Context()
-	h.logger.Debug(ctx, "Starting tenant creation request", nil)
+	h.base.Logger.Debug(ctx, "Starting tenant creation request", nil)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		h.logger.Error(ctx, err, "Failed to bind JSON request", map[string]interface{}{
+		h.base.Logger.Error(ctx, err, "Failed to bind JSON request", map[string]interface{}{
 			"error": err.Error(),
 		})
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -67,7 +48,7 @@ func (h *TenantHandler) 	CreateTenant(c *gin.Context) {
 
 	result, err := h.tenantService.CreateTenant(ctx, &input)
 	if err != nil {
-		h.logger.Error(ctx, err, "Failed to create tenant", map[string]interface{}{
+		h.base.Logger.Error(ctx, err, "Failed to create tenant", map[string]interface{}{
 			"domain": input.Domain,
 			"name":   input.Name,
 			"err":    err.Error(),
@@ -78,7 +59,7 @@ func (h *TenantHandler) 	CreateTenant(c *gin.Context) {
 		})
 		return
 	}
-	h.logger.Info(ctx, "Tenant created successfully", map[string]interface{}{
+	h.base.Logger.Info(ctx, "Tenant created successfully", map[string]interface{}{
 		"tenantID": result.ID(), // Assuming you have an ID getter
 		"domain":   result.Domain(),
 	})
@@ -109,7 +90,7 @@ func (h *TenantHandler) GetTenant(c *gin.Context) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Tenant not found"})
 			return
 		}
-		h.logger.Error(c.Request.Context(), err, "Failed to get tenant", map[string]interface{}{
+		h.base.Logger.Error(c.Request.Context(), err, "Failed to get tenant", map[string]interface{}{
 			"error":    err.Error(),
 			"tenantID": tenantID,
 		})
@@ -189,7 +170,7 @@ func (h *TenantHandler) UpdateTenant(c *gin.Context) {
 			return
 		}
 
-		h.logger.Error(c.Request.Context(), err, "Failed to update tenant", map[string]interface{}{
+		h.base.Logger.Error(c.Request.Context(), err, "Failed to update tenant", map[string]interface{}{
 			"error":    err.Error(),
 			"tenantID": tenantID,
 		})
@@ -224,7 +205,7 @@ func (h *TenantHandler) DeleteTenant(c *gin.Context) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Tenant not found"})
 			return
 		}
-		h.logger.Error(c.Request.Context(), err, "Failed to delete tenant", map[string]interface{}{
+		h.base.Logger.Error(c.Request.Context(), err, "Failed to delete tenant", map[string]interface{}{
 			"error":    err.Error(),
 			"tenantID": tenantID,
 		})

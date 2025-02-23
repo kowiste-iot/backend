@@ -1,35 +1,16 @@
 package tenanthandler
 
 import (
-	"backend/internal/features/tenant/app"
 	"backend/internal/features/tenant/domain"
 	"backend/internal/features/tenant/domain/command"
 	baseCmd "backend/shared/base/command"
 	ginhelp "backend/shared/http/gin"
 	"backend/shared/http/httputil"
-	"backend/shared/logger"
 	"backend/shared/pagination"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
-
-type BranchHandler struct {
-	logger        logger.Logger
-	branchService app.BranchService
-}
-
-type BranchDependencies struct {
-	Logger        logger.Logger
-	BranchService app.BranchService
-}
-
-func NewBranch(deps BranchDependencies) *BranchHandler {
-	return &BranchHandler{
-		logger:        deps.Logger,
-		branchService: deps.BranchService,
-	}
-}
 
 // @Summary Create a new branch
 // @Description Create a new branch in the tenant
@@ -47,7 +28,7 @@ func (h *BranchHandler) CreateBranch(c *gin.Context) {
 	ctx := c.Request.Context()
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		h.logger.Error(ctx, err, "Failed to bind JSON request", nil)
+		h.base.Logger.Error(ctx, err, "Failed to bind JSON request", nil)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -66,7 +47,7 @@ func (h *BranchHandler) CreateBranch(c *gin.Context) {
 
 	result, err := h.branchService.CreateBranch(ctx, &input)
 	if err != nil {
-		h.logger.Error(ctx, err, "Failed to create branch", nil)
+		h.base.Logger.Error(ctx, err, "Failed to create branch", nil)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create branch"})
 		return
 	}

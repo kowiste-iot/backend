@@ -1,17 +1,6 @@
 package http
 
 import (
-	actionhandler "backend/internal/features/action/interface/rest"
-	alerthandler "backend/internal/features/alert/interface/rest"
-	assethandler "backend/internal/features/asset/interface/rest"
-	dashboardhandler "backend/internal/features/dashboard/interface/rest"
-	devicehandler "backend/internal/features/device/interface/rest"
-	measurehandler "backend/internal/features/measure/interface/rest"
-	rolehandler "backend/internal/features/role/interface/rest"
-	tenanthandler "backend/internal/features/tenant/interface/rest"
-	userhandler "backend/internal/features/user/interface/rest"
-	resourcehandler "backend/internal/features/resource/interface/rest"
-	scopehandler "backend/internal/features/scope/interface/rest"
 	"backend/pkg/config"
 	"backend/shared/authentication/domain"
 	"backend/shared/logger"
@@ -22,49 +11,18 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-
-	wshandler "backend/internal/interfaces/http/handlers/websocket"
 )
 
 type Server struct {
-	config           *config.Config
-	logger           logger.Logger
-	router           *gin.Engine
-	httpServer       *http.Server
-	auth             domain.TokenValidator
-	tenantHandler    *tenanthandler.TenantHandler
-	assetHandler     *assethandler.AssetHandler
-	measureHandler   *measurehandler.MeasureHandler
-	dashboardHandler *dashboardhandler.DashboardHandler
-	widgetHandler    *dashboardhandler.WidgetHandler
-	deviceHandler    *devicehandler.DeviceHandler
-	actionHandler    *actionhandler.ActionHandler
-	alertHandler     *alerthandler.AlertHandler
-	userHandler      *userhandler.UserHandler
-	rolesHandler     *rolehandler.RoleHandler
-	resourceHandler  *resourcehandler.ResourceHandler
-	tokenHandler     *wshandler.TokenHandler
-	wsNotifyHandler  *wshandler.NotificationHandler
-	scopesHandler    *scopehandler.ScopeHandler
+	config     *config.Config
+	logger     logger.Logger
+	router     *gin.Engine
+	httpServer *http.Server
+	auth       domain.TokenValidator
 }
 
 type ServerDependencies struct {
-	Authentication   domain.TokenValidator
-	RolesHandler     *rolehandler.RoleHandler
-	ResourceHandler  *resourcehandler.ResourceHandler
-	BranchHandler    *tenanthandler.BranchHandler
-	TenantHandler    *tenanthandler.TenantHandler
-	AssetHandler     *assethandler.AssetHandler
-	MeasureHandler   *measurehandler.MeasureHandler
-	DashboardHandler *dashboardhandler.DashboardHandler
-	WidgetHandler    *dashboardhandler.WidgetHandler
-	DeviceHandler    *devicehandler.DeviceHandler
-	ActionHandler    *actionhandler.ActionHandler
-	AlertHandler     *alerthandler.AlertHandler
-	UserHandler      *userhandler.UserHandler
-	ScopeHandler     *scopehandler.ScopeHandler
-	TokenHandler     *wshandler.TokenHandler
-	WSNotifyHandler  *wshandler.NotificationHandler
+	Authentication domain.TokenValidator
 }
 
 func NewServer(cfg *config.Config, logger logger.Logger, deps ServerDependencies) *Server {
@@ -83,29 +41,14 @@ func NewServer(cfg *config.Config, logger logger.Logger, deps ServerDependencies
 	)
 
 	return &Server{
-		config:           cfg,
-		logger:           logger,
-		router:           router,
-		auth:             deps.Authentication,
-		rolesHandler:     deps.RolesHandler,
-		resourceHandler:  deps.ResourceHandler,
-		tenantHandler:    deps.TenantHandler,
-		assetHandler:     deps.AssetHandler,
-		dashboardHandler: deps.DashboardHandler,
-		widgetHandler:    deps.WidgetHandler,
-		deviceHandler:    deps.DeviceHandler,
-		actionHandler:    deps.ActionHandler,
-		alertHandler:     deps.AlertHandler,
-		userHandler:      deps.UserHandler,
-		scopesHandler:    deps.ScopeHandler,
-		wsNotifyHandler:  deps.WSNotifyHandler,
-		tokenHandler:     deps.TokenHandler,
-		measureHandler:   deps.MeasureHandler,
+		config: cfg,
+		logger: logger,
+		router: router,
+		auth:   deps.Authentication,
 	}
 }
 
 func (s *Server) Start(ctx context.Context) error {
-	s.setupRoutes()
 
 	addr := fmt.Sprintf("%s:%d", s.config.HTTP.Host, s.config.HTTP.Port)
 	s.httpServer = &http.Server{
@@ -119,6 +62,9 @@ func (s *Server) Start(ctx context.Context) error {
 	return s.httpServer.ListenAndServe()
 }
 
+func (s *Server) GetRouter(ctx context.Context) *gin.Engine {
+	return s.router
+}
 func (s *Server) Shutdown(ctx context.Context) error {
 	return s.httpServer.Shutdown(ctx)
 }

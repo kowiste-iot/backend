@@ -86,7 +86,7 @@ func (s *assetService) ListAssets(ctx context.Context, input *baseCmd.BaseInput)
 		return nil, err
 	}
 	assets, err := s.repo.FindAll(ctx, input)
-	if err != nil {
+ 	if err != nil {
 		return nil, fmt.Errorf("failed to list assets: %w", err)
 	}
 	return assets, nil

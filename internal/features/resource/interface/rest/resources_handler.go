@@ -1,35 +1,15 @@
 package resourcehandler
 
 import (
-	"backend/internal/features/resource/app"
-
 	"backend/internal/features/resource/domain/command"
 	baseCmd "backend/shared/base/command"
 	ginhelp "backend/shared/http/gin"
 	"backend/shared/http/httputil"
-	"backend/shared/logger"
 	"backend/shared/pagination"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
-
-type ResourceHandler struct {
-	logger   logger.Logger
-	resource app.ResourceService
-}
-
-type Dependencies struct {
-	Logger   logger.Logger
-	Resource app.ResourceService
-}
-
-func New(deps Dependencies) *ResourceHandler {
-	return &ResourceHandler{
-		logger:   deps.Logger,
-		resource: deps.Resource,
-	}
-}
 
 func (h *ResourceHandler) ListResources(c *gin.Context) {
 	ctx := c.Request.Context()

@@ -3,34 +3,15 @@ package devicehandler
 import (
 	"net/http"
 
-	"backend/internal/features/device/app"
 	"backend/internal/features/device/domain"
 	"backend/internal/features/device/domain/command"
 	baseCmd "backend/shared/base/command"
 	ginhelp "backend/shared/http/gin"
 	"backend/shared/http/httputil"
-	"backend/shared/logger"
 	"backend/shared/pagination"
 
 	"github.com/gin-gonic/gin"
 )
-
-type DeviceHandler struct {
-	logger        logger.Logger
-	deviceService app.DeviceService
-}
-
-type Dependencies struct {
-	Logger        logger.Logger
-	DeviceService app.DeviceService
-}
-
-func New(deps Dependencies) *DeviceHandler {
-	return &DeviceHandler{
-		logger:        deps.Logger,
-		deviceService: deps.DeviceService,
-	}
-}
 
 // @Summary Create a new measure
 // @Description Create a new measure for the tenant
@@ -67,7 +48,7 @@ func (h *DeviceHandler) CreateDevice(c *gin.Context) {
 	result, err := h.deviceService.CreateDevice(ctx, &input)
 	if err != nil {
 		tenantID, _ := httputil.GetTenant(ctx)
-		h.logger.Error(c.Request.Context(), err, "Failed to create measure", map[string]interface{}{
+		h.base.Logger.Error(c.Request.Context(), err, "Failed to create measure", map[string]interface{}{
 			"error":    err.Error(),
 			"tenantID": tenantID,
 		})
@@ -111,7 +92,7 @@ func (h *DeviceHandler) GetDevice(c *gin.Context) {
 			return
 		}
 
-		h.logger.Error(c.Request.Context(), err, "Failed to get measure", map[string]interface{}{
+		h.base.Logger.Error(c.Request.Context(), err, "Failed to get measure", map[string]interface{}{
 			"error":    err.Error(),
 			"tenantID": tenant.Domain(),
 			"deviceID": deviceID,
@@ -147,7 +128,7 @@ func (h *DeviceHandler) ListDevices(c *gin.Context) {
 	results, err := h.deviceService.ListDevices(ctx, &input)
 	if err != nil {
 		tenantID, _ := httputil.GetTenant(ctx)
-		h.logger.Error(c.Request.Context(), err, "Failed to get measure", map[string]interface{}{
+		h.base.Logger.Error(c.Request.Context(), err, "Failed to get measure", map[string]interface{}{
 			"error":    err.Error(),
 			"tenantID": tenantID,
 		})
@@ -208,7 +189,7 @@ func (h *DeviceHandler) UpdateDevice(c *gin.Context) {
 			return
 		}
 		tenantID, _ := httputil.GetTenant(ctx)
-		h.logger.Error(c.Request.Context(), err, "Failed to update measure", map[string]interface{}{
+		h.base.Logger.Error(c.Request.Context(), err, "Failed to update measure", map[string]interface{}{
 			"error":    err.Error(),
 			"tenantID": tenantID,
 			"deviceID": deviceID,
@@ -254,7 +235,7 @@ func (h *DeviceHandler) DeleteDevice(c *gin.Context) {
 			return
 		}
 		tenantID, _ := httputil.GetTenant(ctx)
-		h.logger.Error(c.Request.Context(), err, "Failed to delete measure", map[string]interface{}{
+		h.base.Logger.Error(c.Request.Context(), err, "Failed to delete measure", map[string]interface{}{
 			"error":    err.Error(),
 			"tenantID": tenantID,
 			"deviceID": deviceID,

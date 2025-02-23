@@ -5,7 +5,6 @@ Makefile
 README.md
 cmd/
   server/
-    __debug_bin4278451534
     iot.db
     main.go
 configs/
@@ -80,15 +79,19 @@ internal/
           alert_model.go
     asset/
       app/
+        depency.go
         service.go
       domain/
         asset.go
         command/
           asset_command.go
+          dependecy_command.go
+        dependecy.go
         interface.go
       infra/
         gorm/
           asset.go
+          dependency.go
       interface/
         rest/
           asset_handler.go
@@ -330,20 +333,18 @@ shared/
         mock.go
   pagination/
     paginator.go
-  streaming/
+  stream/
     domain/
       client.go
       config.go
-      connection.go
-      handler.go
       message.go
-      subject.go
-      subjects/
-        notification.go
-    infrastructure/
+    infra/
       nats/
         client.go
         connection.go
+        factory.go
+    repo/
+      message_repo.go
   token/
     app/
       token_service.go
