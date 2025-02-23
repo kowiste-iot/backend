@@ -4,6 +4,7 @@ go 1.22.2
 
 require (
 	github.com/Nerzal/gocloak/v13 v13.9.0
+	github.com/eclipse/paho.mqtt.golang v1.5.0
 	github.com/gin-contrib/cors v1.7.3
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-playground/validator/v10 v10.24.0
@@ -38,6 +39,7 @@ require (
 	github.com/rogpeppe/go-internal v1.13.1 // indirect
 	github.com/segmentio/ksuid v1.0.4 // indirect
 	github.com/spf13/jwalterweatherman v1.0.0 // indirect
+	golang.org/x/sync v0.10.0 // indirect
 	gopkg.in/yaml.v2 v2.2.2 // indirect
 )
 

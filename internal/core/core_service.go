@@ -14,6 +14,7 @@ import (
 	assethandler "backend/internal/features/asset/interface/rest"
 	dashboardhandler "backend/internal/features/dashboard/interface/rest"
 	devicehandler "backend/internal/features/device/interface/rest"
+	ingesthandler "backend/internal/features/ingest/interface/rest"
 	measurehandler "backend/internal/features/measure/interface/rest"
 	resourcehandler "backend/internal/features/resource/interface/rest"
 	rolehandler "backend/internal/features/role/interface/rest"
@@ -51,7 +52,7 @@ func (c *Core) initServer(ctx context.Context) error {
 	})
 	route := c.server.GetRouter(ctx)
 	apiRoute := route.Group("api")
-	
+
 	middleware := middleware.NewMiddlewareManager(c.logger, c.auth)
 	tenatHandler := tenanthandler.New(base, services.TenantService, middleware)
 	apiTenant := tenatHandler.Init(apiRoute)
@@ -89,5 +90,8 @@ func (c *Core) initServer(ctx context.Context) error {
 
 	resourceHandler := resourcehandler.New(base, services.ResourceService)
 	resourceHandler.Init(apiBranch)
+
+	ingestHandler := ingesthandler.New(base, services.IngestService)
+	ingestHandler.Init(apiBranch)
 	return nil
 }

@@ -6,12 +6,6 @@ import (
 	"backend/shared/logger/openob"
 
 	"context"
-	"fmt"
-	"time"
-
-	streamDomain "backend/shared/stream/domain"
-	"backend/shared/stream/infra/nats"
-	repoStream "backend/shared/stream/repo"
 
 	"backend/internal/interfaces/http"
 	kcCore "backend/shared/keycloak"
@@ -30,7 +24,6 @@ type Core struct {
 	db     *gorm.DB
 	auth   *kcCore.Keycloak
 	server *http.Server
-	stream streamDomain.StreamClient
 }
 
 func NewCore(ctx context.Context) (*Core, error) {
@@ -103,28 +96,6 @@ func (c *Core) initAuth() (err error) {
 		WebClientID:  c.cfg.Authentication.WebClientID,
 	})
 	return
-}
-
-// In initServer or create a new init function
-func (c *Core) initStreaming() error {
-	msgRepo := repoStream.NewMessageRepository(c.db)
-	streamConfig := &streamDomain.StreamConfig{
-		URL:            "http://localhost:4222", // Add this to your config
-		MaxReconnects:  5,
-		ReconnectWait:  time.Second * 5,
-		ConnectTimeout: time.Second * 2,
-		WriteTimeout:   time.Second * 2,
-		PersistMessage: true,
-	}
-
-	factory := nats.NewNatsClientFactory(msgRepo)
-	streamClient, err := factory.CreateClient(streamConfig)
-	if err != nil {
-		return fmt.Errorf("failed to create stream client: %w", err)
-	}
-
-	c.stream = streamClient
-	return nil
 }
 
 func (c *Core) Start(ctx context.Context) error {

@@ -1,4 +1,4 @@
-package gorm
+package repository
 
 import (
     "backend/shared/stream/domain"

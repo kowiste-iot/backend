@@ -7,6 +7,7 @@ import (
 	appAsset "backend/internal/features/asset/app"
 	appDashboard "backend/internal/features/dashboard/app"
 	appDevice "backend/internal/features/device/app"
+	appIngest "backend/internal/features/ingest/app"
 	appMeasure "backend/internal/features/measure/app"
 	appPermission "backend/internal/features/permission/app"
 	appResource "backend/internal/features/resource/app"
@@ -14,6 +15,8 @@ import (
 	appScope "backend/internal/features/scope/app"
 	appTenant "backend/internal/features/tenant/app"
 	appUser "backend/internal/features/user/app"
+	domainStream "backend/shared/stream/domain"
+
 	"backend/pkg/config"
 	kcCore "backend/shared/keycloak"
 
@@ -22,6 +25,7 @@ import (
 )
 
 type Services struct {
+	StreamService     domainStream.StreamClient
 	AssetDepService   appAsset.AssetDependencyService
 	AssetService      appAsset.AssetService
 	MeasureService    appMeasure.MeasureService
@@ -37,6 +41,7 @@ type Services struct {
 	ResourceService   appResource.ResourceService
 	BranchService     appTenant.BranchService
 	TenantService     appTenant.TenantService
+	IngestService     appIngest.IngestService
 }
 
 type Container struct {
@@ -56,6 +61,9 @@ func NewContainer(base *base.BaseService, auth *kcCore.Keycloak, tenantConfig *c
 func (c *Container) Initialize() (*Services, error) {
 	services := &Services{}
 
+	if err := c.initializeStreamService(services); err != nil {
+		return nil, fmt.Errorf("failed to initialize strem services: %w", err)
+	}
 	if err := c.initializeAssetServices(services); err != nil {
 		return nil, fmt.Errorf("failed to initialize asset services: %w", err)
 	}
@@ -100,6 +108,9 @@ func (c *Container) Initialize() (*Services, error) {
 
 	if err := c.initializeTenantService(services); err != nil {
 		return nil, fmt.Errorf("failed to initialize tenant service: %w", err)
+	}
+	if err := c.initializeIngestService(services); err != nil {
+		return nil, fmt.Errorf("failed to initialize ingest service: %w", err)
 	}
 
 	return services, nil
