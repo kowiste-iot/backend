@@ -2,15 +2,15 @@ package app
 
 import (
 	"backend/internal/features/ingest/domain"
-	stream"backend/shared/stream/domain"
+	stream "backend/shared/stream/domain"
 	"context"
-	"encoding/json"
 	"fmt"
 )
+
 type IngestService interface {
-    Start() error
-    Stop() error
-    AddConsumer(consumer domain.Consumer)
+	Start() error
+	Stop() error
+	AddConsumer(consumer domain.Consumer)
 }
 type Service struct {
 	consumers    []domain.Consumer
@@ -64,36 +64,12 @@ func (s *Service) Stop() error {
 	return s.streamClient.Close()
 }
 
-func (s *Service) handleMessage(msg *domain.Message) error {
-	// Convert domain.Message to stream.Message
-	streamMsg := &stream.Message{
-		ID:        msg.ID,
-		TenantID:  msg.TenantID,
-		Topic:     s.config.Topic,
-		Data:      newMessageData(msg.Data),
-		Timestamp: msg.Time,
-		Event:     "data.ingested",
+func (s *Service) handleMessage(msg *domain.Message) (err error) {
+	// Convert input.Message to stream.Message
+	streamMsg, err := stream.NewFromIngest(msg)
+	if err != nil {
+		return
 	}
 
 	return s.streamClient.Publish(context.Background(), streamMsg)
-}
-
-// MessageData implements stream.MessageData interface
-type messageData struct {
-	data map[string]interface{}
-}
-
-func newMessageData(data map[string]interface{}) *messageData {
-	return &messageData{data: data}
-}
-
-func (m *messageData) Validate() error {
-	if m.data == nil {
-		return fmt.Errorf("data cannot be nil")
-	}
-	return nil
-}
-
-func (m *messageData) ToBytes() ([]byte, error) {
-	return json.Marshal(m.data)
 }

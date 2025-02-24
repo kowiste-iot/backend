@@ -84,8 +84,8 @@ func (c *Consumer) handleMessage(_ mqtt.Client, msg mqtt.Message) {
 		fmt.Printf("Error unmarshaling message: %v\n", err)
 		return
 	}
-	if message.Data == nil {
-		return //No data
+	if message.Validate() != nil {
+		return 
 	}
 
 	if c.handler != nil {

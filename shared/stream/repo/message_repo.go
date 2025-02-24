@@ -10,7 +10,7 @@ import (
 type MessageModel struct {
     ID        string `gorm:"primarykey"`
     Topic     string
-    Data      []byte    // Store as bytes in DB
+    Data      []byte 
     Event     string
     Status    string
     Timestamp time.Time

@@ -1,6 +1,11 @@
 package domain
 
-import "time"
+import (
+	"backend/internal/features/ingest/domain"
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type MessageData interface {
 	Validate() error
@@ -17,6 +22,25 @@ type Message struct {
 	Timestamp time.Time
 	Event     string
 	Status    MessageStatus
+}
+
+func NewFromIngest(input *domain.Message) (m *Message, err error) {
+	id, err := uuid.NewV7()
+	if err != nil {
+		return
+	}
+	m = &Message{
+		ID:        id.String(),
+		TenantID:  input.TenantID,
+		Topic:     domain.TopicIngest,
+		Data:      input,
+		Timestamp: input.Time,
+		Event:     domain.EventIngest,
+	}
+	if m.Timestamp.IsZero() {
+		m.Timestamp = time.Now()
+	}
+	return
 }
 
 // WireMessage is the format used for NATS transmission
