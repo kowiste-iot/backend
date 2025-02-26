@@ -2,6 +2,9 @@ package domain
 
 import (
 	"backend/internal/features/ingest/domain"
+	"context"
+	"encoding/json"
+	"reflect"
 	"time"
 
 	"github.com/google/uuid"
@@ -24,22 +27,37 @@ type Message struct {
 	Status    MessageStatus
 }
 
+func (m Message) DataToModel(model interface{}) error {
+	// First, convert the Data to bytes
+	dataBytes, err := m.Data.ToBytes()
+	if err != nil {
+		return err
+	}
+	// Check if model is a pointer
+	if reflect.TypeOf(model).Kind() != reflect.Ptr {
+		return json.Unmarshal(dataBytes, &model)
+	}
+	// Unmarshal the bytes into the provided model
+	return json.Unmarshal(dataBytes, model)
+}
+
 func NewFromIngest(input *domain.Message) (m *Message, err error) {
 	id, err := uuid.NewV7()
 	if err != nil {
 		return
+	}
+	if input.Time.IsZero() {
+		input.Time = time.Now()
 	}
 	m = &Message{
 		ID:        id.String(),
 		TenantID:  input.TenantID,
 		Topic:     domain.TopicIngest,
 		Data:      input,
-		Timestamp: input.Time,
+		Timestamp: time.Now(),
 		Event:     domain.EventIngest,
 	}
-	if m.Timestamp.IsZero() {
-		m.Timestamp = time.Now()
-	}
+
 	return
 }
 
@@ -70,7 +88,7 @@ const (
 	MessageStatusFailed  MessageStatus = "failed"
 )
 
-type MessageHandler func(msg *WireMessage) error
+type MessageHandler func(ctx context.Context, msg *Message) error
 
 type MessageRepository interface {
 	Save(message *Message) error

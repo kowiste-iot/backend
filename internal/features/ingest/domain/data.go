@@ -26,3 +26,7 @@ func (m *Message) ToBytes() ([]byte, error) {
 	}
 	return json.Marshal(m)
 }
+func (m *Message) DataToBytes() ([]byte, error) {
+
+	return json.Marshal(m.Data)
+}

@@ -6,6 +6,7 @@ import (
 	appAlert "backend/internal/features/alert/app"
 	appAsset "backend/internal/features/asset/app"
 	appDashboard "backend/internal/features/dashboard/app"
+	appDataStore "backend/internal/features/datastore/app"
 	appDevice "backend/internal/features/device/app"
 	appIngest "backend/internal/features/ingest/app"
 	appMeasure "backend/internal/features/measure/app"
@@ -42,6 +43,7 @@ type Services struct {
 	BranchService     appTenant.BranchService
 	TenantService     appTenant.TenantService
 	IngestService     appIngest.IngestService
+	DataStoreService  appDataStore.DataStoreService
 }
 
 type Container struct {

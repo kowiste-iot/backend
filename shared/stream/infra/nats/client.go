@@ -32,38 +32,38 @@ func (c *NatsClient) Connect() error {
 }
 
 func (c *NatsClient) Publish(ctx context.Context, msg *domain.Message) error {
-	 if !c.IsConnected() {
-        return fmt.Errorf("not connected to NATS")
-    }
+	if !c.IsConnected() {
+		return fmt.Errorf("not connected to NATS")
+	}
 
-    // Convert MessageData to bytes
-    data, err := msg.Data.ToBytes()
-    if err != nil {
-        return fmt.Errorf("failed to convert message data to bytes: %w", err)
-    }
+	// Convert MessageData to bytes
+	data, err := msg.Data.ToBytes()
+	if err != nil {
+		return fmt.Errorf("failed to convert message data to bytes: %w", err)
+	}
 
-    // Create wire format
-    wireMsg := domain.WireMessage{
-        ID:        msg.ID,
-        Topic:     msg.Topic,
-        Data:      data,
-        Timestamp: msg.Timestamp,
-        Event:     msg.Event,
-    }
+	// Create wire format
+	wireMsg := domain.WireMessage{
+		ID:        msg.ID,
+		Topic:     msg.Topic,
+		Data:      data,
+		Timestamp: msg.Timestamp,
+		Event:     msg.Event,
+	}
 
-    // If persistence enabled, save original message
-    if c.config.PersistMessage && c.repository != nil {
-        msg.Status = domain.MessageStatusPending
-        if err := c.repository.Save(msg); err != nil {
-            return fmt.Errorf("failed to persist message: %w", err)
-        }
-    }
+	// If persistence enabled, save original message
+	if c.config.PersistMessage && c.repository != nil {
+		msg.Status = domain.MessageStatusPending
+		if err := c.repository.Save(msg); err != nil {
+			return fmt.Errorf("failed to persist message: %w", err)
+		}
+	}
 
-    // Marshal wire message
-    wireData, err := json.Marshal(wireMsg)
-    if err != nil {
-        return fmt.Errorf("failed to marshal wire message: %w", err)
-    }
+	// Marshal wire message
+	wireData, err := json.Marshal(wireMsg)
+	if err != nil {
+		return fmt.Errorf("failed to marshal wire message: %w", err)
+	}
 
 	// Publish to NATS
 	err = c.conn.GetConn().Publish(msg.Topic, wireData)
@@ -85,37 +85,37 @@ func (c *NatsClient) Publish(ctx context.Context, msg *domain.Message) error {
 }
 
 func (c *NatsClient) Subscribe(ctx context.Context, topic string, handler domain.MessageHandler) error {
-    if !c.IsConnected() {
-        return fmt.Errorf("not connected to NATS")
-    }
+	if !c.IsConnected() {
+		return fmt.Errorf("not connected to NATS")
+	}
 
-    c.subscriberMu.Lock()
-    defer c.subscriberMu.Unlock()
+	c.subscriberMu.Lock()
+	defer c.subscriberMu.Unlock()
 
-    if _, exists := c.subscribers[topic]; exists {
-        return fmt.Errorf("already subscribed to topic: %s", topic)
-    }
+	if _, exists := c.subscribers[topic]; exists {
+		return fmt.Errorf("already subscribed to topic: %s", topic)
+	}
 
-    sub, err := c.conn.GetConn().Subscribe(topic, func(m *nats.Msg) {
-        var wireMsg domain.WireMessage
-        if err := json.Unmarshal(m.Data, &wireMsg); err != nil {
-            // Handle error, maybe through a error channel or logger
-            return
-        }
+	sub, err := c.conn.GetConn().Subscribe(topic, func(m *nats.Msg) {
+		var wireMsg domain.Message
+		if err := json.Unmarshal(m.Data, &wireMsg); err != nil {
+			// Handle error, maybe through a error channel or logger
+			return
+		}
 
-        // Now we pass the WireMessage to the handler
-        if err := handler(&wireMsg); err != nil {
-            // Handle error
-            return
-        }
-    })
+		// Now we pass the WireMessage to the handler
+		if err := handler(ctx, &wireMsg); err != nil {
+			// Handle error
+			return
+		}
+	})
 
-    if err != nil {
-        return fmt.Errorf("failed to subscribe to topic: %w", err)
-    }
+	if err != nil {
+		return fmt.Errorf("failed to subscribe to topic: %w", err)
+	}
 
-    c.subscribers[topic] = sub
-    return nil
+	c.subscribers[topic] = sub
+	return nil
 }
 
 func (c *NatsClient) Unsubscribe(ctx context.Context, topic string) error {

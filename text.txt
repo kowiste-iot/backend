@@ -46,6 +46,24 @@ go.sum
 internal/
   core/
     core.go
+    core_service.go
+    services/
+      container.go
+      container_action.go
+      container_alert.go
+      container_asset.go
+      container_branch.go
+      container_cope.go
+      container_dashboard.go
+      container_device.go
+      container_ingest.go
+      container_measure.go
+      container_permission.go
+      container_resource.go
+      container_role.go
+      container_stream.go
+      container_tenant.go
+      container_user.go
   features/
     action/
       app/
@@ -60,8 +78,9 @@ internal/
           action.go
       interface/
         rest/
+          action_dto.go
           action_handler.go
-          action_model.go
+          action_init.go
     alert/
       app/
         service.go
@@ -75,8 +94,9 @@ internal/
           alert.go
       interface/
         rest/
+          alert_dto.go
           alert_handler.go
-          alert_model.go
+          alert_init.go
     asset/
       app/
         depency.go
@@ -94,8 +114,9 @@ internal/
           dependency.go
       interface/
         rest/
+          asset_dto.go
           asset_handler.go
-          asset_model.go
+          asset_init.go
       test/
     dashboard/
       app/
@@ -115,10 +136,12 @@ internal/
           widget_model.go
       interface/
         rest/
+          dashboard_dto.go
           dashboard_handler.go
-          dashboard_model.go
+          dashboard_init.go
+          widget_dto.go
           widget_handler.go
-          widget_model.go
+          widget_init.go
     device/
       app/
         service.go
@@ -132,8 +155,23 @@ internal/
           device.go
       interface/
         rest/
+          device_dto.go
           device_handler.go
-          device_model.go
+          device_init.go
+    ingest/
+      app/
+        service.go
+      domain/
+        const.go
+        data.go
+        interface.go
+      interface/
+        mqtt/
+          consumer.go
+        rest/
+          ingest_dto.go
+          ingest_handler.go
+          ingest_init.go
     measure/
       app/
         service.go
@@ -147,8 +185,9 @@ internal/
           measure.go
       interface/
         rest/
+          measure_dto.go
           measure_handler.go
-          measure_model.go
+          measure_init.go
     permission/
       app/
         service.go
@@ -176,8 +215,9 @@ internal/
           resource.go
       interface/
         rest/
+          resources_dto.go
           resources_handler.go
-          resources_model.go
+          resources_init.go
     role/
       app/
         service.go
@@ -192,8 +232,9 @@ internal/
           role.go
       interface/
         rest/
+          roles_dto.go
           roles_handler.go
-          roles_model.go
+          roles_init.go
     scope/
       app/
         service.go
@@ -207,8 +248,9 @@ internal/
           scope.go
       interface/
         rest/
+          scopes_dto.go
           scopes_handler.go
-          scopes_model.go
+          scopes_init.go
     tenant/
       app/
         branch_service.go
@@ -232,10 +274,12 @@ internal/
           tenant.go
       interface/
         rest/
+          branch_dto.go
           branch_handler.go
-          branch_model.go
+          branch_init.go
+          tenant_dto.go
           tenant_handler.go
-          tenant_model.go
+          tenant_init.go
     user/
       app/
         service.go
@@ -254,8 +298,9 @@ internal/
           user.go
       interface/
         rest/
+          user_dto.go
           user_handler.go
-          user_model.go
+          user_init.go
   interfaces/
     grpc/
       handlers.go
@@ -265,7 +310,8 @@ internal/
         websocket/
           notification_handler.go
           token_handler.go
-      routes.go
+      middleware/
+        middleware.go
       server.go
 pkg/
   config/
@@ -363,4 +409,6 @@ shared/
       connection.go
       message.go
 test/
+  nats/
+    subscriber.go
 text.txt
