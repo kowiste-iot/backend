@@ -23,19 +23,19 @@ type messageStoreService struct {
 	streamClient streamDomain.StreamClient
 	*base.BaseService
 
-	buffer        []*ingestDomain.Message
-	bufferMu      sync.Mutex
-	batchSize     int
-	flushInterval time.Duration
-	stopChan      chan struct{}
+	buffer   []*ingestDomain.Message
+	bufferMu sync.Mutex
+	stopChan chan struct{}
+	*ServiceConfig
 }
 
 type ServiceConfig struct {
 	BatchSize     int
 	FlushInterval time.Duration
+	TopicNats     string
 }
 
-func NewService(base *base.BaseService, repo domain.MessageRepository, streamClient streamDomain.StreamClient, config ServiceConfig) DataStoreService {
+func NewService(base *base.BaseService, repo domain.MessageRepository, streamClient streamDomain.StreamClient, config *ServiceConfig) DataStoreService {
 	if config.BatchSize == 0 {
 		config.BatchSize = 100
 	}
@@ -48,26 +48,23 @@ func NewService(base *base.BaseService, repo domain.MessageRepository, streamCli
 		streamClient:  streamClient,
 		BaseService:   base,
 		buffer:        make([]*ingestDomain.Message, 0, config.BatchSize),
-		batchSize:     config.BatchSize,
-		flushInterval: config.FlushInterval,
+		ServiceConfig: config,
 		stopChan:      make(chan struct{}),
 	}
 }
 
-func (s *messageStoreService) handleMessage(ctx context.Context, msg *streamDomain.Message) (err error) {
+func (s *messageStoreService) handleMessage(ctx context.Context, msg *streamDomain.WireMessage) (err error) {
 	if err := validator.Validate(msg); err != nil {
 		return fmt.Errorf("validation error: %w", err)
 	}
-msg.Data.ToBytes()
-//need to pass to ingest message before store in the array
 	s.bufferMu.Lock()
-	ingData:= new(ingestDomain.Message)
-	err=msg.DataToModel(ingData)
-	if err!=nil{
+	ingData := new(ingestDomain.Message)
+	err = msg.DataToModel(ingData)
+	if err != nil {
 		return
 	}
 	s.buffer = append(s.buffer, ingData)
-	shouldFlush := len(s.buffer) >= s.batchSize
+	shouldFlush := len(s.buffer) >= s.BatchSize
 	s.bufferMu.Unlock()
 
 	if shouldFlush {
@@ -99,7 +96,7 @@ func (s *messageStoreService) StoreBatch(ctx context.Context, messages []*ingest
 }
 
 func (s *messageStoreService) startFlushTimer(ctx context.Context) {
-	ticker := time.NewTicker(s.flushInterval)
+	ticker := time.NewTicker(s.FlushInterval)
 	go func() {
 		for {
 			select {
@@ -118,7 +115,7 @@ func (s *messageStoreService) startFlushTimer(ctx context.Context) {
 
 func (s *messageStoreService) Start(ctx context.Context) error {
 	s.startFlushTimer(ctx)
-	if err := s.streamClient.Subscribe(ctx, "messages", s.handleMessage); err != nil {
+	if err := s.streamClient.Subscribe(ctx, s.TopicNats, s.handleMessage); err != nil {
 		return fmt.Errorf("failed to subscribe to messages: %w", err)
 	}
 	return nil
@@ -129,7 +126,7 @@ func (s *messageStoreService) Stop(ctx context.Context) error {
 	if err := s.flush(ctx); err != nil {
 		s.Logger.Error(ctx, err, "failed to flush messages during shutdown", "error")
 	}
-	if err := s.streamClient.Unsubscribe(ctx, "messages"); err != nil {
+	if err := s.streamClient.Unsubscribe(ctx, s.TopicNats); err != nil {
 		return fmt.Errorf("failed to unsubscribe from messages: %w", err)
 	}
 	return nil

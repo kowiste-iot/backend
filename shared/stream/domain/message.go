@@ -70,6 +70,15 @@ type WireMessage struct {
 	Event     string
 }
 
+func (m WireMessage) DataToModel(model interface{}) error {
+	// Check if model is a pointer
+	if reflect.TypeOf(model).Kind() != reflect.Ptr {
+		return json.Unmarshal(m.Data, &model)
+	}
+	// Unmarshal the bytes into the provided model
+	return json.Unmarshal(m.Data, model)
+}
+
 // StoredMessage represents a message as stored in the database
 type StoredMessage struct {
 	ID        string
@@ -88,7 +97,7 @@ const (
 	MessageStatusFailed  MessageStatus = "failed"
 )
 
-type MessageHandler func(ctx context.Context, msg *Message) error
+type MessageHandler func(ctx context.Context, msg *WireMessage) error
 
 type MessageRepository interface {
 	Save(message *Message) error

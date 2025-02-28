@@ -1,5 +1,4 @@
-// infra/gorm/message.go
-package gorm
+package repository
 
 import (
 	"context"
@@ -50,6 +49,7 @@ type repository struct {
 }
 
 func NewRepository(db *gorm.DB) domain.MessageRepository {
+	db.AutoMigrate(MessageModel{})
 	return &repository{
 		db: db,
 	}

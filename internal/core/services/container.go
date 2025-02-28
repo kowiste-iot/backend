@@ -114,6 +114,9 @@ func (c *Container) Initialize() (*Services, error) {
 	if err := c.initializeIngestService(services); err != nil {
 		return nil, fmt.Errorf("failed to initialize ingest service: %w", err)
 	}
+	if err := c.initializeStoreService(services); err != nil {
+		return nil, fmt.Errorf("failed to initialize store service: %w", err)
+	}
 
 	return services, nil
 }

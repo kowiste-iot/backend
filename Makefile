@@ -71,6 +71,10 @@ tools: ## Install development tools
 	@go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 	@go install github.com/swaggo/swag/cmd/swag@latest
 
+nats: ## Run nats client
+	@echo "Starting nats client..."
+	@go run ./test/nats/subscriber.go
+
 ## Swagger:
 swagger: swagger-validate ## Generate Swagger documentation
 	@echo "Generating Swagger documentation..."

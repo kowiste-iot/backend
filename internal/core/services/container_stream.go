@@ -15,7 +15,7 @@ func (c *Container) initializeStreamService(s *Services) (err error) {
 
 	// Configure NATS stream
 	streamConfig := &domain.StreamConfig{
-		URL:            "http://localhost:4222",
+		URL:            "nats://localhost:4222",
 		MaxReconnects:  5,
 		ReconnectWait:  time.Second * 5,
 		ConnectTimeout: time.Second * 10,

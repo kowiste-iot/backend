@@ -2,7 +2,9 @@ package services
 
 import (
 	"backend/internal/features/ingest/app"
+	"backend/internal/features/ingest/domain"
 	"backend/internal/features/ingest/interface/mqtt"
+
 	"fmt"
 )
 
@@ -25,7 +27,7 @@ func (c *Container) initializeIngestService(s *Services) error {
 
 	// Create ingest service
 	serviceConfig := &app.ServiceConfig{
-		Topic:           "ingestData",
+		Topic:           domain.TopicIngest,
 		PersistMessages: true,
 	}
 

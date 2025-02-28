@@ -67,7 +67,7 @@ func prettyPrintJSON(msg *nats.Msg) string {
 
 func StartSubscriber(url, subject string) {
     log.Printf("Connecting to NATS server: %s\n", url)
-    log.Printf("use '.>' for multi-level wildcard , '.*'  single-level wildcard : %s\n", url)
+    log.Printf("use '>' for multi-level wildcard , '.*'  single-level wildcard : %s\n", url)
     log.Printf("Subscribing to subject: %s\n", subject)
 
     nc, err := nats.Connect(url)
@@ -93,7 +93,7 @@ func StartSubscriber(url, subject string) {
 
 func main() {
     url := flag.String("url", "nats://localhost:4222", "NATS server URL")
-    subject := flag.String("topic", "devices.>", "Subject to subscribe to")
+    subject := flag.String("topic", ">", "Subject to subscribe to")
     flag.Parse()
 
     StartSubscriber(*url, *subject)

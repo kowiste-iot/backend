@@ -97,13 +97,14 @@ func (c *NatsClient) Subscribe(ctx context.Context, topic string, handler domain
 	}
 
 	sub, err := c.conn.GetConn().Subscribe(topic, func(m *nats.Msg) {
-		var wireMsg domain.Message
+		var wireMsg domain.WireMessage
 		if err := json.Unmarshal(m.Data, &wireMsg); err != nil {
 			// Handle error, maybe through a error channel or logger
 			return
 		}
 
 		// Now we pass the WireMessage to the handler
+		
 		if err := handler(ctx, &wireMsg); err != nil {
 			// Handle error
 			return
@@ -113,7 +114,7 @@ func (c *NatsClient) Subscribe(ctx context.Context, topic string, handler domain
 	if err != nil {
 		return fmt.Errorf("failed to subscribe to topic: %w", err)
 	}
-
+	fmt.Println("subscribed to topic: ", topic)
 	c.subscribers[topic] = sub
 	return nil
 }
