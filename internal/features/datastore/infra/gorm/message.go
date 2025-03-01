@@ -11,6 +11,7 @@ import (
 	ingestDomain "backend/internal/features/ingest/domain"
 	baseCmd "backend/shared/base/command"
 
+	"github.com/google/uuid"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
@@ -18,15 +19,27 @@ import (
 // MessageModel represents the database model for stored messages
 type MessageModel struct {
 	ID        string         `gorm:"primaryKey;type:uuid"`
-	TenantID  string         `gorm:"index;not null"`
-	BranchID  string         `gorm:"index;not null"`
-	Time      time.Time      `gorm:"index;not null"`
+	MeasureID string         `gorm:"uniqueIndex:idx_tenant_branch_measure_time;not null"`
+	TenantID  string         `gorm:"uniqueIndex:idx_tenant_branch_measure_time;not null"`
+	BranchID  string         `gorm:"uniqueIndex:idx_tenant_branch_measure_time;not null"`
+	Time      time.Time      `gorm:"uniqueIndex:idx_tenant_branch_measure_time;not null"`
 	Data      datatypes.JSON `gorm:"type:jsonb;not null"`
 	CreatedAt time.Time      `gorm:"not null"`
 }
 
 func (MessageModel) TableName() string {
 	return "message_store"
+}
+// BeforeCreate will set a UUID rather than numeric ID
+func (m *MessageModel) BeforeCreate(tx *gorm.DB) error {
+	if m.ID == "" {
+		uuid, err := uuid.NewV7()
+		if err != nil {
+			return err
+		}
+		m.ID = uuid.String()
+	}	
+	return nil
 }
 func (m MessageModel) DataToInterface() (result map[string]any, err error) {
 
@@ -50,6 +63,7 @@ type repository struct {
 
 func NewRepository(db *gorm.DB) domain.MessageRepository {
 	db.AutoMigrate(MessageModel{})
+
 	return &repository{
 		db: db,
 	}
@@ -61,12 +75,11 @@ func (r *repository) Store(ctx context.Context, msg *ingestDomain.Message) error
 		return fmt.Errorf("failed to marshal message data: %w", err)
 	}
 	model := &MessageModel{
-		ID:        msg.ID,
+		MeasureID: msg.ID,
 		TenantID:  msg.TenantID,
 		BranchID:  msg.BranchID,
 		Time:      msg.Time,
 		Data:      datatypes.JSON(b),
-		CreatedAt: time.Now(),
 	}
 
 	if err := r.db.WithContext(ctx).Create(model).Error; err != nil {
@@ -82,7 +95,6 @@ func (r *repository) StoreBatch(ctx context.Context, msgs []*ingestDomain.Messag
 	}
 
 	models := make([]*MessageModel, len(msgs))
-	now := time.Now()
 
 	for i, msg := range msgs {
 		b, err := msg.DataToBytes()
@@ -90,12 +102,11 @@ func (r *repository) StoreBatch(ctx context.Context, msgs []*ingestDomain.Messag
 			return fmt.Errorf("failed to marshal message data: %w", err)
 		}
 		models[i] = &MessageModel{
-			ID:        msg.ID,
+			MeasureID:        msg.ID,
 			TenantID:  msg.TenantID,
 			BranchID:  msg.BranchID,
 			Time:      msg.Time,
 			Data:      datatypes.JSON(b),
-			CreatedAt: now,
 		}
 	}
 
