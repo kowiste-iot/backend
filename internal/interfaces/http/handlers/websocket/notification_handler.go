@@ -16,8 +16,7 @@ type NotificationHandler struct {
 	upgrader     websocket.Upgrader
 }
 
-// func NewNotificationHandler(hub *appWS.Hub, subscriber streamingToken.Subscriber, tokenService domainToken.TokenService) *NotificationHandler {
-func NewNotificationHandler(hub *appWS.Hub, tokenService domainToken.TokenService) *NotificationHandler {
+func NewNotificationHandler(hub *appWS.Hub, subscriber streamingToken.Subscriber, tokenService domainToken.TokenService) *NotificationHandler {
 	return &NotificationHandler{
 		hub: hub,
 		// subscriber:   subscriber,

@@ -3,12 +3,12 @@ package services
 import (
 	"backend/shared/stream/domain"
 	"backend/shared/stream/infra/nats"
-	"backend/shared/stream/repo"
+	repository "backend/shared/stream/repo"
 	"fmt"
 	"time"
 )
 
-func (c *Container) initializeStreamService(s *Services) (err error) {
+func (c *Container) initializeStreamService(s *Services) (client domain.StreamClient, err error) {
 
 	messageRepo := repository.NewMessageRepository(c.base.DB)
 	natsFactory := nats.NewNatsClientFactory(messageRepo)
@@ -24,10 +24,10 @@ func (c *Container) initializeStreamService(s *Services) (err error) {
 	}
 
 	// Create NATS client
-	s.StreamService, err = natsFactory.CreateClient(streamConfig)
+	client, err = natsFactory.CreateClient(streamConfig)
 	if err != nil {
-		return fmt.Errorf("failed to create NATS client: %w", err)
+		return nil, fmt.Errorf("failed to create NATS client: %w", err)
 	}
 
-	return nil
+	return
 }

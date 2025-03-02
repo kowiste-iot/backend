@@ -8,7 +8,7 @@ import (
 	"fmt"
 )
 
-func (c *Container) initializeIngestService(s *Services) error {
+func (c *Container) initializeIngestService(s *Services) (err error) {
 
 	// Initialize MQTT consumer config
 	mqttConfig := &mqtt.Config{
@@ -30,8 +30,11 @@ func (c *Container) initializeIngestService(s *Services) error {
 		Topic:           domain.TopicIngest,
 		PersistMessages: true,
 	}
-
-	s.IngestService = app.NewService(s.StreamService, serviceConfig)
+	stream, err := c.initializeStreamService(s)
+	if err != nil {
+		return
+	}
+	s.IngestService = app.NewService(stream, serviceConfig)
 	s.IngestService.AddConsumer(consumer)
 	err = s.IngestService.Start()
 	if err != nil {

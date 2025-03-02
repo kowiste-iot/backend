@@ -5,6 +5,7 @@ Makefile
 README.md
 cmd/
   server/
+    __debug_bin3892556385
     iot.db
     main.go
 configs/
@@ -61,9 +62,11 @@ internal/
       container_permission.go
       container_resource.go
       container_role.go
+      container_store.go
       container_stream.go
       container_tenant.go
       container_user.go
+      container_websocket.go
   features/
     action/
       app/
@@ -142,6 +145,18 @@ internal/
           widget_dto.go
           widget_handler.go
           widget_init.go
+    datastore/
+      app/
+        service.go
+      domain/
+        command/
+          store_command.go
+        errors.go
+        interface.go
+        store.go
+      infra/
+        gorm/
+          message.go
     device/
       app/
         service.go

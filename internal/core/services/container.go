@@ -16,7 +16,8 @@ import (
 	appScope "backend/internal/features/scope/app"
 	appTenant "backend/internal/features/tenant/app"
 	appUser "backend/internal/features/user/app"
-	domainStream "backend/shared/stream/domain"
+	// domainStream "backend/shared/stream/domain"
+	appWS "backend/shared/websocket/app"
 
 	"backend/pkg/config"
 	kcCore "backend/shared/keycloak"
@@ -26,7 +27,7 @@ import (
 )
 
 type Services struct {
-	StreamService     domainStream.StreamClient
+	// StreamService     domainStream.StreamClient
 	AssetDepService   appAsset.AssetDependencyService
 	AssetService      appAsset.AssetService
 	MeasureService    appMeasure.MeasureService
@@ -44,6 +45,8 @@ type Services struct {
 	TenantService     appTenant.TenantService
 	IngestService     appIngest.IngestService
 	DataStoreService  appDataStore.DataStoreService
+	WebSocketHub      *appWS.Hub
+	WebSocketService *appWS.WebSocketStreamService
 }
 
 type Container struct {
@@ -63,9 +66,9 @@ func NewContainer(base *base.BaseService, auth *kcCore.Keycloak, tenantConfig *c
 func (c *Container) Initialize() (*Services, error) {
 	services := &Services{}
 
-	if err := c.initializeStreamService(services); err != nil {
-		return nil, fmt.Errorf("failed to initialize strem services: %w", err)
-	}
+	// if err := c.initializeStreamService(services); err != nil {
+	// 	return nil, fmt.Errorf("failed to initialize strem services: %w", err)
+	// }
 	if err := c.initializeAssetServices(services); err != nil {
 		return nil, fmt.Errorf("failed to initialize asset services: %w", err)
 	}
@@ -117,6 +120,8 @@ func (c *Container) Initialize() (*Services, error) {
 	if err := c.initializeStoreService(services); err != nil {
 		return nil, fmt.Errorf("failed to initialize store service: %w", err)
 	}
-
+	if err := c.initializeWebsocketService(services); err != nil {
+		return nil, fmt.Errorf("failed to initialize websocket service: %w", err)
+	}
 	return services, nil
 }

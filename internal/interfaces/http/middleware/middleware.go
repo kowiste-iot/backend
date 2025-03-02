@@ -6,6 +6,7 @@ import (
 	"backend/shared/keycloak"
 	"backend/shared/logger"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -26,10 +27,18 @@ func NewMiddlewareManager(logger logger.Logger, auth *keycloak.Keycloak) *Middle
 
 func (m *MiddlewareManager) Auth() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if strings.Contains(c.Request.URL.String(), "tenant") {
+		if match, _ := regexp.MatchString(`/api/[^/]+/[^/]+/ws`, c.Request.URL.Path); match {
+			//add check user token websocket here
+			c.Request = c.Request.WithContext(httputil.SetUserID(c.Request.Context(), "pablo"))
 			c.Next()
 			return
 		}
+
+		if strings.Contains(c.Request.URL.String(), "tenant") { //by pass for now to allow create tenant without token
+			c.Next()
+			return
+		}
+
 		token, err := ginhelp.GetAuhtHeader(c)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{

@@ -102,8 +102,6 @@ func (c *NatsClient) Subscribe(ctx context.Context, topic string, handler domain
 			// Handle error, maybe through a error channel or logger
 			return
 		}
-
-		// Now we pass the WireMessage to the handler
 		
 		if err := handler(ctx, &wireMsg); err != nil {
 			// Handle error

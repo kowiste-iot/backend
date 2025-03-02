@@ -3,6 +3,7 @@ package core
 import (
 	"backend/pkg/config"
 	"backend/shared/base"
+	websocket_handler "backend/shared/websocket/interface/rest"
 
 	"backend/shared/validator"
 	"context"
@@ -93,5 +94,8 @@ func (c *Core) initServer(ctx context.Context) error {
 
 	ingestHandler := ingesthandler.New(base, services.IngestService)
 	ingestHandler.Init(apiBranch)
+
+	wsHandler := websocket_handler.New(base, services.WebSocketHub, services.WebSocketService)
+	wsHandler.Init(apiBranch)
 	return nil
 }
