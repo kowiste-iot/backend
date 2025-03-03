@@ -1,83 +1,69 @@
 package app
 
 import (
-	"backend/shared/token/domain"
-	"crypto/hmac"
-	"crypto/sha256"
-	"encoding/base64"
-	"encoding/json"
+	"backend/shared/base"
+	"context"
 	"errors"
-	"strings"
 	"time"
 )
 
+// Errors
+var (
+	ErrTokenInvalid    = errors.New("token is invalid")
+	ErrTokenExpired    = errors.New("token has expired")
+	ErrTokenGeneration = errors.New("failed to generate token")
+)
+
+// TokenProvider defines the interface for Keycloak token operations
+type TokenProvider interface {
+	GenerateWebSocketToken(ctx context.Context, tenantID, userID string) (string, time.Time, error)
+	ValidateToken(ctx context.Context, token string) (valid bool, err error)
+	RevokeToken(ctx context.Context, token string) error
+}
+
+// TokenService handles token operations using Keycloak
 type TokenService struct {
-	secretKey []byte
-	tokenTTL  time.Duration
+	base     *base.BaseService
+	provider TokenProvider
 }
 
-func NewTokenService(secretKey string, tokenTTL time.Duration) *TokenService {
+// New creates a new TokenService
+func New(base *base.BaseService, provider TokenProvider) *TokenService {
 	return &TokenService{
-		secretKey: []byte(secretKey),
-		tokenTTL:  tokenTTL,
+		base:     base,
+		provider: provider,
 	}
 }
 
-func (s *TokenService) GenerateWSToken(tenantID, userID string) (string, error) {
-	claims := domain.WSTokenClaims{
-		TenantID:  tenantID,
-		UserID:    userID,
-		ExpiresAt: time.Now().Add(s.tokenTTL),
-	}
-
-	payload, err := json.Marshal(claims)
+// GenerateWebSocketToken generates a short-lived token for WebSocket authentication
+func (s *TokenService) GenerateWebSocketToken(ctx context.Context, tenantID, userID string) (string, error) {
+	// Generate token using Keycloak
+	tokenStr, _, err := s.provider.GenerateWebSocketToken(ctx, tenantID, userID)
 	if err != nil {
-		return "", err
+		s.base.Logger.Error(ctx, err, "Failed to generate WebSocket token",
+			map[string]interface{}{
+				"tenantID": tenantID,
+				"userID":   userID,
+			})
+		return "", ErrTokenGeneration
 	}
 
-	mac := hmac.New(sha256.New, s.secretKey)
-	mac.Write(payload)
-	signature := mac.Sum(nil)
-
-	token := base64.URLEncoding.EncodeToString(payload) + "." +
-		base64.URLEncoding.EncodeToString(signature)
-
-	return token, nil
+	return tokenStr, nil
 }
 
-func (s *TokenService) ValidateWSToken(token string) (*domain.WSTokenClaims, error) {
-	parts := strings.Split(token, ".")
-	if len(parts) != 2 {
-		return nil, errors.New("invalid token format")
-	}
-
-	payload, err := base64.URLEncoding.DecodeString(parts[0])
+// ValidateToken validates a token
+func (s *TokenService) ValidateToken(ctx context.Context, tokenStr string) error {
+	// Validate token with Keycloak
+	valid, err := s.provider.ValidateToken(ctx, tokenStr)
 	if err != nil {
-		return nil, err
+		s.base.Logger.Error(ctx, err, "Error validating token", nil)
+		return ErrTokenInvalid
 	}
 
-	signature, err := base64.URLEncoding.DecodeString(parts[1])
-	if err != nil {
-		return nil, err
+	if !valid {
+		s.base.Logger.Info(ctx, "Token validation failed", nil)
+		return ErrTokenInvalid
 	}
 
-	// Verify signature
-	mac := hmac.New(sha256.New, s.secretKey)
-	mac.Write(payload)
-	expectedSignature := mac.Sum(nil)
-
-	if !hmac.Equal(signature, expectedSignature) {
-		return nil, errors.New("invalid token signature")
-	}
-
-	var claims domain.WSTokenClaims
-	if err := json.Unmarshal(payload, &claims); err != nil {
-		return nil, err
-	}
-
-	if time.Now().After(claims.ExpiresAt) {
-		return nil, errors.New("token expired")
-	}
-
-	return &claims, nil
+	return nil
 }

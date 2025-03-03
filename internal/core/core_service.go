@@ -94,8 +94,8 @@ func (c *Core) initServer(ctx context.Context) error {
 
 	ingestHandler := ingesthandler.New(base, services.IngestService)
 	ingestHandler.Init(apiBranch)
-
-	wsHandler := websocket_handler.New(base, services.WebSocketHub, services.WebSocketService)
+	
+	wsHandler := websocket_handler.New(base, services.WebSocketHub, services.WebSocketService, services.TokenService)
 	wsHandler.Init(apiBranch)
 	return nil
 }

@@ -72,6 +72,8 @@ services:
       - start-dev
       - --import-realm
       - --spi-cookie-same-site-cookie-same-site-mode=None
+      - --spi-token-exchange-token-exchange-enabled=true
+
     ports:
       - "7080:8080"
     restart: unless-stopped

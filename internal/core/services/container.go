@@ -16,7 +16,9 @@ import (
 	appScope "backend/internal/features/scope/app"
 	appTenant "backend/internal/features/tenant/app"
 	appUser "backend/internal/features/user/app"
+
 	// domainStream "backend/shared/stream/domain"
+	appToken "backend/shared/token/app"
 	appWS "backend/shared/websocket/app"
 
 	"backend/pkg/config"
@@ -45,8 +47,9 @@ type Services struct {
 	TenantService     appTenant.TenantService
 	IngestService     appIngest.IngestService
 	DataStoreService  appDataStore.DataStoreService
+	TokenService      *appToken.TokenService
 	WebSocketHub      *appWS.Hub
-	WebSocketService *appWS.WebSocketStreamService
+	WebSocketService  *appWS.WebSocketStreamService
 }
 
 type Container struct {
@@ -119,6 +122,9 @@ func (c *Container) Initialize() (*Services, error) {
 	}
 	if err := c.initializeStoreService(services); err != nil {
 		return nil, fmt.Errorf("failed to initialize store service: %w", err)
+	}
+	if err := c.initializeTokenService(services); err != nil {
+		return nil, fmt.Errorf("failed to initialize token service: %w", err)
 	}
 	if err := c.initializeWebsocketService(services); err != nil {
 		return nil, fmt.Errorf("failed to initialize websocket service: %w", err)
