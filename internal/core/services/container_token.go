@@ -3,11 +3,25 @@ package services
 import (
 	"backend/shared/token/app"
 	"backend/shared/token/domain"
-	"backend/shared/token/infra/keycloak"
+	"backend/shared/token/infra"
+	"context"
 )
 
 func (c *Container) initializeTokenService(s *Services) (err error) {
-	tokenKc := keycloak.New(&domain.TokenConfiguration{}, c.auth)
-	s.TokenService = app.New(c.base, tokenKc)
-	return
+ // Create token configuration
+    tokenConfig := &domain.TokenConfiguration{
+        WebSocketAudience: "websocket",                        // Set appropriate value
+        TokenLifetime:     3600,                               // Set appropriate value (seconds)
+    }
+    
+    // Create token factory
+    tokenFactory := infra.NewTokenFactory(c.base, *tokenConfig)
+    
+    // Create token provider with in-memory storage
+    tokenProvider := tokenFactory.CreateInMemoryProvider(context.Background())
+    
+    // Create token service using the provider
+    s.TokenService = app.New(c.base, tokenProvider)
+    
+    return 
 }

@@ -52,7 +52,7 @@ func (s *TokenService) GenerateWebSocketToken(ctx context.Context, tenantID, use
 }
 
 // ValidateToken validates a token
-func (s *TokenService) ValidateToken(ctx context.Context, tokenStr string) error {
+func (s *TokenService) ValidateToken(ctx context.Context, tokenStr string) (err error) {
 	// Validate token with Keycloak
 	valid, err := s.provider.ValidateToken(ctx, tokenStr)
 	if err != nil {
@@ -64,6 +64,7 @@ func (s *TokenService) ValidateToken(ctx context.Context, tokenStr string) error
 		s.base.Logger.Info(ctx, "Token validation failed", nil)
 		return ErrTokenInvalid
 	}
-
-	return nil
+	//remove token after use
+	err = s.provider.RevokeToken(ctx, tokenStr)
+	return
 }
