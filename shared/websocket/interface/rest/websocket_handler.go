@@ -89,7 +89,7 @@ func (h *Handler) HandleWebSocket(c *gin.Context) {
 	})
 
 	// Create and register client
-	client := app.NewClient(h.hub, conn, tenant.Name(), "pablo")
+	client := app.NewClient(h.hub, conn, tenant.Domain(), "pablo")
 	h.hub.RegisterClient(client)
 
 	// Start client goroutines
