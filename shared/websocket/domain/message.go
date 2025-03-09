@@ -1,13 +1,19 @@
 // shared/websocket/domain/message.go
 package domain
 
-import "time"
+import (
+	streamDomain "backend/shared/stream/domain"
+	"context"
+	"time"
+)
 
 // MessageType defines the type of websocket message
 type MessageType string
 
 const (
-	TypeSubscribe MessageType = "subscribe"
+	TypeSubscribe   MessageType = "subscribe"
+	TypeUnsubscribe MessageType = "unsubscribe"
+	TypeGetValue    MessageType = "getValue"
 )
 
 // Message represents a websocket message
@@ -21,13 +27,6 @@ type Message struct {
 	CreatedAt time.Time   `json:"created_at"`
 }
 
-// Alert specific message content
-type AlertContent struct {
-	Source   string      `json:"source"`
-	Severity string      `json:"severity"`
-	Details  interface{} `json:"details"`
-}
-
 // NewMessage creates a new message with default values
 func NewMessage(tenantID, userID string, msgType MessageType) *Message {
 	return &Message{
@@ -37,3 +36,6 @@ func NewMessage(tenantID, userID string, msgType MessageType) *Message {
 		CreatedAt: time.Now(),
 	}
 }
+
+// MessageHandler defines a function that handles a specific message type
+type MessageHandler func(ctx context.Context, message *streamDomain.WireMessage) error

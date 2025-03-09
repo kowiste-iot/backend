@@ -11,7 +11,7 @@ import (
 ) // GenerateToken generates a token for WebSocket authentication
 func (h *Handler) GenerateToken(c *gin.Context) {
 	ctx := c.Request.Context()
-	tenant, _, err := httputil.GetBase(ctx)
+	tenant, branchID, err := httputil.GetBase(ctx)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get tenant: " + err.Error()})
 		return
@@ -26,11 +26,12 @@ func (h *Handler) GenerateToken(c *gin.Context) {
 	tenantIDStr := tenant.Domain()
 
 	// Generate a WebSocket token
-	token, err := h.tokenService.GenerateWebSocketToken(ctx, tenantIDStr, userID)
+	token, err := h.tokenService.GenerateWebSocketToken(ctx, tenantIDStr, branchID, userID)
 	if err != nil {
 		h.base.Logger.Error(ctx, err, "Failed to generate WebSocket token",
 			map[string]interface{}{
 				"tenantID": tenantIDStr,
+				"branchID": branchID,
 				"userID":   userID,
 			})
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
@@ -53,14 +54,15 @@ func (h *Handler) HandleWebSocket(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Token is required"})
 		return
 	}
-	tenant, ok := httputil.GetTenant(ctx)
-	if !ok {
-		h.base.Logger.Error(ctx, errors.New("cannot get tenant"), "Failed to upgrade WebSocket connection",
+
+	tenant, branch, err := httputil.GetBase(ctx)
+	if err != nil {
+		h.base.Logger.Error(ctx, err, "Failed to upgrade WebSocket connection",
 			map[string]interface{}{})
 		return
 	}
 	// Validate the token
-	err := h.tokenService.ValidateToken(ctx, token)
+	userID, err := h.tokenService.ValidateToken(ctx, token)
 	if err != nil {
 		h.base.Logger.Error(ctx, errors.New("not valid token"), "Invalid WebSocket token",
 			map[string]interface{}{
@@ -76,6 +78,7 @@ func (h *Handler) HandleWebSocket(c *gin.Context) {
 		h.base.Logger.Error(ctx, err, "Failed to upgrade WebSocket connection",
 			map[string]interface{}{
 				"tenantID": tenant,
+				"userID":   userID,
 			})
 		return
 	}
@@ -89,7 +92,7 @@ func (h *Handler) HandleWebSocket(c *gin.Context) {
 	})
 
 	// Create and register client
-	client := app.NewClient(h.hub, conn, tenant.Domain(), "pablo")
+	client := app.NewClient(h.hub, conn, tenant.Domain()+branch, userID)
 	h.hub.RegisterClient(client)
 
 	// Start client goroutines

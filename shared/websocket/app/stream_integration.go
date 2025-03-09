@@ -1,7 +1,7 @@
 package app
 
 import (
-	indestDomain "backend/internal/features/ingest/domain"
+	ingestDomain "backend/internal/features/ingest/domain"
 	"backend/shared/base"
 	"backend/shared/stream/domain"
 
@@ -22,6 +22,8 @@ type WebSocketStreamService struct {
 	cancel       context.CancelFunc
 	mu           sync.RWMutex
 	isRunning    bool
+	// Map of message types to handler functions
+	messageHandlers map[string]wsDomain.MessageHandler
 }
 
 // NewWebSocketStreamService creates a new WebSocket stream service
@@ -32,13 +34,29 @@ func NewWebSocketStreamService(
 ) *WebSocketStreamService {
 	ctx, cancel := context.WithCancel(context.Background())
 
-	return &WebSocketStreamService{
-		base:         base,
-		hub:          hub,
-		streamClient: streamClient,
-		ctx:          ctx,
-		cancel:       cancel,
+	service := &WebSocketStreamService{
+		base:            base,
+		hub:             hub,
+		streamClient:    streamClient,
+		ctx:             ctx,
+		cancel:          cancel,
+		messageHandlers: make(map[string]wsDomain.MessageHandler),
 	}
+
+	// Register default handlers
+	service.registerDefaultHandlers()
+
+	return service
+}
+
+// registerDefaultHandlers sets up the default message type handlers
+func (s *WebSocketStreamService) registerDefaultHandlers() {
+	// Handler for measure updates
+	s.messageHandlers[ingestDomain.TopicIngest] = s.handleMeasureUpdate
+	// Handler for direct messages
+	s.messageHandlers[ingestDomain.TopicMessageDirect] = s.handleDirectMessage
+	// Handler for broadcast messages
+	s.messageHandlers[ingestDomain.TopicMessageBroadcast] = s.handleBroadcast
 }
 
 // Start initializes the WebSocket stream service
@@ -54,7 +72,7 @@ func (s *WebSocketStreamService) Start(ctx context.Context) error {
 	go s.hub.Run(s.ctx)
 
 	// Subscribe to WebSocket messages from the stream
-	err := s.streamClient.Subscribe(ctx, indestDomain.TopicIngest, s.handleStreamMessage)
+	err := s.streamClient.Subscribe(ctx, ingestDomain.TopicIngest, s.handleStreamMessage)
 	if err != nil {
 		return err
 	}
@@ -85,26 +103,11 @@ func (s *WebSocketStreamService) Stop() error {
 	return nil
 }
 
-// handleStreamMessage processes messages from the stream service
-func (s *WebSocketStreamService) handleStreamMessage(ctx context.Context, msg *domain.WireMessage) error {
-	var wsMessage wsDomain.Message
-
-	// Convert the wire message data to a WebSocket message
-	err := msg.DataToModel(&wsMessage)
-	if err != nil {
-		return err
-	}
-
-	// Convert to JSON
-	jsonData, err := json.Marshal(wsMessage)
-	if err != nil {
-		return err
-	}
-	wsMessage.TenantID = "opel"
-	wsMessage.UserID = "pablo"
-	// Send to the specific user
-	s.hub.SendToUser(wsMessage.TenantID, wsMessage.UserID, jsonData)
-	return nil
+// RegisterHandler allows external code to register a custom handler for a message type
+func (s *WebSocketStreamService) RegisterHandler(messageType string, handler wsDomain.MessageHandler) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.messageHandlers[messageType] = handler
 }
 
 // SendMessage sends a message through the stream service

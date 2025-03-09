@@ -16,8 +16,8 @@ var (
 
 // TokenProvider defines the interface for Keycloak token operations
 type TokenProvider interface {
-	GenerateWebSocketToken(ctx context.Context, tenantID, userID string) (string, time.Time, error)
-	ValidateToken(ctx context.Context, token string) (valid bool, err error)
+	GenerateWebSocketToken(ctx context.Context, tenantID, branchID, userID string) (string, time.Time, error)
+	ValidateToken(ctx context.Context, token string) (valid bool, userID string, err error)
 	RevokeToken(ctx context.Context, token string) error
 }
 
@@ -36,13 +36,14 @@ func New(base *base.BaseService, provider TokenProvider) *TokenService {
 }
 
 // GenerateWebSocketToken generates a short-lived token for WebSocket authentication
-func (s *TokenService) GenerateWebSocketToken(ctx context.Context, tenantID, userID string) (string, error) {
+func (s *TokenService) GenerateWebSocketToken(ctx context.Context, tenantID, branchID, userID string) (string, error) {
 	// Generate token using Keycloak
-	tokenStr, _, err := s.provider.GenerateWebSocketToken(ctx, tenantID, userID)
+	tokenStr, _, err := s.provider.GenerateWebSocketToken(ctx, tenantID, branchID, userID)
 	if err != nil {
 		s.base.Logger.Error(ctx, err, "Failed to generate WebSocket token",
 			map[string]interface{}{
 				"tenantID": tenantID,
+				"branchID": branchID,
 				"userID":   userID,
 			})
 		return "", ErrTokenGeneration
@@ -52,17 +53,17 @@ func (s *TokenService) GenerateWebSocketToken(ctx context.Context, tenantID, use
 }
 
 // ValidateToken validates a token
-func (s *TokenService) ValidateToken(ctx context.Context, tokenStr string) (err error) {
+func (s *TokenService) ValidateToken(ctx context.Context, tokenStr string) (userID string, err error) {
 	// Validate token with Keycloak
-	valid, err := s.provider.ValidateToken(ctx, tokenStr)
+	valid, userID, err := s.provider.ValidateToken(ctx, tokenStr)
 	if err != nil {
 		s.base.Logger.Error(ctx, err, "Error validating token", nil)
-		return ErrTokenInvalid
+		return "", ErrTokenInvalid
 	}
 
 	if !valid {
 		s.base.Logger.Info(ctx, "Token validation failed", nil)
-		return ErrTokenInvalid
+		return "", ErrTokenInvalid
 	}
 	//remove token after use
 	err = s.provider.RevokeToken(ctx, tokenStr)

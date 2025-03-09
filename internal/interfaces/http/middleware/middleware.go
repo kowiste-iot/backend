@@ -5,6 +5,7 @@ import (
 	"backend/shared/http/httputil"
 	"backend/shared/keycloak"
 	"backend/shared/logger"
+	"errors"
 	"net/http"
 	"regexp"
 	"strings"
@@ -27,9 +28,7 @@ func NewMiddlewareManager(logger logger.Logger, auth *keycloak.Keycloak) *Middle
 
 func (m *MiddlewareManager) Auth() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if match, _ := regexp.MatchString(`/api/[^/]+/[^/]+/ws`, c.Request.URL.Path); match {
-			//add check user token websocket here
-			c.Request = c.Request.WithContext(httputil.SetUserID(c.Request.Context(), "pablo"))
+		if match, _ := regexp.MatchString(`/api/[^/]+/[^/]+/ws$`, c.Request.URL.Path); match {
 			c.Next()
 			return
 		}
@@ -54,15 +53,13 @@ func (m *MiddlewareManager) Auth() gin.HandlerFunc {
 			})
 			return
 		}
-		claims := jwtToken.Claims.(jwt.MapClaims)
-		userID, ok := claims["sub"].(string)
-		if !ok {
+		userID, err := m.getUserID(jwtToken)
+		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"error": "invalid token claims",
+				"error": err,
 			})
 			return
 		}
-
 		ctx := httputil.SetToken(c.Request.Context(), token)
 		ctx = httputil.SetUserID(ctx, userID)
 		c.Request = c.Request.WithContext(ctx)
@@ -70,6 +67,18 @@ func (m *MiddlewareManager) Auth() gin.HandlerFunc {
 	}
 }
 
+func (m *MiddlewareManager) getUserID(token *jwt.Token) (userID string, err error) {
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return "", errors.New("invalid token")
+	}
+	userID, ok = claims["sub"].(string)
+	if !ok {
+		return "", errors.New("invalid token sub")
+	}
+
+	return
+}
 func (m *MiddlewareManager) Recovery() gin.HandlerFunc {
 	return httputil.RecoveryMiddleware(m.logger)
 }

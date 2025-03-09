@@ -5,7 +5,7 @@ Makefile
 README.md
 cmd/
   server/
-    __debug_bin3892556385
+    __debug_bin1256257533
     iot.db
     main.go
 configs/
@@ -65,6 +65,7 @@ internal/
       container_store.go
       container_stream.go
       container_tenant.go
+      container_token.go
       container_user.go
       container_websocket.go
   features/
@@ -410,7 +411,11 @@ shared/
     app/
       token_service.go
     domain/
-      token.go
+      config.go
+    infra/
+      factory.go
+      in_memory/
+        in_memory.go
   util/
     string.go
   validator/
@@ -419,10 +424,15 @@ shared/
     app/
       client.go
       hub.go
+      stream_integration.go
       websocket_handler.go
     domain/
       connection.go
       message.go
+    interface/
+      rest/
+        websocket_handler.go
+        websocket_init.go
 test/
   nats/
     subscriber.go

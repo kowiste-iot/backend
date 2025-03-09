@@ -1,8 +1,9 @@
 package inmemmo
 
 import (
-	"backend/shared/token/domain"
 	"backend/shared/base"
+	"backend/shared/http/httputil"
+	"backend/shared/token/domain"
 	"context"
 	"crypto/rand"
 	"encoding/base64"
@@ -14,9 +15,9 @@ import (
 // TokenStore defines the interface for token storage operations
 type TokenStore interface {
 	// Store saves a token with its metadata
-	Store(token string, tenantID, userID string, expiry time.Time) error
+	Store(token string, tenant, branch, userID string, expiry time.Time) error
 	// Get retrieves token metadata if exists
-	Get(token string) (tenantID, userID string, expiry time.Time, exists bool)
+	Get(token string) (tenant, branch, userID string, expiry time.Time, exists bool)
 	// Delete removes a token from storage
 	Delete(token string) error
 }
@@ -29,6 +30,7 @@ type InMemoryTokenStore struct {
 
 type tokenData struct {
 	TenantID string
+	BranchID string
 	UserID   string
 	Expiry   time.Time
 }
@@ -41,12 +43,13 @@ func NewInMemoryTokenStore() *InMemoryTokenStore {
 }
 
 // Store saves a token with its metadata
-func (s *InMemoryTokenStore) Store(token string, tenantID, userID string, expiry time.Time) error {
+func (s *InMemoryTokenStore) Store(token string, tenant, branch, userID string, expiry time.Time) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	s.store[token] = tokenData{
-		TenantID: tenantID,
+		TenantID: tenant,
+		BranchID: branch,
 		UserID:   userID,
 		Expiry:   expiry,
 	}
@@ -54,15 +57,15 @@ func (s *InMemoryTokenStore) Store(token string, tenantID, userID string, expiry
 }
 
 // Get retrieves token metadata if exists
-func (s *InMemoryTokenStore) Get(token string) (tenantID, userID string, expiry time.Time, exists bool) {
+func (s *InMemoryTokenStore) Get(token string) (tenantID, branchID, userID string, expiry time.Time, exists bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
 	data, ok := s.store[token]
 	if !ok {
-		return "", "", time.Time{}, false
+		return "", "", "", time.Time{}, false
 	}
-	return data.TenantID, data.UserID, data.Expiry, true
+	return data.TenantID, data.BranchID, data.UserID, data.Expiry, true
 }
 
 // Delete removes a token from storage
@@ -91,7 +94,7 @@ func NewTokenProvider(base *base.BaseService, config domain.TokenConfiguration, 
 }
 
 // GenerateWebSocketToken generates a token for WebSocket authentication
-func (p *TokenProvider) GenerateWebSocketToken(ctx context.Context, tenantID, userID string) (string, time.Time, error) {
+func (p *TokenProvider) GenerateWebSocketToken(ctx context.Context, tenantID, branchID, userID string) (string, time.Time, error) {
 	// Generate a secure random token
 	tokenBytes := make([]byte, 32) // 256 bits
 	_, err := rand.Read(tokenBytes)
@@ -105,13 +108,14 @@ func (p *TokenProvider) GenerateWebSocketToken(ctx context.Context, tenantID, us
 	expiry := time.Now().Add(time.Duration(p.config.TokenLifetime) * time.Second)
 
 	// Store the token
-	err = p.tokenStore.Store(token, tenantID, userID, expiry)
+	err = p.tokenStore.Store(token, tenantID, branchID, userID, expiry)
 	if err != nil {
 		return "", time.Time{}, errors.New("failed to store token")
 	}
 
 	p.base.Logger.Info(ctx, "Generated WebSocket token", map[string]interface{}{
 		"tenantID": tenantID,
+		"branchID": branchID,
 		"userID":   userID,
 		"expiry":   expiry,
 	})
@@ -120,31 +124,38 @@ func (p *TokenProvider) GenerateWebSocketToken(ctx context.Context, tenantID, us
 }
 
 // ValidateToken checks if a token is valid
-func (p *TokenProvider) ValidateToken(ctx context.Context, token string) (bool, error) {
-	tenantID, userID, expiry, exists := p.tokenStore.Get(token)
+func (p *TokenProvider) ValidateToken(ctx context.Context, token string) (bool, string, error) {
+	tenantID, branchID, userID, expiry, exists := p.tokenStore.Get(token)
 
 	// Check if token exists
 	if !exists {
-		return false, nil
+		return false, "", nil
 	}
-
+	tenant, branch, err := httputil.GetBase(ctx)
+	if err != nil {
+		return false, "", err
+	}
+	if tenant.Domain() != tenantID || branch != branchID {
+		return false, "", errors.New("unmatch tenat/branch")
+	}
 	// Check if token has expired
 	if time.Now().After(expiry) {
 		p.base.Logger.Info(ctx, "Token expired", map[string]interface{}{
 			"tenantID": tenantID,
+			"branchID": branchID,
 			"userID":   userID,
 		})
 		// Clean up expired token
 		_ = p.tokenStore.Delete(token)
-		return false, nil
+		return false, "", nil
 	}
 
-	return true, nil
+	return true, userID, nil
 }
 
 // RevokeToken invalidates a token
 func (p *TokenProvider) RevokeToken(ctx context.Context, token string) error {
-	tenantID, userID, _, exists := p.tokenStore.Get(token)
+	tenantID, branchID, userID, _, exists := p.tokenStore.Get(token)
 
 	if !exists {
 		// Token doesn't exist, nothing to revoke
@@ -158,6 +169,7 @@ func (p *TokenProvider) RevokeToken(ctx context.Context, token string) error {
 
 	p.base.Logger.Info(ctx, "Token revoked", map[string]interface{}{
 		"tenantID": tenantID,
+		"branchID": branchID,
 		"userID":   userID,
 	})
 
@@ -187,14 +199,14 @@ func (p *TokenProvider) cleanupExpiredTokens(ctx context.Context) {
 	p.base.Logger.Info(ctx, "Token cleanup attempted", nil)
 
 	if inMemoryStore, ok := p.tokenStore.(*InMemoryTokenStore); ok {
-	    inMemoryStore.mu.Lock()
-	    defer inMemoryStore.mu.Unlock()
-	
-	    now := time.Now()
-	    for token, data := range inMemoryStore.store {
-	        if now.After(data.Expiry) {
-	            delete(inMemoryStore.store, token)
-	        }
-	    }
+		inMemoryStore.mu.Lock()
+		defer inMemoryStore.mu.Unlock()
+
+		now := time.Now()
+		for token, data := range inMemoryStore.store {
+			if now.After(data.Expiry) {
+				delete(inMemoryStore.store, token)
+			}
+		}
 	}
 }
