@@ -47,7 +47,7 @@ func (s *WebSocketStreamService) handleMeasureUpdate(ctx context.Context, msg *d
 	}
 
 	// Get all users subscribed to this measure
-	subscribers := s.hub.GetSubscribedUsers(ingestMessage.TenantID, ingestMessage.ID)
+	subscribers := s.hub.GetSubscribedUsers(ingestMessage.TenantID, ingestMessage.BranchID, ingestMessage.ID)
 	if len(subscribers) == 0 {
 		// No subscribed users, nothing to do
 		return nil
@@ -69,7 +69,7 @@ func (s *WebSocketStreamService) handleMeasureUpdate(ctx context.Context, msg *d
 
 	// Send to all subscribed users
 	for _, userID := range subscribers {
-		s.hub.SendToUser(ingestMessage.TenantID, userID, jsonData)
+		s.hub.SendToUser(ingestMessage.TenantID, ingestMessage.BranchID, userID, jsonData)
 	}
 
 	return nil
@@ -114,7 +114,7 @@ func (s *WebSocketStreamService) handleDirectMessage(ctx context.Context, msg *d
 	}
 
 	// Send to the specific user
-	s.hub.SendToUser(ingestMessage.TenantID, userID, jsonData)
+	s.hub.SendToUser(ingestMessage.TenantID, ingestMessage.BranchID, userID, jsonData)
 	return nil
 }
 
@@ -146,7 +146,7 @@ func (s *WebSocketStreamService) handleBroadcast(ctx context.Context, msg *domai
 
 	// Send to all users in the tenant
 	for _, userID := range users {
-		s.hub.SendToUser(ingestMessage.TenantID, userID, jsonData)
+		s.hub.SendToUser(ingestMessage.TenantID, ingestMessage.BranchID, userID, jsonData)
 	}
 
 	return nil

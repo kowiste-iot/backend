@@ -58,11 +58,11 @@ func (h *Hub) Run(ctx context.Context) {
 }
 
 // SendToUser sends a message to a specific user in a tenant
-func (h *Hub) SendToUser(tenantID, userID string, message []byte) {
+func (h *Hub) SendToUser(tenantID, branch, userID string, message []byte) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
-	if tenantClients, ok := h.clients[tenantID]; ok {
+	if tenantClients, ok := h.clients[tenantID+branch]; ok {
 		if client, ok := tenantClients[userID]; ok {
 			select {
 			case client.send <- message:
@@ -108,114 +108,112 @@ func (h *Hub) UnregisterClient(client *Client) {
 	h.unregister <- client
 }
 
-
-
 // SubscribeToMeasures subscribes a user to specific measures
 func (h *Hub) SubscribeToMeasures(tenantID, userID string, measureIDs []string) {
-    h.subscribeMu.Lock()
-    defer h.subscribeMu.Unlock()
-    
-    // Initialize tenant map if it doesn't exist
-    if _, ok := h.subscriptions[tenantID]; !ok {
-        h.subscriptions[tenantID] = make(map[string][]string)
-    }
-    
-    // Subscribe to each measure
-    for _, measureID := range measureIDs {
-        if _, ok := h.subscriptions[tenantID][measureID]; !ok {
-            h.subscriptions[tenantID][measureID] = []string{}
-        }
-        
-        // Check if user is already subscribed to avoid duplicates
-        alreadySubscribed := false
-        for _, id := range h.subscriptions[tenantID][measureID] {
-            if id == userID {
-                alreadySubscribed = true
-                break
-            }
-        }
-        
-        // Add user to subscription list if not already there
-        if !alreadySubscribed {
-            h.subscriptions[tenantID][measureID] = append(h.subscriptions[tenantID][measureID], userID)
-        }
-    }
+	h.subscribeMu.Lock()
+	defer h.subscribeMu.Unlock()
+
+	// Initialize tenant map if it doesn't exist
+	if _, ok := h.subscriptions[tenantID]; !ok {
+		h.subscriptions[tenantID] = make(map[string][]string)
+	}
+
+	// Subscribe to each measure
+	for _, measureID := range measureIDs {
+		if _, ok := h.subscriptions[tenantID][measureID]; !ok {
+			h.subscriptions[tenantID][measureID] = []string{}
+		}
+
+		// Check if user is already subscribed to avoid duplicates
+		alreadySubscribed := false
+		for _, id := range h.subscriptions[tenantID][measureID] {
+			if id == userID {
+				alreadySubscribed = true
+				break
+			}
+		}
+
+		// Add user to subscription list if not already there
+		if !alreadySubscribed {
+			h.subscriptions[tenantID][measureID] = append(h.subscriptions[tenantID][measureID], userID)
+		}
+	}
 }
 
 // UnsubscribeFromMeasures unsubscribes a user from specific measures
 func (h *Hub) UnsubscribeFromMeasures(tenantID, userID string, measureIDs []string) {
-    h.subscribeMu.Lock()
-    defer h.subscribeMu.Unlock()
-    
-    if _, ok := h.subscriptions[tenantID]; !ok {
-        return
-    }
-    
-    // If measureIDs is empty, unsubscribe from all
-    if len(measureIDs) == 0 {
-        for measureID, users := range h.subscriptions[tenantID] {
-            // Remove user from the slice
-            newUsers := make([]string, 0, len(users))
-            for _, id := range users {
-                if id != userID {
-                    newUsers = append(newUsers, id)
-                }
-            }
-            
-            // Update or cleanup
-            if len(newUsers) == 0 {
-                delete(h.subscriptions[tenantID], measureID)
-            } else {
-                h.subscriptions[tenantID][measureID] = newUsers
-            }
-        }
-        
-        // Clean up empty tenant
-        if len(h.subscriptions[tenantID]) == 0 {
-            delete(h.subscriptions, tenantID)
-        }
-        return
-    }
-    
-    // Unsubscribe from specific measures
-    for _, measureID := range measureIDs {
-        if users, ok := h.subscriptions[tenantID][measureID]; ok {
-            // Remove user from the slice
-            newUsers := make([]string, 0, len(users))
-            for _, id := range users {
-                if id != userID {
-                    newUsers = append(newUsers, id)
-                }
-            }
-            
-            // Update or cleanup
-            if len(newUsers) == 0 {
-                delete(h.subscriptions[tenantID], measureID)
-            } else {
-                h.subscriptions[tenantID][measureID] = newUsers
-            }
-        }
-    }
-    
-    // Clean up empty tenant
-    if len(h.subscriptions[tenantID]) == 0 {
-        delete(h.subscriptions, tenantID)
-    }
+	h.subscribeMu.Lock()
+	defer h.subscribeMu.Unlock()
+
+	if _, ok := h.subscriptions[tenantID]; !ok {
+		return
+	}
+
+	// If measureIDs is empty, unsubscribe from all
+	if len(measureIDs) == 0 {
+		for measureID, users := range h.subscriptions[tenantID] {
+			// Remove user from the slice
+			newUsers := make([]string, 0, len(users))
+			for _, id := range users {
+				if id != userID {
+					newUsers = append(newUsers, id)
+				}
+			}
+
+			// Update or cleanup
+			if len(newUsers) == 0 {
+				delete(h.subscriptions[tenantID], measureID)
+			} else {
+				h.subscriptions[tenantID][measureID] = newUsers
+			}
+		}
+
+		// Clean up empty tenant
+		if len(h.subscriptions[tenantID]) == 0 {
+			delete(h.subscriptions, tenantID)
+		}
+		return
+	}
+
+	// Unsubscribe from specific measures
+	for _, measureID := range measureIDs {
+		if users, ok := h.subscriptions[tenantID][measureID]; ok {
+			// Remove user from the slice
+			newUsers := make([]string, 0, len(users))
+			for _, id := range users {
+				if id != userID {
+					newUsers = append(newUsers, id)
+				}
+			}
+
+			// Update or cleanup
+			if len(newUsers) == 0 {
+				delete(h.subscriptions[tenantID], measureID)
+			} else {
+				h.subscriptions[tenantID][measureID] = newUsers
+			}
+		}
+	}
+
+	// Clean up empty tenant
+	if len(h.subscriptions[tenantID]) == 0 {
+		delete(h.subscriptions, tenantID)
+	}
 }
 
 // GetSubscribedUsers returns all users subscribed to a specific measure
-func (h *Hub) GetSubscribedUsers(tenantID, measureID string) []string {
-    h.subscribeMu.RLock()
-    defer h.subscribeMu.RUnlock()
-    //TODO: get tenant and branch
-    if tenantSubs, ok := h.subscriptions[tenantID]; ok {
-        if users, ok := tenantSubs[measureID]; ok {
-            // Return a copy of the slice to prevent external modification
-            result := make([]string, len(users))
-            copy(result, users)
-            return result
-        }
-    }
-    
-    return []string{}
+func (h *Hub) GetSubscribedUsers(tenantID, branch, measureID string) []string {
+	h.subscribeMu.RLock()
+	defer h.subscribeMu.RUnlock()
+	//TODO: get tenant and branch
+	if tenantSubs, ok := h.subscriptions[tenantID+branch]; ok {
+		if users, ok := tenantSubs[measureID]; ok {
+			// Return a copy of the slice to prevent external modification
+			result := make([]string, len(users))
+			copy(result, users)
+			return result
+		}
+	}
+
+	return []string{}
 }

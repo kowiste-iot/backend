@@ -13,6 +13,7 @@ type Message struct {
 	Time     time.Time              `json:"time"`
 	Data     map[string]interface{} `json:"data" validate:"required"`
 }
+
 //mqtt
 // {
 //   "id":"019545fa-101a-7d62-8197-fe6930b5f058",
