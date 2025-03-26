@@ -122,7 +122,14 @@ func (a *Widget) Delete() {
 func (a *Widget) IsDeleted() bool {
     return a.deletedAt != nil
 }
-
+// Add this to your domain/widget.go file
+func NewWidgetLinkData(measure, tag, legend string) WidgetLinkData {
+    return WidgetLinkData{
+        measure: measure,
+        tag:     tag,
+        legend:  legend,
+    }
+}
 // Getters for all fields
 func (a *Widget) ID() string            { return a.id }
 func (a *Widget) TenantID() string      { return a.tenantID }

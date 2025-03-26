@@ -107,6 +107,27 @@ services:
     restart: unless-stopped
     networks:
       - keycloak-network
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: mailpit
+    ports:
+      - "1025:1025"  # SMTP port
+      - "8025:8025"  # Web UI port
+    environment:
+      MP_MAX_MESSAGES: "500"     # Maximum number of messages to keep
+      MP_DATA_FILE: "/data/mailpit.db"  # Persistent storage location
+      MP_SMTP_AUTH_ACCEPT_ANY: "true"  # Accept any SMTP authentication
+      MP_SMTP_AUTH_ALLOW_INSECURE: "true"  # Allow insecure authentication
+    volumes:
+      - mailpit_data:/data
+    restart: unless-stopped
+    networks:
+      - keycloak-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "3"
 
 volumes:
   postgres_data:
@@ -115,6 +136,7 @@ volumes:
   emqx_data:
   emqx_log:
   minio_data:
+  mailpit_data:
 networks:
   keycloak-network:
     name: keycloak-network
