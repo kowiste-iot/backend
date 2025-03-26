@@ -12,7 +12,6 @@ type Widget struct {
 	TenantID    string           `gorm:"column:tenant_id;not null"`
 	BranchName  string           `gorm:"column:branch_id;not null"`
 	DashboardID string           `gorm:"column:dashboard_id;not null"`
-	Name        string           `gorm:"column:name;not null"`
 	TypeWidget  byte             `gorm:"column:type_widget;not null"`
 	I           int              `gorm:"column:i;not null"`
 	X           int              `gorm:"column:x;not null"`

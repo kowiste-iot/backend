@@ -19,7 +19,6 @@ type Dashboard struct {
 }
 
 func New(tenantID, branchName, name, parent, description string) (dashboard *Dashboard, err error) {
-
 	id, err := uuid.NewV7()
 	if err != nil {
 		return

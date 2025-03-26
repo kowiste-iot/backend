@@ -7,7 +7,6 @@ import (
 	"backend/shared/pagination"
 	"context"
 	"errors"
-	"time"
 
 	"gorm.io/gorm"
 )
@@ -26,7 +25,6 @@ func (r *widgetRepository) Create(ctx context.Context, input *domain.Widget) err
 		ID:         input.ID(),
 		TenantID:   input.TenantID(),
 		BranchName: input.BranchName(),
-		Name:       input.Name(),
 	}
 	return r.db.WithContext(ctx).Create(&dbWidget).Error
 }
@@ -36,7 +34,6 @@ func (r *widgetRepository) Update(ctx context.Context, input *domain.Widget) err
 		ID:         input.ID(),
 		TenantID:   input.TenantID(),
 		BranchName: input.BranchName(),
-		Name:       input.Name(),
 	}
 	return r.db.WithContext(ctx).Updates(&dbWidget).Error
 }
@@ -50,22 +47,7 @@ func (r *widgetRepository) FindByID(ctx context.Context, input *baseCmd.BaseInpu
 	if err != nil {
 		return nil, err
 	}
-	return domain.NewWidgetFromRepository(
-		dbWidget.ID,
-		dbWidget.TenantID,
-		dbWidget.BranchName,
-		dbWidget.Name,
-		"",
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		domain.WidgetData{},
-		time.Now(),
-		nil,
-	), nil
+	return toWidgetDomain(dbWidget), nil
 
 }
 
@@ -93,34 +75,47 @@ func (r *widgetRepository) FindAll(ctx context.Context, input *baseCmd.BaseInput
 		return nil, err
 	}
 
-	widgets := make([]*domain.Widget, len(dbWidgets))
-	for i, dbWidget := range dbWidgets {
-		widgets[i] = domain.NewWidgetFromRepository(
-			dbWidget.ID,
-			dbWidget.TenantID,
-			dbWidget.BranchName,
-			dbWidget.Name,
-			"",
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			domain.WidgetData{},
-			time.Now(),
-			nil,
-		)
-	}
-	return widgets, nil
+	return toWidgetsDomain(dbWidgets), nil
 }
 
 func (r *widgetRepository) Remove(ctx context.Context, input *baseCmd.BaseInput, dashboardID, widgetID string) error {
-
 	resp := r.db.WithContext(ctx).Where(
 		gormhelper.TenantBranchFilter(input.TenantDomain, input.BranchName)+" AND dashboard_id = ? AND id = ?", dashboardID, widgetID).Delete(&Widget{})
 	if resp.RowsAffected == 0 {
 		return errors.New("no delete")
 	}
 	return resp.Error
+}
+
+func toWidgetsDomain(dbWidgets []Widget) (widgets []*domain.Widget) {
+	widgets = make([]*domain.Widget, len(dbWidgets))
+	for i, dbWidget := range dbWidgets {
+		widgets[i] = toWidgetDomain(dbWidget)
+	}
+	return
+}
+func toWidgetDomain(dbWidget Widget) (widgets *domain.Widget) {
+
+	wData := domain.NewWidgetData(dbWidget.Label, dbWidget.ShowLabel, dbWidget.ShowEmotion, dbWidget.TrueEmotion)
+	lMap := make([]domain.WidgetLinkData, 0)
+	for l := range dbWidget.Link {
+		lMap = append(lMap, domain.NewWidgetLinkData(
+			dbWidget.Link[l].Measure,
+			dbWidget.Link[l].Tag,
+			dbWidget.Link[l].Measure,
+		))
+	}
+	wData.SetLink(lMap)
+	wData.SetOptions(dbWidget.Options)
+
+	return domain.NewWidgetFromRepository(
+		dbWidget.ID,
+		dbWidget.TenantID, dbWidget.BranchName,
+		dbWidget.DashboardID,
+		dbWidget.TypeWidget,
+		dbWidget.I,
+		dbWidget.X, dbWidget.Y,
+		dbWidget.W, dbWidget.H,
+		wData,
+		dbWidget.UpdatedAt, dbWidget.DeletedAt)
 }

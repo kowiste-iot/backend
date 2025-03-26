@@ -40,10 +40,34 @@ func (h *WidgetHandler) CreateWidget(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get base: " + err.Error()})
 		return
 	}
+	
+	// Convert from request link data to command link data
+	// Assuming your command package has a WidgetLink type
+	commandLinks := make([]command.WidgetLink, len(req.Data.Link))
+	for i, link := range req.Data.Link {
+		commandLinks[i] = command.WidgetLink{
+			Measure: link.Measure,
+			Tag:     link.Tag,
+			Legend:  link.Legend,
+		}
+	}
+	
+	// Create input for service
 	input := command.CreateWidgetInput{
 		BaseInput:   baseCmd.NewInput(tenant.Domain(), branch),
-		Name:        req.Name,
 		DashboardID: dashboardID,
+		TypeWidget:  req.Type,
+		I:           req.I,
+		X:           req.X,
+		Y:           req.Y,
+		W:           req.W,
+		H:           req.H,
+		Label:       req.Data.Label,
+		ShowLabel:   req.Data.ShowLabel,
+		ShowEmotion: req.Data.ShowEmotion,
+		TrueEmotion: req.Data.TrueEmotion,
+		Link:        commandLinks, // Using the command link type here
+		Options:     req.Data.Options,
 	}
 
 	result, err := h.widgetService.CreateWidget(ctx, &input)
@@ -179,20 +203,46 @@ func (h *WidgetHandler) UpdateWidget(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get base: " + err.Error()})
 		return
 	}
-	var req UpdateDashboardRequest
+	
+	var req UpdateWidgetRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	
+	// Convert from request link data to command link data
+	commandLinks := make([]command.WidgetLink, len(req.Data.Link))
+	for i, link := range req.Data.Link {
+		commandLinks[i] = command.WidgetLink{
+			Measure: link.Measure,
+			Tag:     link.Tag,
+			Legend:  link.Legend,
+		}
+	}
+	
 	inputBase := baseCmd.NewInput(tenant.Domain(), branch)
 	input := command.UpdateWidgetInput{
-		BaseInput: inputBase,
-		ID:        dashboardID,
-		Name:      req.Name,
+		BaseInput:   inputBase,
+		ID:          widgetID,
+		DashboardID: dashboardID,
+		Name:        req.Name,
+		TypeWidget:  req.Type,
+		I:           req.I,
+		X:           req.X,
+		Y:           req.Y,
+		W:           req.W,
+		H:           req.H,
+		Label:       req.Data.Label,
+		ShowLabel:   req.Data.ShowLabel,
+		ShowEmotion: req.Data.ShowEmotion,
+		TrueEmotion: req.Data.TrueEmotion,
+		Link:        commandLinks,
+		Options:     req.Data.Options,
 	}
+	
 	result, err := h.widgetService.UpdateWidget(ctx, &input)
 	if err != nil {
-		if err == domain.ErrDashboardNotFound {
+		if err == domain.ErrDashboardNotFound || err == domain.ErrWidgetNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Widget not found"})
 			return
 		}
@@ -209,6 +259,8 @@ func (h *WidgetHandler) UpdateWidget(c *gin.Context) {
 
 	c.JSON(http.StatusOK, ToWidgetResponse(result))
 }
+
+
 
 // @Summary Delete an widget
 // @Description Delete an widget by ID

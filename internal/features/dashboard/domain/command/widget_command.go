@@ -7,7 +7,6 @@ import baseCmd "backend/shared/base/command"
 type CreateWidgetInput struct {
 	baseCmd.BaseInput
 	DashboardID string `json:"dashboardID" validate:"required"`
-	Name        string `json:"name" validate:"required"`
 	TypeWidget  byte   `json:"type"`
 	I           int    `json:"i"`
 	X           int    `json:"x"`
