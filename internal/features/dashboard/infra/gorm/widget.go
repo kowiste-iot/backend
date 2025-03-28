@@ -21,10 +21,30 @@ func NewWidgetRepository(db *gorm.DB) domain.WidgetRepository {
 }
 
 func (r *widgetRepository) Create(ctx context.Context, input *domain.Widget) error {
+	lMap := make([]WidgetLinkData, 0)
+	for _, link := range input.Link() {
+		lMap = append(lMap, WidgetLinkData{
+			WidgetID: input.ID(),
+			Measure:  link.MeasureID(),
+			Tag:      link.Tag(),
+			Legend:   link.Legend(),
+		})
+	}
 	dbWidget := Widget{
-		ID:         input.ID(),
-		TenantID:   input.TenantID(),
-		BranchName: input.BranchName(),
+		ID:          input.ID(),
+		TenantID:    input.TenantID(),
+		BranchName:  input.BranchName(),
+		DashboardID: input.DashboardID(),
+		TypeWidget:  input.TypeWidget(),
+		X:           input.X(),
+		Y:           input.Y(),
+		W:           input.W(),
+		H:           input.H(),
+		Label:       input.Label(),
+		ShowLabel:   input.ShowLabel(),
+		ShowEmotion: input.ShowEmotion(),
+		TrueEmotion: input.TrueEmotion(),
+		Link:        lMap,
 	}
 	return r.db.WithContext(ctx).Create(&dbWidget).Error
 }
@@ -42,7 +62,7 @@ func (r *widgetRepository) FindByID(ctx context.Context, input *baseCmd.BaseInpu
 	var dbWidget Widget
 
 	err := r.db.WithContext(ctx).Where(
-		gormhelper.TenantBranchFilter(input.TenantDomain, input.BranchName)+" AND id = ?", dashboardID).
+		gormhelper.TenantBranchFilter(input.TenantDomain, input.BranchName)+" AND dashboard_id = ?", dashboardID).
 		First(&dbWidget).Error
 	if err != nil {
 		return nil, err
@@ -51,7 +71,7 @@ func (r *widgetRepository) FindByID(ctx context.Context, input *baseCmd.BaseInpu
 
 }
 
-func (r *widgetRepository) FindAll(ctx context.Context, input *baseCmd.BaseInput) ([]*domain.Widget, error) {
+func (r *widgetRepository) FindAll(ctx context.Context, input *baseCmd.BaseInput, dashboardID string) ([]*domain.Widget, error) {
 	var dbWidgets []Widget
 
 	pg, ok := pagination.GetPagination(ctx)
@@ -59,7 +79,7 @@ func (r *widgetRepository) FindAll(ctx context.Context, input *baseCmd.BaseInput
 		return nil, errors.New("pagination not found in context")
 	}
 	var total int64
-	err := r.db.Model(&Widget{}).Where(gormhelper.TenantBranchFilter(input.TenantDomain, input.BranchName)).Count(&total).Error
+	err := r.db.Model(&Widget{}).Where(gormhelper.TenantBranchFilter(input.TenantDomain, input.BranchName)+" AND dashboard_id = ?", dashboardID).Count(&total).Error
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +133,6 @@ func toWidgetDomain(dbWidget Widget) (widgets *domain.Widget) {
 		dbWidget.TenantID, dbWidget.BranchName,
 		dbWidget.DashboardID,
 		dbWidget.TypeWidget,
-		dbWidget.I,
 		dbWidget.X, dbWidget.Y,
 		dbWidget.W, dbWidget.H,
 		wData,

@@ -16,6 +16,6 @@ type WidgetRepository interface {
 	Create(ctx context.Context, input *Widget) error
 	Update(ctx context.Context, input *Widget) error
 	FindByID(ctx context.Context, input *baseCmd.BaseInput, dashboardID, widgetID string) (*Widget, error)
-	FindAll(ctx context.Context, input *baseCmd.BaseInput) ([]*Widget, error)
+	FindAll(ctx context.Context, input *baseCmd.BaseInput, dashboardID string) ([]*Widget, error)
 	Remove(ctx context.Context, input *baseCmd.BaseInput, dashboardID, widgetID string) error
 }

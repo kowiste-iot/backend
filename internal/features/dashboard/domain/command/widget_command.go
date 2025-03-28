@@ -8,7 +8,6 @@ type CreateWidgetInput struct {
 	baseCmd.BaseInput
 	DashboardID string `json:"dashboardID" validate:"required"`
 	TypeWidget  byte   `json:"type"`
-	I           int    `json:"i"`
 	X           int    `json:"x"`
 	Y           int    `json:"y"`
 	W           int    `json:"w"`
@@ -37,7 +36,6 @@ type UpdateWidgetInput struct {
 	DashboardID string `json:"dashboardID" validate:"required"`
 	Name        string `json:"name" validate:"required"`
 	TypeWidget  byte   `json:"type"`
-	I           int    `json:"i"`
 	X           int    `json:"x"`
 	Y           int    `json:"y"`
 	W           int    `json:"w"`
@@ -57,7 +55,6 @@ type UpdateWidgetPositionInput struct {
 	baseCmd.BaseInput
 	ID          string `json:"id" validate:"required"`
 	DashboardID string `json:"dashboardID" validate:"required"`
-	I           int    `json:"i"`
 	X           int    `json:"x"`
 	Y           int    `json:"y"`
 	W           int    `json:"w"`

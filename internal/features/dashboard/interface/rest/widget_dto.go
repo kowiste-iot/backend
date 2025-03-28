@@ -86,7 +86,7 @@ type WidgetLinkResponse struct {
 }
 
 // ToWidgetResponse converts domain Widget to handler WidgetResponse
-func ToWidgetResponse(w *domain.Widget) WidgetResponse {
+func ToWidgetResponse(w *domain.Widget, num int) WidgetResponse {
 	linkResponses := make([]WidgetLinkResponse, len(w.Link()))
 	for i, link := range w.Link() {
 		linkResponses[i] = WidgetLinkResponse{
@@ -100,7 +100,7 @@ func ToWidgetResponse(w *domain.Widget) WidgetResponse {
 		ID:          w.ID(),
 		DashboardID: w.DashboardID(),
 		Type:        w.TypeWidget(),
-		I:           w.I(),
+		I:           num, //addin a index for the web
 		X:           w.X(),
 		Y:           w.Y(),
 		W:           w.W(),
@@ -121,7 +121,7 @@ func ToWidgetResponse(w *domain.Widget) WidgetResponse {
 func ToWidgetResponses(widgets []*domain.Widget) []WidgetResponse {
 	responses := make([]WidgetResponse, len(widgets))
 	for i, w := range widgets {
-		responses[i] = ToWidgetResponse(w)
+		responses[i] = ToWidgetResponse(w, i)
 	}
 	return responses
 }

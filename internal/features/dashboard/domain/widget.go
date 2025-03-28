@@ -13,7 +13,6 @@ type Widget struct {
 	branchName  string
 	dashboardID string
 	typeWidget  byte
-	i           int
 	x           int
 	y           int
 	w           int
@@ -38,7 +37,7 @@ type WidgetLinkData struct {
 	legend  string
 }
 
-func NewWidget(tenantID, branchName, dashboardID string, typeWidget byte, i, x, y, w, h int,
+func NewWidget(tenantID, branchName, dashboardID string, typeWidget byte,  x, y, w, h int,
 	label string, showLabel, showEmotion, trueEmotion bool, link []WidgetLinkData, options any) (widget *Widget, err error) {
 
 	id, err := uuid.NewV7()
@@ -52,7 +51,6 @@ func NewWidget(tenantID, branchName, dashboardID string, typeWidget byte, i, x, 
 		tenantID:    tenantID,
 		dashboardID: dashboardID,
 		typeWidget:  typeWidget,
-		i:           i,
 		x:           x,
 		y:           y,
 		w:           w,
@@ -71,14 +69,13 @@ func NewWidget(tenantID, branchName, dashboardID string, typeWidget byte, i, x, 
 }
 
 func NewWidgetFromRepository(id, tenantID, branchName, dashboardID string, typeWidget byte,
-	i, x, y, w, h int, widgetData WidgetData, updatedAt time.Time, deletedAt *time.Time) *Widget {
+	 x, y, w, h int, widgetData WidgetData, updatedAt time.Time, deletedAt *time.Time) *Widget {
 	return &Widget{
 		id:          id,
 		tenantID:    tenantID,
 		branchName:  branchName,
 		dashboardID: dashboardID,
 		typeWidget:  typeWidget,
-		i:           i,
 		x:           x,
 		y:           y,
 		w:           w,
@@ -89,9 +86,8 @@ func NewWidgetFromRepository(id, tenantID, branchName, dashboardID string, typeW
 	}
 }
 
-func (a *Widget) Update( typeWidget byte, i, x, y, w, h int, widgetData WidgetData) error {
+func (a *Widget) Update( typeWidget byte,  x, y, w, h int, widgetData WidgetData) error {
 	a.typeWidget = typeWidget
-	a.i = i
 	a.x = x
 	a.y = y
 	a.w = w
@@ -101,8 +97,7 @@ func (a *Widget) Update( typeWidget byte, i, x, y, w, h int, widgetData WidgetDa
 	return nil
 }
 
-func (a *Widget) UpdatePosition(i, x, y, w, h int) error {
-	a.i = i
+func (a *Widget) UpdatePosition( x, y, w, h int) error {
 	a.x = x
 	a.y = y
 	a.w = w
@@ -123,10 +118,10 @@ func (a *Widget) IsDeleted() bool {
 // Add this to your domain/widget.go file
 func NewWidgetData(label string, showLabel, showEmotion, trueEmotion bool) WidgetData {
 	return WidgetData{
-		label:       "",
-		showLabel:   false,
-		showEmotion: false,
-		trueEmotion: false,
+		label:       label,
+		showLabel:   showLabel,
+		showEmotion: showEmotion,
+		trueEmotion: trueEmotion,
 		link:        []WidgetLinkData{},
 		options:     nil,
 	}
@@ -153,7 +148,6 @@ func (a *Widget) TenantID() string      { return a.tenantID }
 func (a *Widget) BranchName() string    { return a.branchName }
 func (a *Widget) DashboardID() string   { return a.dashboardID }
 func (a *Widget) TypeWidget() byte      { return a.typeWidget }
-func (a *Widget) I() int                { return a.i }
 func (a *Widget) X() int                { return a.x }
 func (a *Widget) Y() int                { return a.y }
 func (a *Widget) W() int                { return a.w }
