@@ -3,34 +3,15 @@ package dashboardhandler
 import (
 	"net/http"
 
-	"backend/internal/features/dashboard/app"
 	"backend/internal/features/dashboard/domain"
 	"backend/internal/features/dashboard/domain/command"
 	baseCmd "backend/shared/base/command"
 	ginhelp "backend/shared/http/gin"
 	"backend/shared/http/httputil"
-	"backend/shared/logger"
 	"backend/shared/pagination"
 
 	"github.com/gin-gonic/gin"
 )
-
-type DashboardHandler struct {
-	logger           logger.Logger
-	dashboardService app.DashboardService
-}
-
-type Dependencies struct {
-	Logger           logger.Logger
-	DashboardService app.DashboardService
-}
-
-func New(deps Dependencies) *DashboardHandler {
-	return &DashboardHandler{
-		logger:           deps.Logger,
-		dashboardService: deps.DashboardService,
-	}
-}
 
 // @Summary Create a new dashboard
 // @Description Create a new dashboard for the tenant
@@ -67,7 +48,7 @@ func (h *DashboardHandler) CreateDashboard(c *gin.Context) {
 	result, err := h.dashboardService.CreateDashboard(ctx, &input)
 	if err != nil {
 		tenantID, _ := httputil.GetTenant(ctx)
-		h.logger.Error(c.Request.Context(), err, "Failed to create dashboard", map[string]interface{}{
+		h.base.Logger.Error(c.Request.Context(), err, "Failed to create dashboard", map[string]interface{}{
 			"error":    err.Error(),
 			"tenantID": tenantID,
 		})
@@ -111,7 +92,7 @@ func (h *DashboardHandler) GetDashboard(c *gin.Context) {
 			return
 		}
 
-		h.logger.Error(c.Request.Context(), err, "Failed to get dashboard", map[string]interface{}{
+		h.base.Logger.Error(c.Request.Context(), err, "Failed to get dashboard", map[string]interface{}{
 			"error":       err.Error(),
 			"tenantID":    tenant.Domain(),
 			"dashboardID": dashboardID,
@@ -147,7 +128,7 @@ func (h *DashboardHandler) ListDashboards(c *gin.Context) {
 	results, err := h.dashboardService.ListDashboards(ctx, &input)
 	if err != nil {
 		tenantID, _ := httputil.GetTenant(ctx)
-		h.logger.Error(c.Request.Context(), err, "Failed to get dashboard", map[string]interface{}{
+		h.base.Logger.Error(c.Request.Context(), err, "Failed to get dashboard", map[string]interface{}{
 			"error":    err.Error(),
 			"tenantID": tenantID,
 		})
@@ -208,7 +189,7 @@ func (h *DashboardHandler) UpdateDashboard(c *gin.Context) {
 			return
 		}
 		tenantID, _ := httputil.GetTenant(ctx)
-		h.logger.Error(c.Request.Context(), err, "Failed to update dashboard", map[string]interface{}{
+		h.base.Logger.Error(c.Request.Context(), err, "Failed to update dashboard", map[string]interface{}{
 			"error":       err.Error(),
 			"tenantID":    tenantID,
 			"dashboardID": dashboardID,
@@ -254,7 +235,7 @@ func (h *DashboardHandler) DeleteDashboard(c *gin.Context) {
 			return
 		}
 		tenantID, _ := httputil.GetTenant(ctx)
-		h.logger.Error(c.Request.Context(), err, "Failed to delete dashboard", map[string]interface{}{
+		h.base.Logger.Error(c.Request.Context(), err, "Failed to delete dashboard", map[string]interface{}{
 			"error":       err.Error(),
 			"tenantID":    tenantID,
 			"dashboardID": dashboardID,

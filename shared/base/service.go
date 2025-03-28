@@ -10,17 +10,21 @@ import (
 
 	"backend/shared/logger"
 	"errors"
+
+	"gorm.io/gorm"
 )
 
 type BaseService struct {
 	Logger logger.Logger
+	DB     *gorm.DB
 	// Auth   validation.AuthProvider
 	Perm authzDomain.PermissionProvider
 }
 
-func New(log logger.Logger, permission authzDomain.PermissionProvider) *BaseService {
+func New(log logger.Logger, permission authzDomain.PermissionProvider, db *gorm.DB) *BaseService {
 	return &BaseService{
 		Logger: log,
+		DB:     db,
 		Perm:   permission,
 	}
 }

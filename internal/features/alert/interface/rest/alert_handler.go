@@ -3,34 +3,15 @@ package alerthandler
 import (
 	"net/http"
 
-	"backend/internal/features/alert/app"
 	"backend/internal/features/alert/domain"
 	"backend/internal/features/alert/domain/command"
 	baseCmd "backend/shared/base/command"
 	ginhelp "backend/shared/http/gin"
 	"backend/shared/http/httputil"
-	"backend/shared/logger"
 	"backend/shared/pagination"
 
 	"github.com/gin-gonic/gin"
 )
-
-type AlertHandler struct {
-	logger       logger.Logger
-	AlertService app.AlertService
-}
-
-type Dependencies struct {
-	Logger       logger.Logger
-	AlertService app.AlertService
-}
-
-func New(deps Dependencies) *AlertHandler {
-	return &AlertHandler{
-		logger:       deps.Logger,
-		AlertService: deps.AlertService,
-	}
-}
 
 // @Summary Create a new measure
 // @Description Create a new measure for the tenant
@@ -64,10 +45,10 @@ func (h *AlertHandler) CreateAlert(c *gin.Context) {
 		Parent:      req.Parent,
 	}
 
-	result, err := h.AlertService.CreateAlert(ctx, &input)
+	result, err := h.alertService.CreateAlert(ctx, &input)
 	if err != nil {
 		tenantID, _ := httputil.GetTenant(ctx)
-		h.logger.Error(c.Request.Context(), err, "Failed to create measure", map[string]interface{}{
+		h.base.Logger.Error(c.Request.Context(), err, "Failed to create measure", map[string]interface{}{
 			"error":    err.Error(),
 			"tenantID": tenantID,
 		})
@@ -104,14 +85,14 @@ func (h *AlertHandler) GetAlert(c *gin.Context) {
 		BaseInput: baseCmd.NewInput(tenant.Domain(), branch),
 		AlertID:   alertID,
 	}
-	result, err := h.AlertService.GetAlert(ctx, &input)
+	result, err := h.alertService.GetAlert(ctx, &input)
 	if err != nil {
 		if err == domain.ErrAlertNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Measure not found"})
 			return
 		}
 
-		h.logger.Error(c.Request.Context(), err, "Failed to get measure", map[string]interface{}{
+		h.base.Logger.Error(c.Request.Context(), err, "Failed to get measure", map[string]interface{}{
 			"error":    err.Error(),
 			"tenantID": tenant.Domain(),
 			"alertID":  alertID,
@@ -144,10 +125,10 @@ func (h *AlertHandler) ListAlerts(c *gin.Context) {
 		return
 	}
 	input := baseCmd.NewInput(tenant.Domain(), branch)
-	results, err := h.AlertService.ListAlerts(ctx, &input)
+	results, err := h.alertService.ListAlerts(ctx, &input)
 	if err != nil {
 		tenantID, _ := httputil.GetTenant(ctx)
-		h.logger.Error(c.Request.Context(), err, "Failed to get measure", map[string]interface{}{
+		h.base.Logger.Error(c.Request.Context(), err, "Failed to get measure", map[string]interface{}{
 			"error":    err.Error(),
 			"tenantID": tenantID,
 		})
@@ -201,14 +182,14 @@ func (h *AlertHandler) UpdateAlert(c *gin.Context) {
 		Parent:      req.Parent,
 		Description: req.Description,
 	}
-	result, err := h.AlertService.UpdateAlert(ctx, &input)
+	result, err := h.alertService.UpdateAlert(ctx, &input)
 	if err != nil {
 		if err == domain.ErrAlertNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Measure not found"})
 			return
 		}
 		tenantID, _ := httputil.GetTenant(ctx)
-		h.logger.Error(c.Request.Context(), err, "Failed to update measure", map[string]interface{}{
+		h.base.Logger.Error(c.Request.Context(), err, "Failed to update measure", map[string]interface{}{
 			"error":    err.Error(),
 			"tenantID": tenantID,
 			"alertID":  alertID,
@@ -247,14 +228,14 @@ func (h *AlertHandler) DeleteAlert(c *gin.Context) {
 		BaseInput: baseCmd.NewInput(tenant.Domain(), branch),
 		AlertID:   alertID,
 	}
-	err = h.AlertService.DeleteAlert(ctx, &input)
+	err = h.alertService.DeleteAlert(ctx, &input)
 	if err != nil {
 		if err == domain.ErrAlertNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "measure not found"})
 			return
 		}
 		tenantID, _ := httputil.GetTenant(ctx)
-		h.logger.Error(c.Request.Context(), err, "Failed to delete measure", map[string]interface{}{
+		h.base.Logger.Error(c.Request.Context(), err, "Failed to delete measure", map[string]interface{}{
 			"error":    err.Error(),
 			"tenantID": tenantID,
 			"alertID":  alertID,

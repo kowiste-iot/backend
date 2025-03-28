@@ -4,6 +4,7 @@ go 1.22.2
 
 require (
 	github.com/Nerzal/gocloak/v13 v13.9.0
+	github.com/eclipse/paho.mqtt.golang v1.5.0
 	github.com/gin-contrib/cors v1.7.3
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-playground/validator/v10 v10.24.0
@@ -14,11 +15,13 @@ require (
 	github.com/nats-io/nats.go v1.38.0
 	github.com/spf13/viper v1.3.2
 	google.golang.org/grpc v1.67.3
+	gorm.io/datatypes v1.2.5
 	gorm.io/driver/sqlite v1.5.7
 	gorm.io/gorm v1.25.12
 )
 
 require (
+	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/BurntSushi/toml v1.4.0 // indirect
 	github.com/bytedance/sonic v1.12.6 // indirect
 	github.com/bytedance/sonic/loader v0.2.1 // indirect
@@ -26,6 +29,7 @@ require (
 	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/gin-contrib/sse v1.0.0 // indirect
+	github.com/go-sql-driver/mysql v1.8.1 // indirect
 	github.com/klauspost/compress v1.17.11 // indirect
 	github.com/mattn/go-sqlite3 v1.14.24 // indirect
 	github.com/nats-io/nkeys v0.4.9 // indirect
@@ -38,7 +42,9 @@ require (
 	github.com/rogpeppe/go-internal v1.13.1 // indirect
 	github.com/segmentio/ksuid v1.0.4 // indirect
 	github.com/spf13/jwalterweatherman v1.0.0 // indirect
+	golang.org/x/sync v0.10.0 // indirect
 	gopkg.in/yaml.v2 v2.2.2 // indirect
+	gorm.io/driver/mysql v1.5.6 // indirect
 )
 
 require (

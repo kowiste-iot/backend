@@ -3,34 +3,15 @@ package measurehandler
 import (
 	"net/http"
 
-	"backend/internal/features/measure/app"
 	"backend/internal/features/measure/domain"
 	"backend/internal/features/measure/domain/command"
 	baseCmd "backend/shared/base/command"
 	ginhelp "backend/shared/http/gin"
 	"backend/shared/http/httputil"
-	"backend/shared/logger"
 	"backend/shared/pagination"
 
 	"github.com/gin-gonic/gin"
 )
-
-type MeasureHandler struct {
-	logger         logger.Logger
-	measureService app.MeasureService
-}
-
-type Dependencies struct {
-	Logger         logger.Logger
-	MeasureService app.MeasureService
-}
-
-func New(deps Dependencies) *MeasureHandler {
-	return &MeasureHandler{
-		logger:         deps.Logger,
-		measureService: deps.MeasureService,
-	}
-}
 
 // @Summary Create a new measure
 // @Description Create a new measure for the tenant
@@ -67,7 +48,7 @@ func (h *MeasureHandler) CreateMeasure(c *gin.Context) {
 	result, err := h.measureService.CreateMeasure(ctx, &input)
 	if err != nil {
 		tenantID, _ := httputil.GetTenant(ctx)
-		h.logger.Error(c.Request.Context(), err, "Failed to create measure", map[string]interface{}{
+		h.base.Logger.Error(c.Request.Context(), err, "Failed to create measure", map[string]interface{}{
 			"error":    err.Error(),
 			"tenantID": tenantID,
 		})
@@ -111,7 +92,7 @@ func (h *MeasureHandler) GetMeasure(c *gin.Context) {
 			return
 		}
 
-		h.logger.Error(c.Request.Context(), err, "Failed to get measure", map[string]interface{}{
+		h.base.Logger.Error(c.Request.Context(), err, "Failed to get measure", map[string]interface{}{
 			"error":     err.Error(),
 			"tenantID":  tenant.Domain(),
 			"measureID": measureID,
@@ -147,7 +128,7 @@ func (h *MeasureHandler) ListMeasures(c *gin.Context) {
 	results, err := h.measureService.ListMeasures(ctx, &input)
 	if err != nil {
 		tenantID, _ := httputil.GetTenant(ctx)
-		h.logger.Error(c.Request.Context(), err, "Failed to get measure", map[string]interface{}{
+		h.base.Logger.Error(c.Request.Context(), err, "Failed to get measure", map[string]interface{}{
 			"error":    err.Error(),
 			"tenantID": tenantID,
 		})
@@ -208,7 +189,7 @@ func (h *MeasureHandler) UpdateMeasure(c *gin.Context) {
 			return
 		}
 		tenantID, _ := httputil.GetTenant(ctx)
-		h.logger.Error(c.Request.Context(), err, "Failed to update measure", map[string]interface{}{
+		h.base.Logger.Error(c.Request.Context(), err, "Failed to update measure", map[string]interface{}{
 			"error":     err.Error(),
 			"tenantID":  tenantID,
 			"measureID": measureID,
@@ -254,7 +235,7 @@ func (h *MeasureHandler) DeleteMeasure(c *gin.Context) {
 			return
 		}
 		tenantID, _ := httputil.GetTenant(ctx)
-		h.logger.Error(c.Request.Context(), err, "Failed to delete measure", map[string]interface{}{
+		h.base.Logger.Error(c.Request.Context(), err, "Failed to delete measure", map[string]interface{}{
 			"error":     err.Error(),
 			"tenantID":  tenantID,
 			"measureID": measureID,

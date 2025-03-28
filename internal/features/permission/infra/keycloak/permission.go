@@ -2,8 +2,8 @@ package keycloak
 
 import (
 	"backend/internal/features/permission/domain"
-	scopeDomain "backend/internal/features/scope/domain"
 	permissionDomain "backend/internal/features/permission/domain"
+	scopeDomain "backend/internal/features/scope/domain"
 
 	baseCmd "backend/shared/base/command"
 	"context"
@@ -26,7 +26,7 @@ func New(core *keycloak.Keycloak) *PermissionKeycloak {
 	}
 }
 
-func (rk PermissionKeycloak) CreatePermission(ctx context.Context, scopes []scopeDomain.Scope, input *baseCmd.BaseInput, p *domain.Permission) (*domain.Permission, error) {
+func (rk PermissionKeycloak) CreatePermission(ctx context.Context, scopes []scopeDomain.Scope, input *baseCmd.BaseInput, per *domain.Permission) (*domain.Permission, error) {
 
 	token, err := rk.GetValidToken(ctx)
 	if err != nil {
@@ -36,20 +36,8 @@ func (rk PermissionKeycloak) CreatePermission(ctx context.Context, scopes []scop
 	if err != nil {
 		return nil, fmt.Errorf("error getting client: %w", err)
 	}
-	internalScopes := []string{}
-
-	// Use the scopes list for all iterations
-	for _, scopeName := range p.Scopes {
-		for _, scope := range scopes {
-			if scope.Name == scopeName {
-				internalScopes = append(internalScopes, scope.ID)
-				break
-			}
-		}
-	}
-	p.Scopes = internalScopes
-
-	created, err := createPermission(ctx, rk.Config.Host, token.AccessToken, input.TenantDomain, *input.ClientID, p)
+	kcPer := newPermissionKc(per)
+	created, err := createPermission(ctx, rk.Config.Host, token.AccessToken, input.TenantDomain, *input.ClientID, kcPer)
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to create permission: %w", err)
@@ -61,7 +49,7 @@ func (rk PermissionKeycloak) CreatePermission(ctx context.Context, scopes []scop
 		Name:             created.Name,
 		DecisionStrategy: created.DecisionStrategy,
 		Description:      created.Description,
-		Resources:        created.Resources,
+		Resource:         created.Resource,
 		Scopes:           created.Scopes,
 		Policies:         created.Policies,
 	}
@@ -99,7 +87,11 @@ func (rk PermissionKeycloak) ListPermissions(ctx context.Context, input *baseCmd
 			Logic: string(*kp.Logic),
 		}
 		if kp.Resources != nil {
-			permissions[i].Resources = *kp.Resources
+			t := *kp.Resources
+			if len(t) != 1 {
+				return nil, fmt.Errorf("more than 1 resource in permission")
+			}
+			permissions[i].Resource = t[0]
 		}
 		if kp.Scopes != nil {
 			permissions[i].Scopes = *kp.Scopes
@@ -112,9 +104,10 @@ func (rk PermissionKeycloak) ListPermissions(ctx context.Context, input *baseCmd
 			return nil, fmt.Errorf("failed to fetch permission resource %w", err)
 		}
 		if len(resourPerm) > 0 {
-			for j := range resourPerm {
-				permissions[i].Resources = append(permissions[i].Resources, *resourPerm[j].ResourceID)
+			if len(resourPerm) != 1 {
+				return nil, fmt.Errorf("error mor than one resource in permission")
 			}
+			permissions[i].Resource = *resourPerm[0].ResourceID
 		}
 		scopesPerm, err := rk.Client.GetPermissionScopes(ctx, token.AccessToken, input.TenantDomain, *input.ClientID, *kp.ID)
 		if err != nil {
@@ -137,8 +130,37 @@ func (rk PermissionKeycloak) ListPermissions(ctx context.Context, input *baseCmd
 	}
 	return permissions, nil
 }
+func (rk PermissionKeycloak) DeletePermission(ctx context.Context, input *baseCmd.BaseInput, resourceID string) (err error) {
+	token, err := rk.GetValidToken(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get token: %w", err)
+	}
+	err = rk.FetchClient(ctx, input)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
 
-func createPermission(ctx context.Context, url, token, tenantID, IDofClient string, p *domain.Permission) (*permissionDomain.Permission, error) {
+	kcPermissions, err := rk.Client.GetPermissions(
+		ctx,
+		token.AccessToken,
+		input.TenantDomain,
+		*input.ClientID,
+		gocloak.GetPermissionParams{Resource: &resourceID},
+	)
+	if err != nil {
+		return fmt.Errorf("failed to list permissions: %w", err)
+	}
+
+	for i := range kcPermissions {
+		err = rk.Client.DeletePermission(ctx, token.AccessToken, input.TenantDomain, *input.ClientID, *kcPermissions[i].ID)
+		if err != nil {
+			return
+		}
+	}
+	return
+}
+
+func createPermission(ctx context.Context, url, token, tenantID, IDofClient string, p *permissionKc) (*permissionDomain.Permission, error) {
 	baseURL := url + "/admin/realms/%s/clients/%s/authz/resource-server/permission/%s"
 	endpoint := fmt.Sprintf(baseURL, tenantID, IDofClient, p.Type)
 
@@ -152,7 +174,7 @@ func createPermission(ctx context.Context, url, token, tenantID, IDofClient stri
 
 	client := resty.New()
 
-	var result permissionDomain.Permission
+	var result permissionKc
 
 	resp, err := client.R().
 		SetContext(ctx).
@@ -171,5 +193,5 @@ func createPermission(ctx context.Context, url, token, tenantID, IDofClient stri
 			resp.StatusCode(), string(resp.Body()))
 	}
 
-	return &result, nil
+	return result.ToDomain(), nil
 }

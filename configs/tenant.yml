@@ -70,3 +70,9 @@ authorization:
     role-resource:
       name: role
       type: base
+    resource-resource:
+      name: resource
+      type: base
+    scope-resource:
+      name: scope
+      type: base

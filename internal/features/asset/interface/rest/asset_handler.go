@@ -3,34 +3,15 @@ package assethandler
 import (
 	"net/http"
 
-	"backend/internal/features/asset/app"
 	"backend/internal/features/asset/domain"
 	"backend/internal/features/asset/domain/command"
 	baseCmd "backend/shared/base/command"
 	ginhelp "backend/shared/http/gin"
 	"backend/shared/http/httputil"
-	"backend/shared/logger"
 	"backend/shared/pagination"
 
 	"github.com/gin-gonic/gin"
 )
-
-type AssetHandler struct {
-	logger       logger.Logger
-	assetService app.AssetService
-}
-
-type Dependencies struct {
-	Logger       logger.Logger
-	AssetService app.AssetService
-}
-
-func New(deps Dependencies) *AssetHandler {
-	return &AssetHandler{
-		logger:       deps.Logger,
-		assetService: deps.AssetService,
-	}
-}
 
 // @Summary Create a new asset
 // @Description Create a new asset for the tenant
@@ -67,7 +48,7 @@ func (h *AssetHandler) CreateAsset(c *gin.Context) {
 	result, err := h.assetService.CreateAsset(ctx, &input)
 	if err != nil {
 		tenantID, _ := httputil.GetTenant(ctx)
-		h.logger.Error(c.Request.Context(), err, "Failed to create asset", map[string]interface{}{
+		h.base.Logger.Error(c.Request.Context(), err, "Failed to create asset", map[string]interface{}{
 			"error":    err.Error(),
 			"tenantID": tenantID,
 		})
@@ -111,7 +92,7 @@ func (h *AssetHandler) GetAsset(c *gin.Context) {
 			return
 		}
 
-		h.logger.Error(c.Request.Context(), err, "Failed to get asset", map[string]interface{}{
+		h.base.Logger.Error(c.Request.Context(), err, "Failed to get asset", map[string]interface{}{
 			"error":    err.Error(),
 			"tenantID": tenant.Domain(),
 			"assetID":  assetID,
@@ -147,7 +128,7 @@ func (h *AssetHandler) ListAssets(c *gin.Context) {
 	results, err := h.assetService.ListAssets(ctx, &input)
 	if err != nil {
 		tenantID, _ := httputil.GetTenant(ctx)
-		h.logger.Error(c.Request.Context(), err, "Failed to get asset", map[string]interface{}{
+		h.base.Logger.Error(c.Request.Context(), err, "Failed to get asset", map[string]interface{}{
 			"error":    err.Error(),
 			"tenantID": tenantID,
 		})
@@ -208,7 +189,7 @@ func (h *AssetHandler) UpdateAsset(c *gin.Context) {
 			return
 		}
 		tenantID, _ := httputil.GetTenant(ctx)
-		h.logger.Error(c.Request.Context(), err, "Failed to update asset", map[string]interface{}{
+		h.base.Logger.Error(c.Request.Context(), err, "Failed to update asset", map[string]interface{}{
 			"error":    err.Error(),
 			"tenantID": tenantID,
 			"assetID":  assetID,
@@ -254,7 +235,7 @@ func (h *AssetHandler) DeleteAsset(c *gin.Context) {
 			return
 		}
 		tenantID, _ := httputil.GetTenant(ctx)
-		h.logger.Error(c.Request.Context(), err, "Failed to delete asset", map[string]interface{}{
+		h.base.Logger.Error(c.Request.Context(), err, "Failed to delete asset", map[string]interface{}{
 			"error":    err.Error(),
 			"tenantID": tenantID,
 			"assetID":  assetID,

@@ -3,8 +3,13 @@ package app
 import (
 	"backend/internal/features/alert/domain"
 	"backend/internal/features/alert/domain/command"
+
+	appAsset "backend/internal/features/asset/app"
+	assetCmd "backend/internal/features/asset/domain/command"
+
 	resourceDomain "backend/internal/features/resource/domain"
 	scopeDomain "backend/internal/features/scope/domain"
+
 	"backend/shared/base"
 	baseCmd "backend/shared/base/command"
 	"backend/shared/validator"
@@ -20,16 +25,23 @@ type AlertService interface {
 	DeleteAlert(ctx context.Context, input *command.AlertIDInput) error
 }
 type alertService struct {
-	repo domain.AlertRepository
+	repo     domain.AlertRepository
+	assetDep appAsset.AssetDependencyService
 	*base.BaseService
 }
 
-func NewService(base *base.BaseService, repo domain.AlertRepository) *alertService {
+const (
+	featureName string = "alert"
+)
+
+func NewService(base *base.BaseService, repo domain.AlertRepository, assetDep appAsset.AssetDependencyService) *alertService {
 	return &alertService{
 		repo:        repo,
+		assetDep:    assetDep,
 		BaseService: base,
 	}
 }
+
 func (s *alertService) CreateAlert(ctx context.Context, input *command.CreateAlertInput) (*domain.Alert, error) {
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
@@ -53,6 +65,17 @@ func (s *alertService) CreateAlert(ctx context.Context, input *command.CreateAle
 		return nil, fmt.Errorf("failed to create alert: %w", err)
 	}
 
+	//Update asset parent dependecy
+	err = s.assetDep.UpdateDependency(ctx, &assetCmd.DependencyChangeInput{
+		BaseInput:  input.BaseInput,
+		Feature:    featureName,
+		Action:     assetCmd.DependencyActionCreate,
+		FeatureID:  alert.ID(),
+		NewAssetID: alert.Parent(),
+	})
+	if err != nil {
+		return nil, err
+	}
 	return alert, nil
 }
 
@@ -101,12 +124,30 @@ func (s *alertService) UpdateAlert(ctx context.Context, input *command.UpdateAle
 	if err != nil {
 		return nil, fmt.Errorf("failed to get alert: %w", err)
 	}
+
+	oldParent := alert.Parent()
+
 	err = alert.Update(input.Name, input.Parent, input.Description, input.Enabled)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get alert: %w", err)
 	}
 	if err := s.repo.Update(ctx, alert); err != nil {
 		return nil, fmt.Errorf("failed to update alert: %w", err)
+	}
+
+	if oldParent != alert.Parent() {
+		//Update asset parent dependecy
+		err = s.assetDep.UpdateDependency(ctx, &assetCmd.DependencyChangeInput{
+			BaseInput:       input.BaseInput,
+			PreviousAssetID: oldParent,
+			Feature:         featureName,
+			Action:          assetCmd.DependencyActionUpdate,
+			FeatureID:       alert.ID(),
+			NewAssetID:      alert.Parent(),
+		})
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return alert, nil
@@ -125,5 +166,16 @@ func (s *alertService) DeleteAlert(ctx context.Context, input *command.AlertIDIn
 	if err != nil {
 		return err
 	}
+
+	err = s.assetDep.UpdateDependency(ctx, &assetCmd.DependencyChangeInput{
+		BaseInput: input.BaseInput,
+		Feature:   featureName,
+		Action:    assetCmd.DependencyActionDelete,
+		FeatureID: input.AlertID,
+	})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

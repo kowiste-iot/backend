@@ -5,7 +5,7 @@ Makefile
 README.md
 cmd/
   server/
-    __debug_bin2427612604
+    __debug_bin1256257533
     iot.db
     main.go
 configs/
@@ -36,6 +36,8 @@ configs/
     wrapper.sh
   nats/
     nats.conf
+  postgres/
+    init-multiple-databases.sh
   tenant.yml
 docker-compose.yml
 dockerfile-kc
@@ -45,18 +47,226 @@ go.sum
 internal/
   core/
     core.go
+    core_service.go
+    services/
+      container.go
+      container_action.go
+      container_alert.go
+      container_asset.go
+      container_branch.go
+      container_cope.go
+      container_dashboard.go
+      container_device.go
+      container_ingest.go
+      container_measure.go
+      container_permission.go
+      container_resource.go
+      container_role.go
+      container_store.go
+      container_stream.go
+      container_tenant.go
+      container_token.go
+      container_user.go
+      container_websocket.go
   features/
+    action/
+      app/
+        service.go
+      domain/
+        action.go
+        command/
+          action_command.go
+        interface.go
+      infra/
+        gorm/
+          action.go
+      interface/
+        rest/
+          action_dto.go
+          action_handler.go
+          action_init.go
+    alert/
+      app/
+        service.go
+      domain/
+        alert.go
+        command/
+          alert_command.go
+        interface.go
+      infra/
+        gorm/
+          alert.go
+      interface/
+        rest/
+          alert_dto.go
+          alert_handler.go
+          alert_init.go
     asset/
       app/
+        depency.go
         service.go
       domain/
         asset.go
         command/
           asset_command.go
+          dependecy_command.go
+        dependecy.go
         interface.go
       infra/
         gorm/
           asset.go
+          dependency.go
+      interface/
+        rest/
+          asset_dto.go
+          asset_handler.go
+          asset_init.go
+      test/
+    dashboard/
+      app/
+        dashboard_service.go
+        widget_service.go
+      domain/
+        command/
+          dashboard_command.go
+          widget_command.go
+        dashboard.go
+        interface.go
+        widget.go
+      infra/
+        gorm/
+          dashboard.go
+          widget.go
+          widget_model.go
+      interface/
+        rest/
+          dashboard_dto.go
+          dashboard_handler.go
+          dashboard_init.go
+          widget_dto.go
+          widget_handler.go
+          widget_init.go
+    datastore/
+      app/
+        service.go
+      domain/
+        command/
+          store_command.go
+        errors.go
+        interface.go
+        store.go
+      infra/
+        gorm/
+          message.go
+    device/
+      app/
+        service.go
+      domain/
+        command/
+          device_command.go
+        device.go
+        interface.go
+      infra/
+        gorm/
+          device.go
+      interface/
+        rest/
+          device_dto.go
+          device_handler.go
+          device_init.go
+    ingest/
+      app/
+        service.go
+      domain/
+        const.go
+        data.go
+        interface.go
+      interface/
+        mqtt/
+          consumer.go
+        rest/
+          ingest_dto.go
+          ingest_handler.go
+          ingest_init.go
+    measure/
+      app/
+        service.go
+      domain/
+        command/
+          measure_command.go
+        interface.go
+        measure.go
+      infra/
+        gorm/
+          measure.go
+      interface/
+        rest/
+          measure_dto.go
+          measure_handler.go
+          measure_init.go
+    permission/
+      app/
+        service.go
+      domain/
+        command/
+          permission_command.go
+        permission.go
+        permissions.go
+      infra/
+        keycloak/
+          mapper.go
+          permission.go
+    resource/
+      app/
+        service.go
+      domain/
+        command/
+          resource_command.go
+        permission.go
+        resource.go
+        resources.go
+      infra/
+        keycloak/
+          mapper.go
+          resource.go
+      interface/
+        rest/
+          resources_dto.go
+          resources_handler.go
+          resources_init.go
+    role/
+      app/
+        service.go
+      domain/
+        command/
+          role_command.go
+        policy.go
+        role.go
+      infra/
+        keycloak/
+          policy.go
+          role.go
+      interface/
+        rest/
+          roles_dto.go
+          roles_handler.go
+          roles_init.go
+    scope/
+      app/
+        service.go
+      domain/
+        command/
+          scope_command.go
+        scope.go
+        scopes.go
+      infra/
+        keycloak/
+          scope.go
+      interface/
+        rest/
+          scopes_dto.go
+          scopes_handler.go
+          scopes_init.go
     tenant/
       app/
         branch_service.go
@@ -71,6 +281,21 @@ internal/
         gorm/
           branch_repository.go
           tenant_repository.go
+        keycloak/
+          branch.go
+          client.go
+          client_mapper.go
+          client_rest.go
+          mapper.go
+          tenant.go
+      interface/
+        rest/
+          branch_dto.go
+          branch_handler.go
+          branch_init.go
+          tenant_dto.go
+          tenant_handler.go
+          tenant_init.go
     user/
       app/
         service.go
@@ -79,37 +304,30 @@ internal/
           command.go
         interface.go
         user.go
+      dto/
+        userDTO.go
+        userMapper.go
       infra/
         gorm/
           user.go
+        keycloak/
+          user.go
+      interface/
+        rest/
+          user_dto.go
+          user_handler.go
+          user_init.go
   interfaces/
     grpc/
       handlers.go
       server.go
     http/
       handlers/
-        asset/
-          asset_handler.go
-          asset_model.go
-        branch/
-          branch_handler.go
-          branch_model.go
-        resource/
-          resources_handler.go
-          resources_model.go
-        roles/
-          roles_handler.go
-          roles_model.go
-        tenant/
-          tenant_handler.go
-          tenant_model.go
-        user/
-          user_handler.go
-          user_model.go
         websocket/
           notification_handler.go
           token_handler.go
-      routes.go
+      middleware/
+        middleware.go
       server.go
 pkg/
   config/
@@ -120,58 +338,36 @@ pkg/
     models/
     proto/
 shared/
-  auth/
-    .DS_Store
-    app/
-      service.go
-      service_branch.go
-      service_resource.go
-      service_role.go
-      service_tenant.go
+  authentication/
     domain/
       branch.go
-      client.go
       command/
         branch_command.go
-        policy_command.go
-        resource_command.go
-        role_command.go
-        tenant_command.go
       interface.go
-      permission/
-        permission.go
-      policy/
-        policy.go
-      resource/
-        resources.go
-      roles.go
-      scope/
-        scope.go
       tenant.go
-      validation/
-        validation.go
     infra/
-      gokc/
-        auth-branch.go
-        authkc-client.go
-        authkc-permission.go
-        authkc-policy.go
-        authkc-resource.go
-        authkc-role.go
-        authkc-scope.go
-        authkc-tenant.go
-        authkc-user.go
-        authkc.go
-      restkc/
-        kc-client.go
-        kc-mapper.go
-        kc-permission.go
-        kc-policy.go
+      keyclaok/
+  authorization/
+    domain/
+      action.go
+      command/
+        action_command.go
+        permission_command.go
+      interface.go
+    infra/
+      keycloak/
+      openfga/
+    test/
+      authz_test.go
+      mock/
+        mock.go
   base/
     command/
       base_input.go
       permission_input.go
     service.go
+    test/
+      base_test.go
   errors/
     errors.go
   gorm/
@@ -184,33 +380,42 @@ shared/
       httputil.go
       middleware.go
     response.go
+  keycloak/
+    client.go
+    init.go
+    validate.go
   logger/
     level.go
     logger.go
     openob/
       logger.go
       logger_test.go
+    test/
+      mock/
+        mock.go
   pagination/
     paginator.go
-  streaming/
+  stream/
     domain/
       client.go
       config.go
-      connection.go
-      handler.go
       message.go
-      subject.go
-      subjects/
-        notification.go
-    infrastructure/
+    infra/
       nats/
         client.go
         connection.go
+        factory.go
+    repo/
+      message_repo.go
   token/
     app/
       token_service.go
     domain/
-      token.go
+      config.go
+    infra/
+      factory.go
+      in_memory/
+        in_memory.go
   util/
     string.go
   validator/
@@ -219,9 +424,16 @@ shared/
     app/
       client.go
       hub.go
+      stream_integration.go
       websocket_handler.go
     domain/
       connection.go
       message.go
+    interface/
+      rest/
+        websocket_handler.go
+        websocket_init.go
 test/
+  nats/
+    subscriber.go
 text.txt

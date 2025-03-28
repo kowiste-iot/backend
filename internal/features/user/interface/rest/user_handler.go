@@ -1,35 +1,17 @@
 package userhandler
 
 import (
-	"backend/internal/features/user/app"
 	"backend/internal/features/user/domain"
 	"backend/internal/features/user/domain/command"
 	baseCmd "backend/shared/base/command"
 
 	ginhelp "backend/shared/http/gin"
 	"backend/shared/http/httputil"
-	"backend/shared/logger"
 	"backend/shared/pagination"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
-
-type UserHandler struct {
-	logger      logger.Logger
-	userService app.UserService
-}
-type Dependencies struct {
-	Logger      logger.Logger
-	UserService app.UserService
-}
-
-func New(deps Dependencies) *UserHandler {
-	return &UserHandler{
-		logger:      deps.Logger,
-		userService: deps.UserService,
-	}
-}
 
 func (h *UserHandler) CreateUser(c *gin.Context) {
 	var req CreateUserRequest
@@ -53,7 +35,7 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 
 	result, err := h.userService.CreateUser(c.Request.Context(), &input)
 	if err != nil {
-		h.logger.Error(c.Request.Context(), err, "Failed to create user", nil)
+		h.base.Logger.Error(c.Request.Context(), err, "Failed to create user", nil)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
 		return
 	}
@@ -79,7 +61,7 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 			return
 		}
-		h.logger.Error(ctx, err, "Failed to get user", nil)
+		h.base.Logger.Error(ctx, err, "Failed to get user", nil)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user"})
 		return
 	}
@@ -143,7 +125,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 			return
 		}
-		h.logger.Error(ctx, err, "Failed to update user", nil)
+		h.base.Logger.Error(ctx, err, "Failed to update user", nil)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user"})
 		return
 	}
@@ -169,7 +151,7 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 			return
 		}
-		h.logger.Error(ctx, err, "Failed to delete user", nil)
+		h.base.Logger.Error(ctx, err, "Failed to delete user", nil)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

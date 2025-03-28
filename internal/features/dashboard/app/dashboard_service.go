@@ -3,8 +3,13 @@ package app
 import (
 	"backend/internal/features/dashboard/domain"
 	"backend/internal/features/dashboard/domain/command"
+
+	appAsset "backend/internal/features/asset/app"
+	assetCmd "backend/internal/features/asset/domain/command"
+
 	resourceDomain "backend/internal/features/resource/domain"
 	scopeDomain "backend/internal/features/scope/domain"
+
 	"backend/shared/base"
 	baseCmd "backend/shared/base/command"
 	"backend/shared/validator"
@@ -20,16 +25,23 @@ type DashboardService interface {
 	DeleteDashboard(ctx context.Context, input *command.DashboardIDInput) error
 }
 type dashboardService struct {
-	repo domain.DashboardRepository
+	repo     domain.DashboardRepository
+	assetDep appAsset.AssetDependencyService
 	*base.BaseService
 }
 
-func NewService(base *base.BaseService, repo domain.DashboardRepository) DashboardService {
+const (
+	featureName string = "dashboard"
+)
+
+func NewService(base *base.BaseService, repo domain.DashboardRepository, assetDep appAsset.AssetDependencyService) DashboardService {
 	return &dashboardService{
 		repo:        repo,
+		assetDep:    assetDep,
 		BaseService: base,
 	}
 }
+
 func (s *dashboardService) CreateDashboard(ctx context.Context, input *command.CreateDashboardInput) (*domain.Dashboard, error) {
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
@@ -51,6 +63,18 @@ func (s *dashboardService) CreateDashboard(ctx context.Context, input *command.C
 	err = s.repo.Create(ctx, dashboard)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create dashboard: %w", err)
+	}
+
+	//Update asset parent dependecy
+	err = s.assetDep.UpdateDependency(ctx, &assetCmd.DependencyChangeInput{
+		BaseInput:  input.BaseInput,
+		Feature:    featureName,
+		Action:     assetCmd.DependencyActionCreate,
+		FeatureID:  dashboard.ID(),
+		NewAssetID: dashboard.Parent(),
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return dashboard, nil
@@ -101,6 +125,9 @@ func (s *dashboardService) UpdateDashboard(ctx context.Context, input *command.U
 	if err != nil {
 		return nil, fmt.Errorf("failed to get dashboard: %w", err)
 	}
+
+	oldParent := dashboard.Parent()
+
 	err = dashboard.Update(input.Name, input.Parent, input.Description)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get dashboard: %w", err)
@@ -109,8 +136,24 @@ func (s *dashboardService) UpdateDashboard(ctx context.Context, input *command.U
 		return nil, fmt.Errorf("failed to update dashboard: %w", err)
 	}
 
+	if oldParent != dashboard.Parent() {
+		//Update asset parent dependecy
+		err = s.assetDep.UpdateDependency(ctx, &assetCmd.DependencyChangeInput{
+			BaseInput:       input.BaseInput,
+			PreviousAssetID: oldParent,
+			Feature:         featureName,
+			Action:          assetCmd.DependencyActionUpdate,
+			FeatureID:       dashboard.ID(),
+			NewAssetID:      dashboard.Parent(),
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return dashboard, nil
 }
+
 func (s *dashboardService) DeleteDashboard(ctx context.Context, input *command.DashboardIDInput) error {
 
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
@@ -125,5 +168,16 @@ func (s *dashboardService) DeleteDashboard(ctx context.Context, input *command.D
 	if err != nil {
 		return err
 	}
+
+	err = s.assetDep.UpdateDependency(ctx, &assetCmd.DependencyChangeInput{
+		BaseInput: input.BaseInput,
+		Feature:   featureName,
+		Action:    assetCmd.DependencyActionDelete,
+		FeatureID: input.DashboardID,
+	})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

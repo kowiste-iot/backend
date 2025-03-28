@@ -9,8 +9,8 @@ services:
       - ZO_DATA_DIR=/data
       - ZO_LOG_RETENTION_DAYS=3 # 3-day retention
       - ZO_COMPACT_DAYS=1 # Daily compaction
-      # Optional performance tuning
-      - ZO_MEMORY_CACHE_MAX_SIZE=1073741824 # 1GB cache
+      # Memory cache settings
+      - ZO_MEMORY_CACHE_MAX_SIZE=16777216  # 16MB in bytes
       - ZO_MEMORY_CACHE_CLEAN_INTERVAL=60 # Clean cache every 60 seconds
       # Optional compression settings
       - ZO_COMPRESSION_ENABLED=true
@@ -23,7 +23,7 @@ services:
     logging:
       driver: "json-file"
       options:
-        max-size: "50m" # Max log size for the container itself
+        max-size: "5m" # Max log size for the container itself
         max-file: "3" # Keep 3 rotated log files
   postgres:
     image: postgres:15
@@ -46,21 +46,21 @@ services:
     networks:
       - keycloak-network
   emqx:
-    image: emqx/emqx:5.8.4
-    container_name: emqx
+    image: emqx/emqx:latest
     ports:
-      - "2883:1883" # MQTT
-      - "9083:8083" # MQTT/WebSocket
-      - "9084:8084" # MQTT/WSS
-      - "9883:8883" # MQTT/SSL
-      - "18083:18083" # Dashboard
+      - "1883:1883"      # MQTT port
+      - "8083:8083"      # MQTT/WebSocket port
+      - "8084:8084"      # MQTT/WSS port
+      - "8883:8883"      # MQTT/SSL port
+      - "18083:18083"    # Dashboard port
+    environment:
+      - EMQX_ALLOW_ANONYMOUS=true
+      - EMQX_ACL_NOMATCH=allow
     volumes:
-      - ./configs/emqx:/opt/emqx/etc
       - emqx_data:/opt/emqx/data
       - emqx_log:/opt/emqx/log
-    restart: unless-stopped
-    networks:
-      - keycloak-network
+    restart: always
+
   keycloak:
     build:
       context: .
@@ -72,27 +72,14 @@ services:
       - start-dev
       - --import-realm
       - --spi-cookie-same-site-cookie-same-site-mode=None
+      - --spi-token-exchange-token-exchange-enabled=true
+
     ports:
       - "7080:8080"
     restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
-    networks:
-      - keycloak-network
-  openfga:
-    image: openfga/openfga:v1.8.4
-    depends_on:
-      postgres:
-        condition: service_healthy
-    ports:
-      - "8080:8080"
-      - "8081:8081"
-    command: run --datastore-engine postgres --datastore-uri "postgres://keycloak:password@postgres:5432/openfga?sslmode=disable"
-    environment:
-      - OPENFGA_DATASTORE_ENGINE=postgres
-      - OPENFGA_LOG_FORMAT=json
-      - OPENFGA_LOG_LEVEL=info
     networks:
       - keycloak-network
   nats:
@@ -120,6 +107,27 @@ services:
     restart: unless-stopped
     networks:
       - keycloak-network
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: mailpit
+    ports:
+      - "1025:1025"  # SMTP port
+      - "8025:8025"  # Web UI port
+    environment:
+      MP_MAX_MESSAGES: "500"     # Maximum number of messages to keep
+      MP_DATA_FILE: "/data/mailpit.db"  # Persistent storage location
+      MP_SMTP_AUTH_ACCEPT_ANY: "true"  # Accept any SMTP authentication
+      MP_SMTP_AUTH_ALLOW_INSECURE: "true"  # Allow insecure authentication
+    volumes:
+      - mailpit_data:/data
+    restart: unless-stopped
+    networks:
+      - keycloak-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "3"
 
 volumes:
   postgres_data:
@@ -128,9 +136,7 @@ volumes:
   emqx_data:
   emqx_log:
   minio_data:
-
-
-
+  mailpit_data:
 networks:
   keycloak-network:
     name: keycloak-network

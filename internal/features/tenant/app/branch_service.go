@@ -169,7 +169,7 @@ func (s *branchService) CreateBranch(ctx context.Context, input *command.CreateB
 				Name:             permissionDomain.NameNonAdmin(roleName, res.Name),
 				Description:      fmt.Sprintf("Permission for %s resource with %s role", res.Name, roleName),
 				Type:             permissionDomain.TypeScope,
-				Resources:        []string{createdResource.ID},
+				Resources:        createdResource.ID,
 				Scopes:           scopes,
 				Policies:         []string{id},
 				DecisionStrategy: permissionDomain.DecisionAffirmative,
@@ -184,10 +184,11 @@ func (s *branchService) CreateBranch(ctx context.Context, input *command.CreateB
 
 	pID := policies[roleDomain.RoleAdmin]
 	perm := permissionCmd.CreatePermissionInput{
-		BaseInput:   baseInput,
-		Name:        permissionDomain.NameAdmin(),
-		Description: fmt.Sprintf("Permission for %s resource with %s role", roleDomain.RoleAdmin, roleDomain.RoleAdmin),
-		Type:        permissionDomain.TypeResource,
+		BaseInput:        baseInput,
+		Name:             permissionDomain.NameAdmin(),
+		Description:      fmt.Sprintf("Permission for %s resource with %s role", roleDomain.RoleAdmin, roleDomain.RoleAdmin),
+		ResourceType:     s.config.Authorization.AdminGroup,
+		Type:             permissionDomain.TypeResource,
 		Scopes:           sc,
 		Policies:         []string{pID},
 		DecisionStrategy: permissionDomain.DecisionAffirmative,

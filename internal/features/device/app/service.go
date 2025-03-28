@@ -3,8 +3,13 @@ package app
 import (
 	"backend/internal/features/device/domain"
 	"backend/internal/features/device/domain/command"
+
+	appAsset "backend/internal/features/asset/app"
+	assetCmd "backend/internal/features/asset/domain/command"
+
 	resourceDomain "backend/internal/features/resource/domain"
 	scopeDomain "backend/internal/features/scope/domain"
+
 	"backend/shared/base"
 	baseCmd "backend/shared/base/command"
 	"backend/shared/validator"
@@ -20,16 +25,23 @@ type DeviceService interface {
 	DeleteDevice(ctx context.Context, input *command.DeviceIDInput) error
 }
 type deviceService struct {
-	repo domain.DeviceRepository
+	repo     domain.DeviceRepository
+	assetDep appAsset.AssetDependencyService
 	*base.BaseService
 }
 
-func NewService(base *base.BaseService, repo domain.DeviceRepository) DeviceService {
+const (
+	featureName string = "device"
+)
+
+func NewService(base *base.BaseService, repo domain.DeviceRepository, assetDep appAsset.AssetDependencyService) DeviceService {
 	return &deviceService{
 		repo:        repo,
+		assetDep:    assetDep,
 		BaseService: base,
 	}
 }
+
 func (s *deviceService) CreateDevice(ctx context.Context, input *command.CreateDeviceInput) (*domain.Device, error) {
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
@@ -51,6 +63,18 @@ func (s *deviceService) CreateDevice(ctx context.Context, input *command.CreateD
 	err = s.repo.Create(ctx, device)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create device: %w", err)
+	}
+
+	//Update asset parent dependecy
+	err = s.assetDep.UpdateDependency(ctx, &assetCmd.DependencyChangeInput{
+		BaseInput:  input.BaseInput,
+		Feature:    featureName,
+		Action:     assetCmd.DependencyActionCreate,
+		FeatureID:  device.ID(),
+		NewAssetID: device.Parent(),
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return device, nil
@@ -101,6 +125,9 @@ func (s *deviceService) UpdateDevice(ctx context.Context, input *command.UpdateD
 	if err != nil {
 		return nil, fmt.Errorf("failed to get device: %w", err)
 	}
+
+	oldParent := device.Parent()
+
 	err = device.Update(input.Name, input.Parent, input.Description)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get device: %w", err)
@@ -109,8 +136,24 @@ func (s *deviceService) UpdateDevice(ctx context.Context, input *command.UpdateD
 		return nil, fmt.Errorf("failed to update device: %w", err)
 	}
 
+	if oldParent != device.Parent() {
+		//Update asset parent dependecy
+		err = s.assetDep.UpdateDependency(ctx, &assetCmd.DependencyChangeInput{
+			BaseInput:       input.BaseInput,
+			PreviousAssetID: oldParent,
+			Feature:         featureName,
+			Action:          assetCmd.DependencyActionUpdate,
+			FeatureID:       device.ID(),
+			NewAssetID:      device.Parent(),
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return device, nil
 }
+
 func (s *deviceService) DeleteDevice(ctx context.Context, input *command.DeviceIDInput) error {
 
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
@@ -125,5 +168,16 @@ func (s *deviceService) DeleteDevice(ctx context.Context, input *command.DeviceI
 	if err != nil {
 		return err
 	}
+
+	err = s.assetDep.UpdateDependency(ctx, &assetCmd.DependencyChangeInput{
+		BaseInput: input.BaseInput,
+		Feature:   featureName,
+		Action:    assetCmd.DependencyActionDelete,
+		FeatureID: input.DeviceID,
+	})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

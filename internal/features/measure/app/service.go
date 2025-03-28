@@ -3,8 +3,13 @@ package app
 import (
 	"backend/internal/features/measure/domain"
 	"backend/internal/features/measure/domain/command"
-		resourceDomain "backend/internal/features/resource/domain"
+
+	appAsset "backend/internal/features/asset/app"
+	assetCmd "backend/internal/features/asset/domain/command"
+
+	resourceDomain "backend/internal/features/resource/domain"
 	scopeDomain "backend/internal/features/scope/domain"
+
 	"backend/shared/base"
 	baseCmd "backend/shared/base/command"
 	"backend/shared/validator"
@@ -20,16 +25,23 @@ type MeasureService interface {
 	DeleteMeasure(ctx context.Context, input *command.MeasureIDInput) error
 }
 type measureService struct {
-	repo domain.MeasureRepository
+	repo     domain.MeasureRepository
+	assetDep appAsset.AssetDependencyService
 	*base.BaseService
 }
 
-func NewService(base *base.BaseService, repo domain.MeasureRepository) MeasureService {
+const (
+	featureName string = "measure"
+)
+
+func NewService(base *base.BaseService, repo domain.MeasureRepository, assetDep appAsset.AssetDependencyService) MeasureService {
 	return &measureService{
 		repo:        repo,
+		assetDep:    assetDep,
 		BaseService: base,
 	}
 }
+
 func (s *measureService) CreateMeasure(ctx context.Context, input *command.CreateMeasureInput) (*domain.Measure, error) {
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
 		BaseInput: input.BaseInput,
@@ -53,6 +65,18 @@ func (s *measureService) CreateMeasure(ctx context.Context, input *command.Creat
 		return nil, fmt.Errorf("failed to create measure: %w", err)
 	}
 
+	//Update asset parent dependecy
+	err = s.assetDep.UpdateDependency(ctx, &assetCmd.DependencyChangeInput{
+		BaseInput:  input.BaseInput,
+		Feature:    featureName,
+		Action:     assetCmd.DependencyActionCreate,
+		FeatureID:  measure.ID(),
+		NewAssetID: measure.Parent(),
+	})
+	if err != nil {
+		return nil, err
+	}
+	
 	return measure, nil
 }
 
@@ -97,10 +121,14 @@ func (s *measureService) UpdateMeasure(ctx context.Context, input *command.Updat
 	if err != nil {
 		return nil, err
 	}
+
 	measure, err := s.repo.FindByID(ctx, &input.BaseInput, input.ID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get measure: %w", err)
 	}
+
+	oldParent := measure.Parent()
+
 	err = measure.Update(input.Name, input.Parent, input.Description)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get measure: %w", err)
@@ -109,8 +137,24 @@ func (s *measureService) UpdateMeasure(ctx context.Context, input *command.Updat
 		return nil, fmt.Errorf("failed to update measure: %w", err)
 	}
 
+	if oldParent != measure.Parent() {
+		//Update asset parent dependecy
+		err = s.assetDep.UpdateDependency(ctx, &assetCmd.DependencyChangeInput{
+			BaseInput:       input.BaseInput,
+			PreviousAssetID: oldParent,
+			Feature:         featureName,
+			Action:          assetCmd.DependencyActionUpdate,
+			FeatureID:       measure.ID(),
+			NewAssetID:      measure.Parent(),
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return measure, nil
 }
+
 func (s *measureService) DeleteMeasure(ctx context.Context, input *command.MeasureIDInput) error {
 
 	err := s.CheckPermission(ctx, &baseCmd.CheckPermissionInput{
@@ -125,5 +169,16 @@ func (s *measureService) DeleteMeasure(ctx context.Context, input *command.Measu
 	if err != nil {
 		return err
 	}
+
+	err = s.assetDep.UpdateDependency(ctx, &assetCmd.DependencyChangeInput{
+		BaseInput: input.BaseInput,
+		Feature:   featureName,
+		Action:    assetCmd.DependencyActionDelete,
+		FeatureID: input.MeasureID,
+	})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
