@@ -1,0 +1,6 @@
+-name emqx@node1
+-setcookie emqxsecretcookie123
++P 2097152
++t 1048576
++stbt db
++zdbbl 32768

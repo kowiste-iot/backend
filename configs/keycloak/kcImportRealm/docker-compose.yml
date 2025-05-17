@@ -1,0 +1,75 @@
+name: iot
+services:
+  openobserve:
+    image: public.ecr.aws/zinclabs/openobserve:latest
+    environment:
+      - ZO_ROOT_USER_EMAIL=admin@kowiste.com
+      - ZO_ROOT_USER_PASSWORD=admin123
+      - ZO_STORAGE_TYPE=disk
+      - ZO_DATA_DIR=/data
+      - ZO_LOG_RETENTION_DAYS=3 # 3-day retention
+      - ZO_COMPACT_DAYS=1 # Daily compaction
+      # Optional performance tuning
+      - ZO_MEMORY_CACHE_MAX_SIZE=1073741824 # 1GB cache
+      - ZO_MEMORY_CACHE_CLEAN_INTERVAL=60 # Clean cache every 60 seconds
+      # Optional compression settings
+      - ZO_COMPRESSION_ENABLED=true
+      - ZO_COMPRESSION_MIN_SIZE=1024 # Min size for compression (1KB)
+    ports:
+      - "5080:5080" # UI and API port
+    volumes:
+      - openobserve_data:/data # Persistent storage
+    restart: unless-stopped # Automatically restart if it crashes
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m" # Max log size for the container itself
+        max-file: "3" # Keep 3 rotated log files
+  postgres:
+    image: postgres:15
+    container_name: keycloak_postgres
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: password
+      KEYCLOAK_FEATURES: upload_scripts
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U keycloak" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - keycloak-network
+
+  keycloak:
+    build:
+      context: .
+      dockerfile: dockerfile-kc
+    container_name: keycloak
+    env_file:
+      - .env.local      
+    command:
+      - start-dev
+      - --import-realm
+      - --spi-cookie-same-site-cookie-same-site-mode=None
+    ports:
+      - "7080:8080"
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - keycloak-network
+
+volumes:
+  postgres_data:
+    name: keycloak_postgres_data
+  openobserve_data:
+
+
+networks:
+  keycloak-network:
+    name: keycloak-network

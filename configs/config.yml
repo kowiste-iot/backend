@@ -1,0 +1,76 @@
+# config/config.yaml
+app:
+  name: backend-service
+  environment: development
+  log_level: debug
+
+http:
+  host: 0.0.0.0
+  port: 5500
+  shutdown_timeout: 5s
+  read_timeout: 15s
+  write_timeout: 15s
+  cors_allowed_origins:
+    - http://localhost:5500
+    - http://localhost:5173
+
+grpc:
+  host: 0.0.0.0
+  port: 9090
+
+database:
+  driver: postgres # or sqlite
+  host: localhost
+  port: 4432
+  username: keycloak
+  password: password
+  database: kowiste
+  ssl_mode: disable
+  max_idle_conns: 10
+  max_open_conns: 100
+  conn_max_lifetime: 1h
+  auto_migrate: true
+
+ingest:
+  url: tcp://localhost:1883
+  client_id: admin
+  user: admin
+  password: admin
+  manage_url: http://localhost:18083
+  manage_key: backend
+  manage_secret: J8sK2pL7qR5tX3vY6mZ9nB4wC1eD0aF
+
+stream:
+  url: nats://localhost:4222
+  timeout: 10s
+
+jwt:
+  secret: your-secret-key-here
+  expiration_time: 24h
+  refresh_duration: 72h
+
+websocket:
+  read_buffer_size: 1024
+  write_buffer_size: 1024
+  handshake_timeout: 10s
+  ping_interval: 30s
+  max_message_size: 512000 # 512KB
+
+telemetry:
+  service_name: kowiste
+  environment: local
+  endpoint: localhost:5080
+  tracing_enabled: true
+  sampling_rate: 1.0
+  user: admin@example.com
+  password: 6Q8IBAlFYMbcj3Xq
+  metrics_enabled: true
+  metrics_host: 0.0.0.0
+  metrics_port: 9100
+
+authentication:
+  host: http://localhost:7080/auth
+  realm: master
+  client_id: master-client
+  client_secret: master_password1!
+  client_web: vue-client

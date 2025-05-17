@@ -1,0 +1,145 @@
+name: iot
+services:
+  openobserver:
+    image: openobserve/openobserve:v0.14.4
+    container_name: openobserver
+    ports:
+      - "5080:5080"
+    volumes:
+      - openobserve_data:/data
+    environment:
+      - ZO_ROOT_USER_EMAIL=admin@example.com # Change to your email
+      - ZO_ROOT_USER_PASSWORD=StrongPassword123! # Change to a secure password
+      - ZO_DATA_DIR=/data
+
+    restart: unless-stopped
+    networks:
+      - kowiste-network
+  postgres:
+    image: postgres:17.2-alpine3.21
+    container_name: postgres
+    environment:
+      POSTGRES_MULTIPLE_DATABASES: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: password
+      KEYCLOAK_FEATURES: upload_scripts
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./configs/postgres/init-multiple-databases.sh:/docker-entrypoint-initdb.d/init-multiple-databases.sh:ro,z
+
+    ports:
+      - "4432:5432" # UI and API port
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U keycloak" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - kowiste-network
+  emqx:
+    image: emqx/emqx:latest
+    container_name: emqx
+    ports:
+      - "1883:1883" # MQTT port
+      - "8083:8083" # MQTT/WebSocket port
+      - "8084:8084" # MQTT/WSS port
+      - "8883:8883" # MQTT/SSL port
+      - "18083:18083" # Dashboard port
+    environment:
+      - EMQX_ALLOW_ANONYMOUS=true
+      - EMQX_ACL_NOMATCH=allow
+      - EMQX_API_KEY__BOOTSTRAP_FILE=/opt/emqx/data/api_keys
+
+    volumes:
+      - emqx_data:/opt/emqx/data
+      - emqx_log:/opt/emqx/log
+      - ./configs/emqx/emqx.conf:/opt/emqx/etc/emqx.conf
+      - ./configs/emqx/api_keys:/opt/emqx/data/api_keys
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: always
+    networks:
+      - kowiste-network
+  keycloak:
+    build:
+      context: .
+      dockerfile: dockerfile-kc
+    container_name: keycloak
+    env_file:
+      - .env.local
+    command:
+      - start-dev
+      - --import-realm
+      - --spi-cookie-same-site-cookie-same-site-mode=None
+      - --spi-token-exchange-token-exchange-enabled=true
+
+    ports:
+      - "7080:8080"
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - kowiste-network
+  nats:
+    container_name: nats-server
+    image: nats:2.9.25-alpine3.18
+    restart: always
+    command: --js
+    volumes:
+      - ./configs/nats/nats.conf:/etc/nats/nats-server.conf
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    networks:
+      - kowiste-network
+  minio:
+    image: minio/minio:RELEASE.2025-01-20T14-49-07Z
+    container_name: minio
+    ports:
+      - "9000:9000" # API
+      - "9001:9001" # Console
+    volumes:
+      - minio_data:/data
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+    networks:
+      - kowiste-network
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: mailpit
+    ports:
+      - "1025:1025" # SMTP port
+      - "8025:8025" # Web UI port
+    environment:
+      MP_MAX_MESSAGES: "500" # Maximum number of messages to keep
+      MP_DATA_FILE: "/data/mailpit.db" # Persistent storage location
+      MP_SMTP_AUTH_ACCEPT_ANY: "true" # Accept any SMTP authentication
+      MP_SMTP_AUTH_ALLOW_INSECURE: "true" # Allow insecure authentication
+    volumes:
+      - mailpit_data:/data
+    restart: unless-stopped
+    networks:
+      - kowiste-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "3"
+
+volumes:
+  postgres_data:
+    name: keycloak_postgres_data
+  openobserve_data:
+  emqx_data:
+  emqx_log:
+  minio_data:
+  mailpit_data:
+networks:
+  kowiste-network:
+    name: kowiste-network
